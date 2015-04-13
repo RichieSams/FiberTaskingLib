@@ -1,0 +1,17 @@
+# Build files
+build/
+obj/
+*.pdb
+
+# Lib binary files
+lib/
+bin/
+
+# Project files
+.vs/
+*.sdf
+*.opensdf
+*.suo
+*.vcxproj.*.nvuser
+
+

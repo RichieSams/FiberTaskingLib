@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\source\fiber_tasking_lib\task_scheduler.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\linear_allocator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\typedefs.h" />
+    <ClInclude Include="..\libs\concurrentqueue\blockingconcurrentqueue.h">
+      <Filter>libs\concurrentqueue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\concurrentqueue\concurrentqueue.h">
+      <Filter>libs\concurrentqueue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\fiber_tasking_lib\linear_allocator.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="libs">
+      <UniqueIdentifier>{9f53360c-d3fb-4687-9deb-6a1ee04d861f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\concurrentqueue">
+      <UniqueIdentifier>{cd75f4f6-5d8d-4788-89b1-1a7aaa31011e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
