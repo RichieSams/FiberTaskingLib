@@ -36,6 +36,9 @@ private:
             : NextPage(nullptr),
               Data(::operator new(pageSize)) {
         }
+		~Page() {
+			delete Data;
+		}
     
         Page *NextPage;
         void *Data;
