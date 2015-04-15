@@ -120,7 +120,7 @@ void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
 		HANDLE threadHandle = (HANDLE)_beginthreadex(nullptr, 524288, ThreadStart, globalArgs, CREATE_SUSPENDED, nullptr);
 		m_threads[i] = threadHandle;
 
-		uint64 mask = 1 << i;
+		DWORD_PTR mask = 1 << i;
 		SetThreadAffinityMask(threadHandle, mask);
 		ResumeThread(threadHandle);
 	}
@@ -138,8 +138,8 @@ void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
 	ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
 }
 
-AtomicCounter *TaskScheduler::AddTask(Task task) {
-	AtomicCounter *counter = new AtomicCounter();
+std::shared_ptr<AtomicCounter> TaskScheduler::AddTask(Task task) {
+	std::shared_ptr<AtomicCounter> counter(new AtomicCounter());
 	counter->store(1, std::memory_order_relaxed);
 
 	TaskBundle bundle = {task, counter};
@@ -148,8 +148,8 @@ AtomicCounter *TaskScheduler::AddTask(Task task) {
 	return counter;
 }
 
-AtomicCounter *TaskScheduler::AddTasks(uint numTasks, Task *tasks) {
-	AtomicCounter *counter = new AtomicCounter();
+std::shared_ptr<AtomicCounter> TaskScheduler::AddTasks(uint numTasks, Task *tasks) {
+	std::shared_ptr<AtomicCounter> counter(new AtomicCounter());
 	counter->store(numTasks, std::memory_order_relaxed);
 
 	for (uint i = 0; i < numTasks; ++i) {
@@ -173,7 +173,7 @@ void TaskScheduler::SwitchFibers(void *fiberToSwitchTo) {
 	SwitchToFiber(m_fiberSwitchingFiber);
 }
 
-void TaskScheduler::WaitForCounter(AtomicCounter *counter, int value) {
+void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int value) {
 	if (counter->load() == value) {
 		return;
 	}
@@ -182,7 +182,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, int value) {
 	m_fiberPool.wait_dequeue(tls_fiberToSwitchTo);
 
 	tls_currentFiber = GetCurrentFiber();
-	tls_waitingCounter = counter;
+	tls_waitingCounter = counter.get();
 	tls_waitingValue = value;
 	
 	SwitchToFiber(m_counterWaitingFiber);

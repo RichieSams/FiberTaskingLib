@@ -26,7 +26,7 @@
 namespace FiberTaskingLib {
 
 class TaskScheduler;
-class GlobalArgs;
+struct GlobalArgs;
 
 typedef void (__stdcall *TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg);
 #define TASK_FUNCTION(functionName) void __stdcall functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg)
@@ -53,7 +53,7 @@ private:
 
 	struct TaskBundle {
 		Task Task;
-		AtomicCounter *Counter;
+		std::shared_ptr<AtomicCounter> Counter;
 	};
 
 	struct WaitingTask {
@@ -86,10 +86,10 @@ private:
 
 public:
 	void Initialize(GlobalArgs *globalArgs);
-	AtomicCounter *AddTask(Task task);
-	AtomicCounter *AddTasks(uint numTasks, Task *tasks);
+	std::shared_ptr<AtomicCounter> AddTask(Task task);
+	std::shared_ptr<AtomicCounter> AddTasks(uint numTasks, Task *tasks);
 
-	void WaitForCounter(AtomicCounter *counter, int value);
+	void WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int value);
 	void Quit();
 
 private:
