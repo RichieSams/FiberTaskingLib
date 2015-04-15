@@ -16,6 +16,11 @@
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
 #include <atomic>
+#include <vector>
+#include <memory>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 
 namespace FiberTaskingLib {
@@ -52,13 +57,25 @@ private:
 	};
 
 	struct WaitingTask {
+		WaitingTask() 
+			: Fiber(nullptr), 
+			  Counter(nullptr), 
+			  Value(0) {
+		}
+		WaitingTask(void *fiber, AtomicCounter *counter, int value)
+			: Fiber(fiber),
+			  Counter(counter),
+			  Value(value) {
+		}
+
 		void *Fiber;
 		AtomicCounter *Counter;
 		int Value;
 	};
 
 	moodycamel::ConcurrentQueue<TaskBundle> m_taskQueue;
-	moodycamel::ConcurrentQueue<WaitingTask> m_waitingTasks;
+	std::vector<WaitingTask> m_waitingTasks;
+	CRITICAL_SECTION m_waitingTaskLock;
 
 	moodycamel::BlockingConcurrentQueue<void *> m_fiberPool;
 

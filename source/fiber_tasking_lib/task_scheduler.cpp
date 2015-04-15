@@ -13,11 +13,8 @@
 
 #include "fiber_tasking_lib/global_args.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <process.h>
 
-#include <vector>
 
 namespace FiberTaskingLib {
 
@@ -41,22 +38,23 @@ void TaskScheduler::FiberStart(void *arg) {
 	while (!taskScheduler->m_quit.load()) {
 		// Check if any of the waiting tasks are ready
 		WaitingTask waitingTask;
-		std::vector<WaitingTask> tasksNotReady;
-		while (taskScheduler->m_waitingTasks.try_dequeue(waitingTask)) {
+		bool waitingTaskReady = false;
+		EnterCriticalSection(&taskScheduler->m_waitingTaskLock);
+		for (uint i = 0; i < taskScheduler->m_waitingTasks.size(); ++i) {
+			waitingTask = taskScheduler->m_waitingTasks[i];
 			if (waitingTask.Counter->load() == waitingTask.Value) {
-				if (tasksNotReady.size() > 0) {
-					taskScheduler->m_waitingTasks.enqueue_bulk(&tasksNotReady[0], tasksNotReady.size());
-					tasksNotReady.clear();
-				}
-
-				taskScheduler->SwitchFibers(waitingTask.Fiber);
-			} else {
-				tasksNotReady.push_back(waitingTask);
+				taskScheduler->m_waitingTasks.erase(taskScheduler->m_waitingTasks.begin() + i);
+				waitingTaskReady = true;
+				break;
 			}
 		}
-		if (tasksNotReady.size() > 0) {
-			taskScheduler->m_waitingTasks.enqueue_bulk(&tasksNotReady[0], tasksNotReady.size());
+		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
+
+		if (waitingTaskReady) {
+			taskScheduler->SwitchFibers(waitingTask.Fiber);
 		}
+
+
 
 		TaskBundle nextTask;
 		if (!taskScheduler->GetNextTask(&nextTask)) {
@@ -81,8 +79,9 @@ void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
-		WaitingTask waitingTask = {tls_currentFiber, tls_waitingCounter, tls_waitingValue};
-		taskScheduler->m_waitingTasks.enqueue(waitingTask);
+		EnterCriticalSection(&taskScheduler->m_waitingTaskLock);
+		taskScheduler->m_waitingTasks.emplace_back(tls_currentFiber, tls_waitingCounter, tls_waitingValue);
+		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
 
 		SwitchToFiber(tls_fiberToSwitchTo);
 	}
@@ -94,10 +93,18 @@ TaskScheduler::TaskScheduler()
 		: m_numThreads(0),
 		  m_threads(nullptr) {
 	m_quit.store(false, std::memory_order_relaxed);
+	InitializeCriticalSection(&m_waitingTaskLock);
 }
 
 TaskScheduler::~TaskScheduler() {
 	delete[] m_threads;
+
+	void *fiber;
+	while (m_fiberPool.try_dequeue(fiber)) {
+		DeleteFiber(fiber);
+	}
+
+	DeleteCriticalSection(&m_waitingTaskLock);
 }
 
 void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
