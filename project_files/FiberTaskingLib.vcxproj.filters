@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\fiber_tasking_lib\task_scheduler.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\linear_allocator.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\read_write_lock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
@@ -15,6 +16,7 @@
     </ClInclude>
     <ClInclude Include="..\source\fiber_tasking_lib\linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\read_write_lock.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="libs">
