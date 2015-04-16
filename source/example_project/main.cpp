@@ -17,11 +17,30 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-TASK_FUNCTION(FirstLevel) {
-	volatile int i = 0;
+TASK_ENTRY_POINT(SecondLevel) {
+	volatile int k = 0;
 	for (uint j = 0; j < 10000; ++j) {
-		i += 1;
+		k += 1;
 	}
+
+	std::cout << "second" << std::endl;
+}
+
+TASK_ENTRY_POINT(FirstLevel) {
+	volatile int k = 0;
+	for (uint j = 0; j < 1000000; ++j) {
+		k += 1;
+	}
+
+	std::cout << "first" << std::endl;
+
+	FiberTaskingLib::Task tasks[10];
+	for (uint i = 0; i < 10; ++i) {
+		tasks[i] = {SecondLevel, nullptr};
+	}
+
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = g_taskScheduler->AddTasks(10, tasks);
+	g_taskScheduler->WaitForCounter(counter, 0);
 }
 
 
@@ -29,12 +48,12 @@ int main() {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
 	globalArgs->TaskScheduler.Initialize(globalArgs);	
 
-	FiberTaskingLib::Task tasks[10000];
-	for (uint i = 0; i < 10000; ++i) {
+	FiberTaskingLib::Task tasks[10];
+	for (uint i = 0; i < 10; ++i) {
 		tasks[i] = {FirstLevel, nullptr};
 	}
 
-	FiberTaskingLib::AtomicCounter *counter = globalArgs->TaskScheduler.AddTasks(10000, tasks);
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(10, tasks);
 	globalArgs->TaskScheduler.WaitForCounter(counter, 0);
 	std::flush(std::cout);
 
