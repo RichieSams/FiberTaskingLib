@@ -39,21 +39,24 @@ void TaskScheduler::FiberStart(void *arg) {
 		// Check if any of the waiting tasks are ready
 		WaitingTask waitingTask;
 		bool waitingTaskReady = false;
+
 		EnterCriticalSection(&taskScheduler->m_waitingTaskLock);
-		for (uint i = 0; i < taskScheduler->m_waitingTasks.size(); ++i) {
-			waitingTask = taskScheduler->m_waitingTasks[i];
-			if (waitingTask.Counter->load() == waitingTask.Value) {
-				taskScheduler->m_waitingTasks.erase(taskScheduler->m_waitingTasks.begin() + i);
+		auto iter = taskScheduler->m_waitingTasks.begin();
+		for ( ; iter != taskScheduler->m_waitingTasks.end(); ++iter) {
+			if (iter->Counter->load() == iter->Value) {
 				waitingTaskReady = true;
 				break;
 			}
+		}
+		if (waitingTaskReady) {
+			waitingTask = *iter;
+			taskScheduler->m_waitingTasks.erase(iter);
 		}
 		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
 
 		if (waitingTaskReady) {
 			taskScheduler->SwitchFibers(waitingTask.Fiber);
 		}
-
 
 
 		TaskBundle nextTask;

@@ -16,7 +16,7 @@
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
 #include <atomic>
-#include <vector>
+#include <list>
 #include <memory>
 
 #define WIN32_LEAN_AND_MEAN
@@ -74,7 +74,7 @@ private:
 	};
 
 	moodycamel::ConcurrentQueue<TaskBundle> m_taskQueue;
-	std::vector<WaitingTask> m_waitingTasks;
+	std::list<WaitingTask> m_waitingTasks;
 	CRITICAL_SECTION m_waitingTaskLock;
 
 	moodycamel::BlockingConcurrentQueue<void *> m_fiberPool;
