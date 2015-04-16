@@ -79,8 +79,8 @@ private:
 
 	moodycamel::BlockingConcurrentQueue<void *> m_fiberPool;
 
-	void *m_fiberSwitchingFiber;
-	void *m_counterWaitingFiber;
+	void **m_fiberSwitchingFibers;
+	void **m_counterWaitingFibers;
 
 	std::atomic_bool m_quit;
 
