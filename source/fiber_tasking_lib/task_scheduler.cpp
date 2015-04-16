@@ -111,8 +111,8 @@ void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
 TaskScheduler::TaskScheduler()
 		: m_numThreads(0),
 		  m_threads(nullptr) {
-	m_quit.store(false, std::memory_order_relaxed);
 	InitializeCriticalSection(&m_waitingTaskLock);
+	m_quit.store(false);
 }
 
 TaskScheduler::~TaskScheduler() {
@@ -170,7 +170,7 @@ void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
 
 std::shared_ptr<AtomicCounter> TaskScheduler::AddTask(Task task) {
 	std::shared_ptr<AtomicCounter> counter(new AtomicCounter());
-	counter->store(1, std::memory_order_relaxed);
+	counter->store(1);
 
 	TaskBundle bundle = {task, counter};
 	m_taskQueue.enqueue(bundle);
@@ -180,7 +180,7 @@ std::shared_ptr<AtomicCounter> TaskScheduler::AddTask(Task task) {
 
 std::shared_ptr<AtomicCounter> TaskScheduler::AddTasks(uint numTasks, Task *tasks) {
 	std::shared_ptr<AtomicCounter> counter(new AtomicCounter());
-	counter->store(numTasks, std::memory_order_relaxed);
+	counter->store(numTasks);
 
 	for (uint i = 0; i < numTasks; ++i) {
 		TaskBundle bundle = {tasks[i], counter};
@@ -219,7 +219,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 }
 
 void TaskScheduler::Quit() {
-	m_quit.store(true, std::memory_order_relaxed);
+	m_quit.store(true);
 	ConvertFiberToThread();
 
 	std::vector<HANDLE> workerThreads;
@@ -229,7 +229,7 @@ void TaskScheduler::Quit() {
 		}
 	}
 
-	DWORD result = WaitForMultipleObjects(workerThreads.size(), &workerThreads[0], true, INFINITE);
+	DWORD result = WaitForMultipleObjects((DWORD)workerThreads.size(), &workerThreads[0], true, INFINITE);
 
 	for (auto &workerThread : workerThreads) {
 		CloseHandle(workerThread);
