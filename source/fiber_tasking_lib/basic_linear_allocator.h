@@ -25,10 +25,10 @@
 
 namespace FiberTaskingLib {
 
-class LinearAllocator {
+class BasicLinearAllocator {
 public:
-    LinearAllocator(size_t pageSize);
-	~LinearAllocator();
+    BasicLinearAllocator(size_t pageSize);
+	~BasicLinearAllocator();
 
 private:
     struct Page {
@@ -44,7 +44,7 @@ private:
         void *Data;
     };
 
-    size_t m_pageSize;
+    const size_t m_pageSize;
     
 	uint m_numPages;
 

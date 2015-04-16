@@ -22,14 +22,18 @@
     <ClInclude Include="..\libs\concurrentqueue\blockingconcurrentqueue.h" />
     <ClInclude Include="..\libs\concurrentqueue\concurrentqueue.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
-    <ClInclude Include="..\source\fiber_tasking_lib\linear_allocator.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\basic_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\read_write_lock.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\typedefs.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\fiber_tasking_lib\linear_allocator.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\basic_linear_allocator.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\read_write_lock.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\task_scheduler.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

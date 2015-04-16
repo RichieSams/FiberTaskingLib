@@ -17,12 +17,12 @@
  * Copyright Adrian Astley 2015
  */
 
-#include "fiber_tasking_lib/linear_allocator.h"
+#include "fiber_tasking_lib/basic_linear_allocator.h"
 
 
 namespace FiberTaskingLib {
 
-LinearAllocator::LinearAllocator(size_t pageSize)
+BasicLinearAllocator::BasicLinearAllocator(size_t pageSize)
 		: m_pageSize(pageSize),
 		  m_numPages(1u) {
 	m_currentPage = m_firstPage = new Page(pageSize);
@@ -30,7 +30,7 @@ LinearAllocator::LinearAllocator(size_t pageSize)
 	m_end = m_current + m_pageSize;
 }
 
-LinearAllocator::~LinearAllocator() {
+BasicLinearAllocator::~BasicLinearAllocator() {
 	Page *currentPage = m_firstPage;
 	Page *pageToDelete;
 
@@ -42,7 +42,7 @@ LinearAllocator::~LinearAllocator() {
 	} while (currentPage != nullptr);
 }
 
-void *LinearAllocator::Allocate(size_t size) {
+void *BasicLinearAllocator::Allocate(size_t size) {
     if (m_current + size >= m_end) {
 		// Check if we already have a new page allocated
 		if (m_currentPage->NextPage != nullptr) {

@@ -2,8 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\source\fiber_tasking_lib\task_scheduler.cpp" />
-    <ClCompile Include="..\source\fiber_tasking_lib\linear_allocator.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\read_write_lock.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\basic_linear_allocator.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
@@ -14,9 +16,11 @@
     <ClInclude Include="..\libs\concurrentqueue\concurrentqueue.h">
       <Filter>libs\concurrentqueue</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\fiber_tasking_lib\linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\read_write_lock.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\basic_linear_allocator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="libs">
