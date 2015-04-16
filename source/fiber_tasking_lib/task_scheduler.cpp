@@ -18,14 +18,30 @@
 
 namespace FiberTaskingLib {
 
+__declspec(thread) uint tls_threadId;
+
 __declspec(thread) void *tls_fiberToSwitchTo;
 __declspec(thread) void *tls_currentFiber;
 __declspec(thread) AtomicCounter *tls_waitingCounter;
 __declspec(thread) int tls_waitingValue;
 
+
+
+struct ThreadStartArgs {
+	GlobalArgs *globalArgs;
+	uint threadId;
+};
+
 uint TaskScheduler::ThreadStart(void *arg) {
+	ThreadStartArgs *threadArgs = (ThreadStartArgs *)arg;
+	tls_threadId = threadArgs->threadId;
+	GlobalArgs *globalArgs = threadArgs->globalArgs;
+
+	// Clean up
+	delete threadArgs;
+
 	ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-	FiberStart(arg);
+	FiberStart(globalArgs);
 
 	ConvertFiberToThread();
 	return 1;
@@ -120,7 +136,11 @@ void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
 
 	m_threads[0] = GetCurrentThread();
 	for (DWORD i = 1; i < m_numThreads; ++i) {
-		HANDLE threadHandle = (HANDLE)_beginthreadex(nullptr, 524288, ThreadStart, globalArgs, CREATE_SUSPENDED, nullptr);
+		ThreadStartArgs *threadArgs = new ThreadStartArgs();
+		threadArgs->globalArgs = globalArgs;
+		threadArgs->threadId = i;
+
+		HANDLE threadHandle = (HANDLE)_beginthreadex(nullptr, 524288, ThreadStart, threadArgs, CREATE_SUSPENDED, nullptr);
 		m_threads[i] = threadHandle;
 
 		DWORD_PTR mask = 1 << i;
