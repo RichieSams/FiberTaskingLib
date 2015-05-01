@@ -123,6 +123,13 @@ TaskScheduler::~TaskScheduler() {
 		DeleteFiber(fiber);
 	}
 
+	for (uint i = 0; i < m_numThreads; ++i) {
+		DeleteFiber(m_fiberSwitchingFibers[i]);
+		DeleteFiber(m_counterWaitingFibers[i]);
+	}
+	delete[] m_fiberSwitchingFibers;
+	delete[] m_counterWaitingFibers;
+
 	DeleteCriticalSection(&m_waitingTaskLock);
 }
 
