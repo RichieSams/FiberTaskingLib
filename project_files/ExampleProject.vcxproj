@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\example_project\eastl_defaults.cpp" />
     <ClCompile Include="..\source\example_project\main.cpp" />
   </ItemGroup>
   <ItemGroup>

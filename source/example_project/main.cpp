@@ -12,31 +12,33 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 #include "fiber_tasking_lib/global_args.h"
 
-#include <iostream>
+#include <EASTL/string.h>
+typedef eastl::basic_string<char, FiberTaskingLib::TaggedHeapBackedLinearAllocator> EastlStringWithCustomAlloc;
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <cstdio>
+
 
 TASK_ENTRY_POINT(SecondLevel) {
 	volatile int k = 0;
-	for (uint j = 0; j < 10000; ++j) {
+	for (uint j = 0; j < 100000; ++j) {
 		k += 1;
 	}
 
-	std::cout << "second" << std::endl;
+	EastlStringWithCustomAlloc *firstArg = (EastlStringWithCustomAlloc *)arg;
+
+	//printf("%s second\n", firstArg->c_str());
 }
 
 TASK_ENTRY_POINT(FirstLevel) {
 	volatile int k = 0;
-	for (uint j = 0; j < 1000000; ++j) {
+	for (uint j = 0; j < 10000000; ++j) {
 		k += 1;
 	}
 
-	std::cout << "first" << std::endl;
-
 	FiberTaskingLib::Task tasks[10];
 	for (uint i = 0; i < 10; ++i) {
-		tasks[i] = {SecondLevel, nullptr};
+		EastlStringWithCustomAlloc *newArg = new(g_allocator->allocate(sizeof(EastlStringWithCustomAlloc))) EastlStringWithCustomAlloc("first", *g_allocator);
+		tasks[i] = {SecondLevel, newArg};
 	}
 
 	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = g_taskScheduler->AddTasks(10, tasks);
@@ -46,18 +48,25 @@ TASK_ENTRY_POINT(FirstLevel) {
 
 int main() {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(globalArgs);	
+	globalArgs->TaskScheduler.Initialize(globalArgs);
+	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
 
-	FiberTaskingLib::Task tasks[10];
-	for (uint i = 0; i < 10; ++i) {
-		tasks[i] = {FirstLevel, nullptr};
+
+	for (uint j = 0; j < 10; ++j) {
+		FiberTaskingLib::Task tasks[10];
+		for (uint i = 0; i < 10; ++i) {
+			tasks[i] = {FirstLevel, nullptr};
+		}
+
+		std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(10, tasks);
+		globalArgs->TaskScheduler.WaitForCounter(counter, 0);
+
+		globalArgs->Heap.FreeAllPagesWithId(1234);
+		globalArgs->Allocator.reset(1234);
 	}
 
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(10, tasks);
-	globalArgs->TaskScheduler.WaitForCounter(counter, 0);
-	std::flush(std::cout);
-
 	globalArgs->TaskScheduler.Quit();
+	globalArgs->Allocator.destroy();
 	delete globalArgs;
 
 	return 1;
