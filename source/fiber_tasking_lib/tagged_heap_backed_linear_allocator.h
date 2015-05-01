@@ -14,47 +14,79 @@
 
 #include "fiber_tasking_lib/typedefs.h"
 
+#include <EASTL/allocator.h>
+#include <memory>
+
+
+struct _RTL_CRITICAL_SECTION;
+typedef struct _RTL_CRITICAL_SECTION RTL_CRITICAL_SECTION;
+typedef RTL_CRITICAL_SECTION CRITICAL_SECTION;
+
 
 namespace FiberTaskingLib {
 
 class TaggedHeap;
 struct MemoryPage;
 
+#define TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME "TaggedHeapLinearAllocator"
+
 class TaggedHeapBackedLinearAllocator {
 public:
-    TaggedHeapBackedLinearAllocator(TaggedHeap *heap, uint64 id);
+	// Constructors
+	EASTL_ALLOCATOR_EXPLICIT TaggedHeapBackedLinearAllocator(const char *name = TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME);
+	TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc);
+	TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc, const char *name);
+
+	// Assignment
+	TaggedHeapBackedLinearAllocator &operator=(const TaggedHeapBackedLinearAllocator &alloc);
+
 
 private:
-	TaggedHeap *m_heap;
-	const uint64 m_id;
+	#if EASTL_NAME_ENABLED
+		const char* m_name;
+	#endif
 
-    MemoryPage *m_currentPage;
-    
-    byte *m_end;
-    byte *m_current;
-    
+	TaggedHeap *m_heap;
+	uint64 m_id;
+
+	MemoryPage **m_currentPage;
+
+	byte **m_end;
+	byte **m_current;
+
+	CRITICAL_SECTION *m_lock;
+
+
 public:
-    /**
-     * Allocates memory of the specified size
-     *
-     * @param size    The size, in bytes, of the memory to allocate
-     * @return        A pointer to the allocated memory
-     */
-    void *Allocate(size_t size);
-	
-	template<typename T, typename... Args>
-	T* AllocateAndConstruct(Args... args) {
-		return new(Allocate(sizeof(T))) T(args...);
+	void init(TaggedHeap *heap, uint64 id);
+	void reset(uint64 id);
+	void destroy();
+
+	// Allocation & Deallocation
+	void *allocate(size_t n, int flags = 0);
+	void *allocate(size_t n, size_t alignment, size_t offset, int flags = 0);
+
+	inline void deallocate(void *p, size_t n) {
+		// NoOp
+		// In order to free the memory, the user needs to flush the heap
 	}
 
-    /**
-     * Asks the TaggedHeap for a new block of memory to allocate from. 
-	 *
-	 * WARNING: If the user wishes to use this allocator after calling 
-	 * FreeAllPagesWithId() on the heap, they MUST call this function before
-	 * Allocate(). Otherwise, the internal memory pointer will be stale.    
-     */
-    void GetNewMemoryBlockFromHeap();
+	// Name info
+	inline const char *get_name() const {
+		#if EASTL_NAME_ENABLED
+				return m_name;
+		#else
+				return TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME;
+		#endif
+	}
+	inline void set_name(const char * name) {
+		#if EASTL_NAME_ENABLED
+				m_name = name;
+		#endif
+	}
+
+	friend bool operator==(const TaggedHeapBackedLinearAllocator &a, const TaggedHeapBackedLinearAllocator &b);
+	friend bool operator!=(const TaggedHeapBackedLinearAllocator &a, const TaggedHeapBackedLinearAllocator &b);
 };
 
 } // End of namespace FiberTaskingLib
