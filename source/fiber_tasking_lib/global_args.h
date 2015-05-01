@@ -12,19 +12,20 @@
 #pragma once
 
 #include "fiber_tasking_lib/task_scheduler.h"
-#include "fiber_tasking_lib/linear_allocator.h"
+#include "fiber_tasking_lib/tagged_heap.h"
+#include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 
 namespace FiberTaskingLib {
 
 struct GlobalArgs {
 	GlobalArgs()
-		: TaskScheduler(),
-		  Allocator(2097152) {
+		: Heap(2097152) {
 	}
 
 	TaskScheduler TaskScheduler;
-	LinearAllocator Allocator;
+	TaggedHeap Heap;
+	TaggedHeapBackedLinearAllocator Allocator;
 };
 
 } // End of namespace FiberTaskingLib

@@ -26,10 +26,19 @@
 namespace FiberTaskingLib {
 
 class TaskScheduler;
+class TaggedHeap;
+class TaggedHeapBackedLinearAllocator;
 struct GlobalArgs;
 
-typedef void (__stdcall *TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg);
-#define TASK_FUNCTION(functionName) void __stdcall functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg)
+
+typedef void(__stdcall *TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
+                                      FiberTaskingLib::TaggedHeap *g_heap,
+                                      FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator,
+                                      void *arg);
+#define TASK_ENTRY_POINT(functionName) void __stdcall functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, \
+                                                                   FiberTaskingLib::TaggedHeap *g_heap, \
+                                                                   FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator, \
+                                                                   void *arg)
 
 
 typedef std::atomic_char32_t AtomicCounter;
@@ -40,7 +49,7 @@ struct Task {
 	void *ArgData;
 };
 
-#define FIBER_POOL_SIZE 150
+#define FIBER_POOL_SIZE 25
 
 class TaskScheduler {
 public:

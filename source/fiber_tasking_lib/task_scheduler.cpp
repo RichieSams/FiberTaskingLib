@@ -79,7 +79,7 @@ void TaskScheduler::FiberStart(void *arg) {
 		if (!taskScheduler->GetNextTask(&nextTask)) {
 			Sleep(1);
 		} else {
-			nextTask.Task.Function(&globalArgs->TaskScheduler, nextTask.Task.ArgData);
+			nextTask.Task.Function(&globalArgs->TaskScheduler, &globalArgs->Heap, &globalArgs->Allocator, nextTask.Task.ArgData);
 			nextTask.Counter->fetch_sub(1);
 		}
 	}
