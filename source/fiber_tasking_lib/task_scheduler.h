@@ -31,10 +31,10 @@ class TaggedHeapBackedLinearAllocator;
 struct GlobalArgs;
 
 
-typedef void(__stdcall *TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
-                                      FiberTaskingLib::TaggedHeap *g_heap,
-                                      FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator,
-                                      void *arg);
+typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
+                            FiberTaskingLib::TaggedHeap *g_heap,
+                            FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator,
+                            void *arg);
 /**
  * Creates the correct function signature for a task entry point
  *
@@ -45,10 +45,10 @@ typedef void(__stdcall *TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskSche
  *     void *arg
  * where arg == Task::ArgData
  */
-#define TASK_ENTRY_POINT(functionName) void __stdcall functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, \
-                                                                   FiberTaskingLib::TaggedHeap *g_heap, \
-                                                                   FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator, \
-                                                                   void *arg)
+#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, \
+                                                         FiberTaskingLib::TaggedHeap *g_heap, \
+                                                         FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator, \
+                                                         void *arg)
 
 
 typedef std::atomic_char32_t AtomicCounter;
