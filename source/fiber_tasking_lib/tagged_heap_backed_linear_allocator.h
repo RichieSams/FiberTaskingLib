@@ -87,6 +87,13 @@ public:
 
 	friend bool operator==(const TaggedHeapBackedLinearAllocator &a, const TaggedHeapBackedLinearAllocator &b);
 	friend bool operator!=(const TaggedHeapBackedLinearAllocator &a, const TaggedHeapBackedLinearAllocator &b);
+
+private:
+	inline void AskForNewPageFromHeap() {
+		*m_currentPage = m_heap->GetNextFreePage(m_id);
+		*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
+		*m_end = *m_current + (*m_currentPage)->PageSize;
+	}
 };
 
 } // End of namespace FiberTaskingLib

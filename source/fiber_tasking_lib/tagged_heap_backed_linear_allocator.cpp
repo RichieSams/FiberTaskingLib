@@ -85,18 +85,13 @@ void TaggedHeapBackedLinearAllocator::init(TaggedHeap *heap, uint64 id) {
 	m_current = new byte *();
 	m_end = new byte *();
 
-	*m_currentPage = heap->GetNextFreePage(id);
-	*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
-	*m_end = *m_current + (*m_currentPage)->PageSize;
+	AskForNewPageFromHeap();
 }
 
 void TaggedHeapBackedLinearAllocator::reset(uint64 id) {
 	m_id = id;
 
-	// Ask for a new page
-	*m_currentPage = m_heap->GetNextFreePage(id);
-	*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
-	*m_end = *m_current + (*m_currentPage)->PageSize;
+	AskForNewPageFromHeap();
 }
 
 void TaggedHeapBackedLinearAllocator::destroy() {
@@ -111,14 +106,12 @@ void TaggedHeapBackedLinearAllocator::destroy() {
 
 void *TaggedHeapBackedLinearAllocator::allocate(size_t n, int flags) {
 	EASTL_ASSERT(m_currentPage);
+	EASTL_ASSERT(n <= (*m_currentPage)->PageSize);
 
 	EnterCriticalSection(m_lock);
 
 	if (*m_current + n >= *m_end) {
-		// Ask for a new page
-		*m_currentPage = m_heap->GetNextFreePage(m_id);
-		*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
-		*m_end = *m_current + (*m_currentPage)->PageSize;
+		AskForNewPageFromHeap();
 	}
 
 	void* userPtr = *m_current;
@@ -131,24 +124,19 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, int flags) {
 
 void *TaggedHeapBackedLinearAllocator::allocate(size_t n, size_t alignment, size_t offset, int flags) {
 	EASTL_ASSERT(m_currentPage);
+	EASTL_ASSERT(n <= (*m_currentPage)->PageSize);
 
 	EnterCriticalSection(m_lock);
 
 	if (*m_current + n >= *m_end) {
-		// Ask for a new page
-		*m_currentPage = m_heap->GetNextFreePage(m_id);
-		*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
-		*m_end = *m_current + (*m_currentPage)->PageSize;
+		AskForNewPageFromHeap();
 	}
 
 	size_t bufferSize = *m_end - *m_current;
 	void *start = *m_current;
 	void *userPtr;
 	while ((userPtr = std::align(alignment, n, start, bufferSize)) == nullptr) {
-		// Ask for a new page
-		*m_currentPage = m_heap->GetNextFreePage(m_id);
-		*m_current = reinterpret_cast<byte *>((*m_currentPage)->Data);
-		*m_end = *m_current + (*m_currentPage)->PageSize;
+		AskForNewPageFromHeap();
 
 		// Recalculate bounds for the align check
 		bufferSize = *m_end - *m_current;
