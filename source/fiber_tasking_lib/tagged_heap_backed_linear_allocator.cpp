@@ -23,42 +23,36 @@ EASTL_ALLOCATOR_EXPLICIT TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinear
 		: m_heap(nullptr), 
 		  m_id(0u),
 		  m_currentPage(nullptr),
-		  m_lock(nullptr) {
+		  m_lock(nullptr),
+		  m_end(nullptr),
+		  m_current(nullptr) {
 	#if EASTL_NAME_ENABLED
 		m_name = name;
 	#endif
 }
 
-TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc) {
+TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc)
+		: m_heap(alloc.m_heap),
+		  m_id(alloc.m_id),
+		  m_currentPage(alloc.m_currentPage),
+		  m_lock(alloc.m_lock),
+		  m_end(alloc.m_end),
+		  m_current(alloc.m_current) {
 	#if EASTL_NAME_ENABLED
 		m_name = alloc.m_name;
 	#endif
-	
-	m_lock = alloc.m_lock;
-
-	m_heap = alloc.m_heap;
-	m_id = alloc.m_id;
-
-	m_currentPage = alloc.m_currentPage;
-
-	m_end = alloc.m_end;
-	m_current = alloc.m_current;
 }
 
-TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc, const char *name) {
+TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc, const char *name) 
+		: m_heap(alloc.m_heap),
+		  m_id(alloc.m_id),
+		  m_currentPage(alloc.m_currentPage),
+		  m_lock(alloc.m_lock),
+		  m_end(alloc.m_end),
+		  m_current(alloc.m_current) {
 	#if EASTL_NAME_ENABLED
 		m_name = name ? name : EASTL_ALLOCATOR_DEFAULT_NAME;
 	#endif
-
-	m_lock = alloc.m_lock;
-
-	m_heap = alloc.m_heap;
-	m_id = alloc.m_id;
-
-	m_currentPage = alloc.m_currentPage;
-
-	m_end = alloc.m_end;
-	m_current = alloc.m_current;
 }
 
 TaggedHeapBackedLinearAllocator &TaggedHeapBackedLinearAllocator::operator=(const TaggedHeapBackedLinearAllocator &alloc) {
