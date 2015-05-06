@@ -14,6 +14,8 @@
 
 #include "fiber_tasking_lib/typedefs.h"
 
+#include "fiber_tasking_lib/tagged_heap.h"
+
 #include <EASTL/allocator.h>
 #include <memory>
 
@@ -25,7 +27,6 @@ typedef RTL_CRITICAL_SECTION CRITICAL_SECTION;
 
 namespace FiberTaskingLib {
 
-class TaggedHeap;
 struct MemoryPage;
 
 #define TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME "TaggedHeapLinearAllocator"
