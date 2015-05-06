@@ -16,8 +16,16 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 
 <br />
 
+
+##Platforms
+Currently the library is Windows exclusive. This is mostly due to the fact that I happened to start the project with the Win32 API since it was so simple. The Win32 API has functions for easily creating / working with fibers. 
+
+When I looked into trying to create support for *nix, I ran into problems. In *nix, the only similar API is the [setcontext family of functions](http://en.wikipedia.org/wiki/Setcontext). However, as of POSIX 1-2004, the functions were depreciated, and of POSIX 1-2008, they were removed. So currently, the only options are to use an old API, or create the fiber API from scratch. If anyone has another option, please let me know. I would be happy to try to implement this library on another platform.
+
+<br />
+
 ##How it works
-Honestly, the best explanation is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here
+Honestly, the best explanation is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here.
 
 <br />
 
