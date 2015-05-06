@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/yhx0vf00v45m8qcr?svg=true)](https://ci.appveyor.com/project/RichieSams/fibertaskinglib)
+
 **Fiber Tasking Lib**
 ====================
 
@@ -15,7 +17,7 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 <br />
 
 ##How it works
-Honestly, the best explaination is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here
+Honestly, the best explanation is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here
 
 <br />
 
