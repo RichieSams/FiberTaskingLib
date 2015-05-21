@@ -66,6 +66,8 @@ bool ReadWriteLock::TryUpgradeReadToWriteLock() {
 		// Yield timeslice
 		SwitchToThread();
 	}
+
+	return true;
 }
 
 } // End of namespace FiberTaskingLib
