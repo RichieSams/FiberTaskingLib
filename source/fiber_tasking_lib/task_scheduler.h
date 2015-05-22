@@ -51,7 +51,7 @@ typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
                                                          void *arg)
 
 
-typedef std::atomic_char32_t AtomicCounter;
+typedef std::atomic_long AtomicCounter;
 
 
 struct Task {
