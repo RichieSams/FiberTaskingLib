@@ -59,7 +59,6 @@ struct Task {
 	void *ArgData;
 };
 
-#define FIBER_POOL_SIZE 25
 
 /**
  * A class that enables task-based multithreading.
@@ -136,7 +135,7 @@ public:
 	 *
 	 * @param globalArgs    A valid GlobalArgs instance
 	 */
-	void Initialize(GlobalArgs *globalArgs);
+	void Initialize(uint fiberPoolSize, GlobalArgs *globalArgs);
 
 	/**
 	 * Adds a task to the internal queue. 

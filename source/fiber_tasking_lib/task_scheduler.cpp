@@ -133,8 +133,8 @@ TaskScheduler::~TaskScheduler() {
 	DeleteCriticalSection(&m_waitingTaskLock);
 }
 
-void TaskScheduler::Initialize(GlobalArgs *globalArgs) {
-	for (uint i = 0; i < FIBER_POOL_SIZE; ++i) {
+void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
+	for (uint i = 0; i < fiberPoolSize; ++i) {
 		m_fiberPool.enqueue(CreateFiberEx(524288, 0, FIBER_FLAG_FLOAT_SWITCH, FiberStart, globalArgs));
 	}
 

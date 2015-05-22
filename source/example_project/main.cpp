@@ -48,7 +48,7 @@ TASK_ENTRY_POINT(FirstLevel) {
 
 int main() {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(globalArgs);
+	globalArgs->TaskScheduler.Initialize(25, globalArgs);
 	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
 
 
