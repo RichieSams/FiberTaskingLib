@@ -71,28 +71,28 @@
     <OutDir>..\build\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>..\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>..\libs\gtest\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\libs\gtest\include;..\source;$(IncludePath)</IncludePath>
+    <IncludePath>..\libs\gtest\include;..\source;..\libs\EASTL\include;..\libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\build\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>..\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>..\libs\gtest\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\libs\gtest\include;..\source;$(IncludePath)</IncludePath>
+    <IncludePath>..\libs\gtest\include;..\source;..\libs\EASTL\include;..\libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\build\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>..\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>..\libs\gtest\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\libs\gtest\include;..\source;$(IncludePath)</IncludePath>
+    <IncludePath>..\libs\gtest\include;..\source;..\libs\EASTL\include;..\libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\build\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>..\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>..\libs\gtest\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\libs\gtest\include;..\source;$(IncludePath)</IncludePath>
+    <IncludePath>..\libs\gtest\include;..\source;..\libs\EASTL\include;..\libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -159,12 +159,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\fiber_tasking_lib_test\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="FiberTaskingLib.vcxproj">
       <Project>{a9751c33-878c-43ee-af0b-f77f50fc2dd6}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\test\calc_triangle_num.cpp" />
+    <ClCompile Include="..\test\eastl_defaults.cpp" />
+    <ClCompile Include="..\test\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

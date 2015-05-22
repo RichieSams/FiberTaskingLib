@@ -1,6 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\source\fiber_tasking_lib_test\main.cpp" />
+    <ClCompile Include="..\test\main.cpp" />
+    <ClCompile Include="..\test\eastl_defaults.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\calc_triangle_num.cpp">
+      <Filter>ConcurrentAdd</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{4efa05ef-4b3b-463c-9071-a4e72387cc14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ConcurrentAdd">
+      <UniqueIdentifier>{78562403-ced7-4c54-88f3-76684956f389}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
