@@ -6,14 +6,14 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\test\calc_triangle_num.cpp">
-      <Filter>ConcurrentAdd</Filter>
+      <Filter>CalcTriangleNum</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
       <UniqueIdentifier>{4efa05ef-4b3b-463c-9071-a4e72387cc14}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ConcurrentAdd">
+    <Filter Include="CalcTriangleNum">
       <UniqueIdentifier>{78562403-ced7-4c54-88f3-76684956f389}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
