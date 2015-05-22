@@ -174,7 +174,6 @@
     <ClInclude Include="..\libs\EASTL\include\EABase\config\eaplatform.h">
       <Filter>libs\EASTL\include\EABase\config</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\fiber_tasking_lib\memory.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="libs">
