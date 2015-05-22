@@ -66,7 +66,19 @@ void TaskScheduler::FiberStart(void *arg) {
 		}
 		if (waitingTaskReady) {
 			waitingTask = *iter;
-			taskScheduler->m_waitingTasks.erase(iter);
+			
+			// Optimization for removing an item from a vector as suggested by ryeguy on reddit
+			// Explained here: http://stackoverflow.com/questions/4442477/remove-ith-item-from-c-stdvector/4442529#4442529
+			// Essentially, rather than forcing a memcpy to shift all the remaining elements down after the erase,
+			// we move the last element into the place where the erased element was. Then we pop off the last element
+			
+			// Check that we're not already the last item
+			// Move assignment to self is not defined
+			if (iter != (--taskScheduler->m_waitingTasks.end())) {
+				*iter = std::move(taskScheduler->m_waitingTasks.back());
+			}
+			taskScheduler->m_waitingTasks.pop_back();
+
 		}
 		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
 
