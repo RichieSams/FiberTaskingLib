@@ -8,6 +8,9 @@
     <ClCompile Include="..\test\calc_triangle_num.cpp">
       <Filter>CalcTriangleNum</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\producer_consumer.cpp">
+      <Filter>ProducerConsumer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -15,6 +18,9 @@
     </Filter>
     <Filter Include="CalcTriangleNum">
       <UniqueIdentifier>{78562403-ced7-4c54-88f3-76684956f389}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProducerConsumer">
+      <UniqueIdentifier>{02770757-a31f-4531-8d98-25b888cebedc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
