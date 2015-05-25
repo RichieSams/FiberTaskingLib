@@ -11,6 +11,9 @@
     <ClCompile Include="..\test\producer_consumer.cpp">
       <Filter>ProducerConsumer</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\maze.cpp">
+      <Filter>Maze</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -22,5 +25,13 @@
     <Filter Include="ProducerConsumer">
       <UniqueIdentifier>{02770757-a31f-4531-8d98-25b888cebedc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Maze">
+      <UniqueIdentifier>{9868d855-abaf-4c46-bdc5-329697ad67f9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\test\maze10x10.h">
+      <Filter>Maze</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

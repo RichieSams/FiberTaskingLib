@@ -167,7 +167,11 @@
     <ClCompile Include="..\test\calc_triangle_num.cpp" />
     <ClCompile Include="..\test\eastl_defaults.cpp" />
     <ClCompile Include="..\test\main.cpp" />
+    <ClCompile Include="..\test\maze.cpp" />
     <ClCompile Include="..\test\producer_consumer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\test\maze10x10.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
