@@ -28,7 +28,7 @@ struct MemoryPage {
 		: PageSize(pageSize),
 		  Data(::operator new(pageSize)) {}
 	~MemoryPage() {
-		delete Data;
+		::operator delete(Data);
 	}
 
 	const size_t PageSize;

@@ -37,7 +37,7 @@ private:
               Data(::operator new(pageSize)) {
         }
 		~Page() {
-			delete Data;
+			::operator delete(Data);
 		}
     
         Page *NextPage;
