@@ -12,6 +12,7 @@
 #include "fiber_tasking_lib/read_write_lock.h"
 
 #include <cassert>
+#include <thread>
 
 
 namespace FiberTaskingLib {
@@ -43,7 +44,7 @@ void ReadWriteLock::LockWrite() {
 	// Wait until all the reads are finished
 	while (m_readerCount.load(std::memory_order_relaxed) > 0) {
 		// Yield timeslice
-		SwitchToThread();
+		std::this_thread::yield();
 	}
 }
 
@@ -62,7 +63,7 @@ bool ReadWriteLock::TryUpgradeReadToWriteLock() {
 	// the last reader will have undefined behavior
 	while (m_readerCount.load(std::memory_order_relaxed) > 1) {
 		// Yield timeslice
-		SwitchToThread();
+		std::this_thread::yield();
 	}
 
 	return true;

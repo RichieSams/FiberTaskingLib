@@ -93,7 +93,7 @@ void TaskScheduler::FiberStart(void *arg) {
 
 		TaskBundle nextTask;
 		if (!taskScheduler->GetNextTask(&nextTask)) {
-			SwitchToThread();
+			std::this_thread::yield();
 		} else {
 			nextTask.Task.Function(&globalArgs->TaskScheduler, &globalArgs->Heap, &globalArgs->Allocator, nextTask.Task.ArgData);
 			nextTask.Counter->fetch_sub(1);
