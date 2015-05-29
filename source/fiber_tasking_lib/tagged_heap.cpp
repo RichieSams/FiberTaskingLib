@@ -75,6 +75,7 @@ void TaggedHeap::FreeAllPagesWithId(uint64 id) {
 
 	auto iter = m_usedMemory.find(id);
 	if (iter == m_usedMemory.end()) {
+		LeaveCriticalSection(&m_memoryLock);
 		return;
 	}
 
