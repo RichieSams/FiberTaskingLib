@@ -3,7 +3,7 @@ build/
 obj/
 *.pdb
 
-# Project files
+# MSVC Project files
 .vs/
 *.sdf
 *.opensdf
@@ -11,6 +11,7 @@ obj/
 *.vcxproj.*.nvuser
 
 
+# CLion Project files
 workspace.xml
 tasks.xml
-
+misc.xml
