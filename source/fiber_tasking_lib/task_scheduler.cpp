@@ -122,7 +122,9 @@ void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
 
 TaskScheduler::TaskScheduler()
 		: m_numThreads(0),
-		  m_threads(nullptr) {
+		  m_threads(nullptr),
+		  m_fiberSwitchingFibers(nullptr),
+		  m_counterWaitingFibers(nullptr) {
 	InitializeCriticalSection(&m_waitingTaskLock);
 	m_quit.store(false);
 }
