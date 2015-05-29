@@ -183,7 +183,7 @@ void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 		HANDLE threadHandle = (HANDLE)_beginthreadex(nullptr, 524288, ThreadStart, threadArgs, CREATE_SUSPENDED, nullptr);
 		m_threads[i] = threadHandle;
 
-		DWORD_PTR mask = 1 << i;
+		DWORD_PTR mask = 1ull << i;
 		SetThreadAffinityMask(threadHandle, mask);
 		ResumeThread(threadHandle);
 	}
