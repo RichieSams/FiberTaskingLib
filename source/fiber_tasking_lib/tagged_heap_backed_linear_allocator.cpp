@@ -14,9 +14,6 @@
 #include "fiber_tasking_lib/tagged_heap.h"
 #include "fiber_tasking_lib/memory.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 
 namespace FiberTaskingLib {
 
