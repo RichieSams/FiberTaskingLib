@@ -9,12 +9,12 @@
  * Copyright Adrian Astley 2015
  */
 
+#pragma once
+
 #include "fiber_tasking_lib/typedefs.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <atomic>
+#include <mutex>
 
 
 namespace FiberTaskingLib {
@@ -25,7 +25,7 @@ public:
 	~ReadWriteLock();
 
 private:
-	CRITICAL_SECTION m_writeLock;
+	std::mutex m_writeLock;
 
 	std::atomic_uint m_readerCount;
 

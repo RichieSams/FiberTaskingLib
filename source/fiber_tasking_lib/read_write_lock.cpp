@@ -19,17 +19,15 @@ namespace FiberTaskingLib {
 
 ReadWriteLock::ReadWriteLock() {
 	m_readerCount.store(0u, std::memory_order_relaxed);
-	InitializeCriticalSection(&m_writeLock);
 }
 
 ReadWriteLock::~ReadWriteLock() {
-	DeleteCriticalSection(&m_writeLock);
 }
 
 void ReadWriteLock::LockRead() {
-	EnterCriticalSection(&m_writeLock);
+	m_writeLock.lock();
 	m_readerCount.fetch_add(1);
-	LeaveCriticalSection(&m_writeLock);
+	m_writeLock.unlock();
 }
 
 void ReadWriteLock::UnlockRead() {
@@ -40,7 +38,7 @@ void ReadWriteLock::UnlockRead() {
 
 void ReadWriteLock::LockWrite() {
 	// Prevent further reads
-	EnterCriticalSection(&m_writeLock);
+	m_writeLock.lock();
 
 	// Wait until all the reads are finished
 	while (m_readerCount.load(std::memory_order_relaxed) > 0) {
@@ -50,17 +48,17 @@ void ReadWriteLock::LockWrite() {
 }
 
 void ReadWriteLock::UnlockWrite() {
-	LeaveCriticalSection(&m_writeLock);
+	m_writeLock.unlock();
 }
 
 bool ReadWriteLock::TryUpgradeReadToWriteLock() {
-	if (!TryEnterCriticalSection(&m_writeLock)) {
+	if (!m_writeLock.try_lock()) {
 		return false;
 	}
 
 	// Wait until all but 1 reads are finished
 	// We assume that the remaining reader is the one held by this thread
-	// So if this function is called without first aquiring a read lock
+	// So if this function is called without first acquiring a read lock,
 	// the last reader will have undefined behavior
 	while (m_readerCount.load(std::memory_order_relaxed) > 1) {
 		// Yield timeslice
