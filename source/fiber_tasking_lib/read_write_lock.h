@@ -27,7 +27,7 @@ public:
 private:
 	CRITICAL_SECTION m_writeLock;
 
-	std::atomic_uint32_t m_readerCount;
+	std::atomic_uint m_readerCount;
 
 public:
 	/**
