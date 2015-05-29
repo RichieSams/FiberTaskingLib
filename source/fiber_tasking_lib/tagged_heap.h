@@ -16,9 +16,7 @@
 
 #include <unordered_map>
 #include <queue>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <mutex>
 
 
 namespace FiberTaskingLib {
@@ -56,7 +54,7 @@ private:
 	std::unordered_map<uint64, MemoryNode *> m_usedMemory;
 	std::queue<MemoryNode *> m_freeMemory;
     
-	CRITICAL_SECTION m_memoryLock;
+	std::mutex m_memoryLock;
 
 public:
 	MemoryPage *GetNextFreePage(uint64 id);

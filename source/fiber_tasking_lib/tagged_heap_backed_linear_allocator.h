@@ -20,11 +20,6 @@
 #include <memory>
 
 
-struct _RTL_CRITICAL_SECTION;
-typedef struct _RTL_CRITICAL_SECTION RTL_CRITICAL_SECTION;
-typedef RTL_CRITICAL_SECTION CRITICAL_SECTION;
-
-
 namespace FiberTaskingLib {
 
 struct MemoryPage;
@@ -55,7 +50,7 @@ private:
 	byte **m_end;
 	byte **m_current;
 
-	CRITICAL_SECTION *m_lock;
+	std::mutex *m_lock;
 
 
 public:

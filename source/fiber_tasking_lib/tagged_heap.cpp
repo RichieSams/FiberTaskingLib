@@ -16,12 +16,9 @@ namespace FiberTaskingLib {
 
 TaggedHeap::TaggedHeap(size_t pageSize)
 		: m_pageSize(pageSize) {
-	InitializeCriticalSection(&m_memoryLock);
 }
 
 TaggedHeap::~TaggedHeap() {
-	DeleteCriticalSection(&m_memoryLock);
-
 	for (auto &kvp : m_usedMemory) {
 		MemoryNode *currentNode = kvp.second;
 		MemoryNode *nodeToDelete;
@@ -40,7 +37,7 @@ TaggedHeap::~TaggedHeap() {
 }
 
 MemoryPage *TaggedHeap::GetNextFreePage(uint64 id) {
-	EnterCriticalSection(&m_memoryLock);
+	m_memoryLock.lock();
 
 	MemoryNode *newNode;
 	if (m_freeMemory.empty()) {
@@ -55,7 +52,7 @@ MemoryPage *TaggedHeap::GetNextFreePage(uint64 id) {
 	if (iter == m_usedMemory.end()) {
 		m_usedMemory[id] = newNode;
 
-		LeaveCriticalSection(&m_memoryLock);
+		m_memoryLock.unlock();
 		return &newNode->Page;
 	}
 
@@ -66,16 +63,16 @@ MemoryPage *TaggedHeap::GetNextFreePage(uint64 id) {
 
 	head->NextNode = newNode;
 
-	LeaveCriticalSection(&m_memoryLock);
+	m_memoryLock.unlock();
 	return &newNode->Page;
 }
 
 void TaggedHeap::FreeAllPagesWithId(uint64 id) {
-	EnterCriticalSection(&m_memoryLock);
+	m_memoryLock.unlock();
 
 	auto iter = m_usedMemory.find(id);
 	if (iter == m_usedMemory.end()) {
-		LeaveCriticalSection(&m_memoryLock);
+		m_memoryLock.unlock();
 		return;
 	}
 
@@ -87,7 +84,7 @@ void TaggedHeap::FreeAllPagesWithId(uint64 id) {
 
 	m_usedMemory.erase(id);
 
-	LeaveCriticalSection(&m_memoryLock);
+	m_memoryLock.unlock();
 }
 
 } // End of namespace FiberTaskingLib

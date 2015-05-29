@@ -75,8 +75,7 @@ TaggedHeapBackedLinearAllocator &TaggedHeapBackedLinearAllocator::operator=(cons
 
 
 void TaggedHeapBackedLinearAllocator::init(TaggedHeap *heap, uint64 id) {
-	m_lock = new CRITICAL_SECTION();
-	InitializeCriticalSection(m_lock);
+	m_lock = new std::mutex();
 
 	m_heap = heap;
 	m_id = id;
@@ -95,8 +94,6 @@ void TaggedHeapBackedLinearAllocator::reset(uint64 id) {
 }
 
 void TaggedHeapBackedLinearAllocator::destroy() {
-	DeleteCriticalSection(m_lock);
-
 	delete m_currentPage;
 	delete m_current;
 	delete m_end;
@@ -108,7 +105,7 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, int flags) {
 	EASTL_ASSERT(m_currentPage);
 	EASTL_ASSERT(n <= (*m_currentPage)->PageSize);
 
-	EnterCriticalSection(m_lock);
+	m_lock->lock();
 
 	if (*m_current + n >= *m_end) {
 		AskForNewPageFromHeap();
@@ -117,7 +114,7 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, int flags) {
 	void* userPtr = *m_current;
 	*m_current += n;
 
-	LeaveCriticalSection(m_lock);
+	m_lock->unlock();
 
 	return userPtr;
 }
@@ -126,7 +123,7 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, size_t alignment, size
 	EASTL_ASSERT(m_currentPage);
 	EASTL_ASSERT(n <= (*m_currentPage)->PageSize);
 
-	EnterCriticalSection(m_lock);
+	m_lock->lock();
 
 	if (*m_current + n >= *m_end) {
 		AskForNewPageFromHeap();
@@ -143,8 +140,8 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, size_t alignment, size
 		start = *m_current;
 	}
 
-	*m_current += ((byte *)userPtr + n) - start;
-	LeaveCriticalSection(m_lock);
+	*m_current += ((byte *)userPtr + n) - (byte *)start;
+	m_lock->unlock();
 
 	return userPtr;
 }

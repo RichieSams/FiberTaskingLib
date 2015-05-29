@@ -17,10 +17,9 @@
 
 #include <atomic>
 #include <list>
-#include <memory>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mutex>
 
 
 namespace FiberTaskingLib {
@@ -108,7 +107,7 @@ private:
 
 	moodycamel::ConcurrentQueue<TaskBundle> m_taskQueue;
 	std::list<WaitingTask> m_waitingTasks;
-	CRITICAL_SECTION m_waitingTaskLock;
+	std::mutex m_waitingTaskLock;
 
 	moodycamel::BlockingConcurrentQueue<void *> m_fiberPool;
 

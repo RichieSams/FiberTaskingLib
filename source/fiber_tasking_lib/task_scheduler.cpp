@@ -56,7 +56,7 @@ void TaskScheduler::FiberStart(void *arg) {
 		WaitingTask waitingTask;
 		bool waitingTaskReady = false;
 
-		EnterCriticalSection(&taskScheduler->m_waitingTaskLock);
+		taskScheduler->m_waitingTaskLock.lock();
 		auto iter = taskScheduler->m_waitingTasks.begin();
 		for ( ; iter != taskScheduler->m_waitingTasks.end(); ++iter) {
 			if (iter->Counter->load() == iter->Value) {
@@ -80,7 +80,7 @@ void TaskScheduler::FiberStart(void *arg) {
 			taskScheduler->m_waitingTasks.pop_back();
 
 		}
-		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
+		taskScheduler->m_waitingTaskLock.unlock();
 
 		if (waitingTaskReady) {
 			taskScheduler->SwitchFibers(waitingTask.Fiber);
@@ -110,9 +110,9 @@ void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
-		EnterCriticalSection(&taskScheduler->m_waitingTaskLock);
+		taskScheduler->m_waitingTaskLock.lock();
 		taskScheduler->m_waitingTasks.emplace_back(tls_currentFiber, tls_waitingCounter, tls_waitingValue);
-		LeaveCriticalSection(&taskScheduler->m_waitingTaskLock);
+		taskScheduler->m_waitingTaskLock.unlock();
 
 		SwitchToFiber(tls_fiberToSwitchTo);
 	}
@@ -125,7 +125,6 @@ TaskScheduler::TaskScheduler()
 		  m_threads(nullptr),
 		  m_fiberSwitchingFibers(nullptr),
 		  m_counterWaitingFibers(nullptr) {
-	InitializeCriticalSection(&m_waitingTaskLock);
 	m_quit.store(false);
 }
 
@@ -143,8 +142,6 @@ TaskScheduler::~TaskScheduler() {
 	}
 	delete[] m_fiberSwitchingFibers;
 	delete[] m_counterWaitingFibers;
-
-	DeleteCriticalSection(&m_waitingTaskLock);
 }
 
 void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
