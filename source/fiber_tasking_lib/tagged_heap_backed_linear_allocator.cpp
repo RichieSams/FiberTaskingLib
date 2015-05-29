@@ -12,6 +12,7 @@
 #include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 #include "fiber_tasking_lib/tagged_heap.h"
+#include "fiber_tasking_lib/memory.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
