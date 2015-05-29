@@ -75,6 +75,7 @@
     <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\thread_abstraction.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\typedefs.h" />
   </ItemGroup>
   <ItemGroup>

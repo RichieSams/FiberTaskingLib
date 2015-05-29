@@ -14,11 +14,6 @@
 #include "fiber_tasking_lib/global_args.h"
 #include "fiber_tasking_lib/fiber_abstraction.h"
 
-#include <process.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-
 
 namespace FiberTaskingLib {
 
@@ -36,7 +31,7 @@ struct ThreadStartArgs {
 	uint threadId;
 };
 
-uint TaskScheduler::ThreadStart(void *arg) {
+THREAD_FUNC_DECL TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = (ThreadStartArgs *)arg;
 	tls_threadId = threadArgs->threadId;
 	GlobalArgs *globalArgs = threadArgs->globalArgs;
@@ -148,16 +143,13 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_counterWaitingFibers;
 }
 
-void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
+bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	for (uint i = 0; i < fiberPoolSize; ++i) {
 		m_fiberPool.enqueue(FTLCreateFiber(524288, FiberStart, globalArgs));
 	}
 
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-
 	// Create an additional thread for each logical processor
-	m_numThreads = sysinfo.dwNumberOfProcessors;
+	m_numThreads = FTLGetNumHardwareThreads();
 	m_threads = new HANDLE[m_numThreads];
 	m_fiberSwitchingFibers = new void *[m_numThreads];
 	m_counterWaitingFibers = new void *[m_numThreads];
@@ -170,9 +162,9 @@ void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	}
 
 	// Set the affinity for the current thread and convert it to a fiber
-	SetThreadAffinityMask(GetCurrentThread(), 1);
+	FTLSetCurrentThreadAffinity(1);
 	FTLConvertThreadToFiber();
-	m_threads[0] = GetCurrentThread();
+	m_threads[0] = FTLGetCurrentThread();
 	tls_threadId = 0;
 	
 	// Create the remaining threads
@@ -181,13 +173,14 @@ void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 		threadArgs->globalArgs = globalArgs;
 		threadArgs->threadId = i;
 
-		HANDLE threadHandle = (HANDLE)_beginthreadex(nullptr, 524288, ThreadStart, threadArgs, CREATE_SUSPENDED, nullptr);
+		ThreadId threadHandle;
+		if (!FTLCreateThread(&threadHandle, 524288, ThreadStart, threadArgs, i)) {
+			return false;
+		}
 		m_threads[i] = threadHandle;
-
-		DWORD_PTR mask = 1ull << i;
-		SetThreadAffinityMask(threadHandle, mask);
-		ResumeThread(threadHandle);
 	}
+
+	return true;
 }
 
 std::shared_ptr<AtomicCounter> TaskScheduler::AddTask(Task task) {
@@ -246,12 +239,12 @@ void TaskScheduler::Quit() {
 
 	std::vector<HANDLE> workerThreads;
 	for (uint i = 0; i < m_numThreads; ++i) {
-		if (m_threads != GetCurrentThread()) {
+		if (m_threads != FTLGetCurrentThread()) {
 			workerThreads.push_back(m_threads[i]);
 		}
 	}
 
-	DWORD result = WaitForMultipleObjects((DWORD)workerThreads.size(), &workerThreads[0], true, INFINITE);
+	FTLJoinThreads(workerThreads.size(), &workerThreads[0]);
 
 	for (auto &workerThread : workerThreads) {
 		CloseHandle(workerThread);

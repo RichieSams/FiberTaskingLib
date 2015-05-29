@@ -13,6 +13,7 @@
 
 #include "fiber_tasking_lib/typedefs.h"
 #include "fiber_tasking_lib/portability.h"
+#include "fiber_tasking_lib/thread_abstraction.h"
 
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
@@ -72,8 +73,8 @@ public:
 	~TaskScheduler();
 
 private:
-	DWORD m_numThreads;
-	HANDLE *m_threads;
+	std::size_t m_numThreads;
+	ThreadId *m_threads;
 
 	/**
 	 * Holds a task that is ready to to be executed by the worker threads
@@ -133,7 +134,7 @@ public:
 	 *
 	 * @param globalArgs    A valid GlobalArgs instance
 	 */
-	void Initialize(uint fiberPoolSize, GlobalArgs *globalArgs);
+	bool Initialize(uint fiberPoolSize, GlobalArgs *globalArgs);
 
 	/**
 	 * Adds a task to the internal queue. 
@@ -190,7 +191,7 @@ private:
 	 * @param arg    An instance of ThreadStartArgs
 	 * @return       The return status of the thread
 	 */
-	static uint STDCALL ThreadStart(void *arg);
+	static THREAD_FUNC_DECL ThreadStart(void *arg);
 	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
