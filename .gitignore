@@ -11,3 +11,6 @@ obj/
 *.vcxproj.*.nvuser
 
 
+workspace.xml
+tasks.xml
+
