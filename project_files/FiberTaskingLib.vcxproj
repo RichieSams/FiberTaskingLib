@@ -66,6 +66,7 @@
     <ClInclude Include="..\libs\EASTL\include\EASTL\utility.h" />
     <ClInclude Include="..\libs\EASTL\include\EASTL\vector.h" />
     <ClInclude Include="..\libs\EASTL\include\EASTL\vector_map.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\fiber_abstraction.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\basic_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\read_write_lock.h" />
@@ -82,6 +83,7 @@
     <ClCompile Include="..\libs\EASTL\src\red_black_tree.cpp" />
     <ClCompile Include="..\libs\EASTL\src\string.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\basic_linear_allocator.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\fiber_abstraction.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\read_write_lock.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.cpp" />

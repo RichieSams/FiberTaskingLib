@@ -12,8 +12,12 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 
 #include "fiber_tasking_lib/global_args.h"
+#include "fiber_tasking_lib/fiber_abstraction.h"
 
 #include <process.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
 
 
 namespace FiberTaskingLib {
@@ -40,10 +44,10 @@ uint TaskScheduler::ThreadStart(void *arg) {
 	// Clean up
 	delete threadArgs;
 
-	ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
+	FTLConvertThreadToFiber();
 	FiberStart(globalArgs);
 
-	ConvertFiberToThread();
+	FTLConvertFiberToThread();
 	return 1;
 }
 
@@ -102,7 +106,7 @@ void __stdcall TaskScheduler::FiberSwitchStart(void *arg) {
 
 	while (true) {
 		taskScheduler->m_fiberPool.enqueue(tls_currentFiber);
-		SwitchToFiber(tls_fiberToSwitchTo);
+		FTLSwitchToFiber(tls_fiberToSwitchTo);
 	}
 }
 
@@ -114,7 +118,7 @@ void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
 		taskScheduler->m_waitingTasks.emplace_back(tls_currentFiber, tls_waitingCounter, tls_waitingValue);
 		taskScheduler->m_waitingTaskLock.unlock();
 
-		SwitchToFiber(tls_fiberToSwitchTo);
+		FTLSwitchToFiber(tls_fiberToSwitchTo);
 	}
 }
 
@@ -133,12 +137,12 @@ TaskScheduler::~TaskScheduler() {
 
 	void *fiber;
 	while (m_fiberPool.try_dequeue(fiber)) {
-		DeleteFiber(fiber);
+		FTLDeleteFiber(fiber);
 	}
 
 	for (uint i = 0; i < m_numThreads; ++i) {
-		DeleteFiber(m_fiberSwitchingFibers[i]);
-		DeleteFiber(m_counterWaitingFibers[i]);
+		FTLDeleteFiber(m_fiberSwitchingFibers[i]);
+		FTLDeleteFiber(m_counterWaitingFibers[i]);
 	}
 	delete[] m_fiberSwitchingFibers;
 	delete[] m_counterWaitingFibers;
@@ -146,7 +150,7 @@ TaskScheduler::~TaskScheduler() {
 
 void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	for (uint i = 0; i < fiberPoolSize; ++i) {
-		m_fiberPool.enqueue(CreateFiberEx(524288, 0, FIBER_FLAG_FLOAT_SWITCH, FiberStart, globalArgs));
+		m_fiberPool.enqueue(FTLCreateFiber(524288, FiberStart, globalArgs));
 	}
 
 	SYSTEM_INFO sysinfo;
@@ -161,13 +165,13 @@ void TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 
 	// Create a switching fiber for each thread
 	for (uint i = 0; i < m_numThreads; ++i) {
-		m_fiberSwitchingFibers[i] = CreateFiberEx(32768, 0, FIBER_FLAG_FLOAT_SWITCH, FiberSwitchStart, &globalArgs->TaskScheduler);
-		m_counterWaitingFibers[i] = CreateFiberEx(32768, 0, FIBER_FLAG_FLOAT_SWITCH, CounterWaitStart, &globalArgs->TaskScheduler);
+		m_fiberSwitchingFibers[i] = FTLCreateFiber(32768, FiberSwitchStart, &globalArgs->TaskScheduler);
+		m_counterWaitingFibers[i] = FTLCreateFiber(32768, CounterWaitStart, &globalArgs->TaskScheduler);
 	}
 
 	// Set the affinity for the current thread and convert it to a fiber
 	SetThreadAffinityMask(GetCurrentThread(), 1);
-	ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
+	FTLConvertThreadToFiber();
 	m_threads[0] = GetCurrentThread();
 	tls_threadId = 0;
 	
@@ -215,10 +219,10 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 }
 
 void TaskScheduler::SwitchFibers(void *fiberToSwitchTo) {
-	tls_currentFiber = GetCurrentFiber();
+	tls_currentFiber = FTLGetCurrentFiber();
 	tls_fiberToSwitchTo = fiberToSwitchTo;
 
-	SwitchToFiber(m_fiberSwitchingFibers[tls_threadId]);
+	FTLSwitchToFiber(m_fiberSwitchingFibers[tls_threadId]);
 }
 
 void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int value) {
@@ -229,16 +233,16 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 	// Switch to a new Fiber
 	m_fiberPool.wait_dequeue(tls_fiberToSwitchTo);
 
-	tls_currentFiber = GetCurrentFiber();
+	tls_currentFiber = FTLGetCurrentFiber();
 	tls_waitingCounter = counter.get();
 	tls_waitingValue = value;
 	
-	SwitchToFiber(m_counterWaitingFibers[tls_threadId]);
+	FTLSwitchToFiber(m_counterWaitingFibers[tls_threadId]);
 }
 
 void TaskScheduler::Quit() {
 	m_quit.store(true);
-	ConvertFiberToThread();
+	FTLConvertFiberToThread();
 
 	std::vector<HANDLE> workerThreads;
 	for (uint i = 0; i < m_numThreads; ++i) {
