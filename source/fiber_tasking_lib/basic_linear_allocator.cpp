@@ -22,7 +22,7 @@
 
 namespace FiberTaskingLib {
 
-BasicLinearAllocator::BasicLinearAllocator(size_t pageSize)
+BasicLinearAllocator::BasicLinearAllocator(std::size_t pageSize)
 		: m_pageSize(pageSize),
 		  m_numPages(1u) {
 	m_currentPage = m_firstPage = new Page(pageSize);
@@ -42,7 +42,7 @@ BasicLinearAllocator::~BasicLinearAllocator() {
 	} while (currentPage != nullptr);
 }
 
-void *BasicLinearAllocator::Allocate(size_t size) {
+void *BasicLinearAllocator::Allocate(std::size_t size) {
     if (m_current + size >= m_end) {
 		// Check if we already have a new page allocated
 		if (m_currentPage->NextPage != nullptr) {

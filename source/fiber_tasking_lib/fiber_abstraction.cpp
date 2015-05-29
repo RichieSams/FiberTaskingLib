@@ -40,7 +40,7 @@ namespace FiberTaskingLib {
 	void *FTLGetCurrentFiber() {
 		return GetCurrentFiber();
 	}
-#elif defined(WIN32) && (defined(__GNUC__) || defined(__GNUG__)
+#elif defined(WIN32) && (defined(__GNUC__) || defined(__GNUG__))
 
 
 

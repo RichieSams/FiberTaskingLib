@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 
 namespace FiberTaskingLib {
 	// Declarations
@@ -19,7 +21,7 @@ namespace FiberTaskingLib {
 	void *FTLConvertThreadToFiber();
 	bool FTLConvertFiberToThread();
 
-	void *FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg);
+	void *FTLCreateFiber(std::size_t stackSize, FiberStartRoutine startRoutine, void *arg);
 	void FTLDeleteFiber(void *fiber);
 
 	void FTLSwitchToFiber(void *fiber);

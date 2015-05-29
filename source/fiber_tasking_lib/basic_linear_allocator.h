@@ -27,12 +27,12 @@ namespace FiberTaskingLib {
 
 class BasicLinearAllocator {
 public:
-    BasicLinearAllocator(size_t pageSize);
+    BasicLinearAllocator(std::size_t pageSize);
 	~BasicLinearAllocator();
 
 private:
     struct Page {
-        Page(size_t pageSize)
+        Page(std::size_t pageSize)
             : NextPage(nullptr),
               Data(::operator new(pageSize)) {
         }
@@ -44,7 +44,7 @@ private:
         void *Data;
     };
 
-    const size_t m_pageSize;
+    const std::size_t m_pageSize;
     
 	uint m_numPages;
 
@@ -55,7 +55,7 @@ private:
     byte *m_current;
     
 public:
-    void *Allocate(size_t size);
+    void *Allocate(std::size_t size);
     inline void Reset() {  
 		m_currentPage = m_firstPage; 
 		m_current = reinterpret_cast<byte *>(m_currentPage->Data);
