@@ -22,6 +22,8 @@
 
 #include "fiber_tasking_lib/typedefs.h"
 
+#include <new>
+
 
 namespace FiberTaskingLib {
 
