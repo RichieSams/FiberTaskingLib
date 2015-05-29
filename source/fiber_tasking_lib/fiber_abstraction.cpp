@@ -14,8 +14,8 @@
 
 namespace FiberTaskingLib {
 
-#if defined(_WIN32)
-	// Windows implementation
+#if defined(_MSC_VER)
+	// VC++ implementation
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 
@@ -40,8 +40,12 @@ namespace FiberTaskingLib {
 	void *FTLGetCurrentFiber() {
 		return GetCurrentFiber();
 	}
+#elif defined(WIN32) && (defined(__GNUC__) || defined(__GNUG__)
 
-#elif defined(__linux__) 
+
+
+
+#elif defined(__linux__)
 
 
 	
