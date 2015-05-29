@@ -12,6 +12,7 @@
 #pragma once
 
 #include "fiber_tasking_lib/typedefs.h"
+#include "fiber_tasking_lib/portability.h"
 
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
@@ -189,25 +190,25 @@ private:
 	 * @param arg    An instance of ThreadStartArgs
 	 * @return       The return status of the thread
 	 */
-	static uint __stdcall ThreadStart(void *arg);
+	static uint STDCALL ThreadStart(void *arg);
 	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
 	 * @param arg    An instance of GlobalArgs
 	 */
-	static void __stdcall FiberStart(void *arg);
+	static void STDCALL FiberStart(void *arg);
 	/**
 	 * The fiberProc function for the fiber switching helper fiber
 	 *
 	 * @param arg    An instance of TaskScheduler
 	 */
-	static void __stdcall FiberSwitchStart(void *arg);
+	static void STDCALL FiberSwitchStart(void *arg);
 	/**
 	 * The fiberProc function for the counter wait helper fiber
 	 *
 	 * @param arg    An instance of TaskScheduler  
 	 */
-	static void __stdcall CounterWaitStart(void *arg);
+	static void STDCALL CounterWaitStart(void *arg);
 };
 
 } // End of namespace FiberTaskingLib

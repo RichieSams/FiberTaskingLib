@@ -177,6 +177,7 @@
     </ClInclude>
     <ClInclude Include="..\source\fiber_tasking_lib\fiber_abstraction.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\memory.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\portability.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="libs">

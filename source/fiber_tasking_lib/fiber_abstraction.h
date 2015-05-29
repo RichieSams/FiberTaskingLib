@@ -11,12 +11,14 @@
 
 #pragma once
 
+#include "fiber_tasking_lib/portability.h"
+
 #include <cstddef>
 
 
 namespace FiberTaskingLib {
 	// Declarations
-	typedef void (__stdcall *FiberStartRoutine)(void *arg);
+	typedef void (STDCALL *FiberStartRoutine)(void *arg);
 
 	void *FTLConvertThreadToFiber();
 	bool FTLConvertFiberToThread();

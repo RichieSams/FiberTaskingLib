@@ -70,6 +70,7 @@
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\basic_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\memory.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\portability.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\read_write_lock.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.h" />

@@ -101,7 +101,7 @@ void TaskScheduler::FiberStart(void *arg) {
 	}
 }
 
-void __stdcall TaskScheduler::FiberSwitchStart(void *arg) {
+void STDCALL TaskScheduler::FiberSwitchStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
@@ -110,7 +110,7 @@ void __stdcall TaskScheduler::FiberSwitchStart(void *arg) {
 	}
 }
 
-void __stdcall TaskScheduler::CounterWaitStart(void *arg) {
+void STDCALL TaskScheduler::CounterWaitStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
