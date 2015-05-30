@@ -56,7 +56,7 @@ struct ThreadStartArgs {
 
 THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = (ThreadStartArgs *)arg;
-	#if defined(_MCS_VER)
+	#if defined(_MSC_VER)
 		tls_threadId = threadArgs->threadId;
 	#else
 		g_threadIdToIndexMap[FTLGetCurrentThread()] = threadArgs->threadId;
@@ -128,7 +128,7 @@ void STDCALL TaskScheduler::FiberSwitchStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
-		#if defined(_MCS_VER)
+		#if defined(_MSC_VER)
 			taskScheduler->m_fiberPool.enqueue(tls_currentFiber);
 			FTLSwitchToFiber(tls_fiberToSwitchTo);
 		#else
@@ -142,7 +142,7 @@ void STDCALL TaskScheduler::CounterWaitStart(void *arg) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
 
 	while (true) {
-		#if defined(_MCS_VER)
+		#if defined(_MSC_VER)
 			taskScheduler->m_waitingTaskLock.lock();
 			taskScheduler->m_waitingTasks.emplace_back(tls_currentFiber, tls_waitingCounter, tls_waitingValue);
 			taskScheduler->m_waitingTaskLock.unlock();
@@ -257,7 +257,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 }
 
 void TaskScheduler::SwitchFibers(void *fiberToSwitchTo) {
-	#if defined(_MCS_VER)
+	#if defined(_MSC_VER)
 		tls_currentFiber = FTLGetCurrentFiber();
 		tls_fiberToSwitchTo = fiberToSwitchTo;
 
@@ -275,7 +275,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 		return;
 	}
 
-	#if defined(_MCS_VER)
+	#if defined(_MSC_VER)
 		// Switch to a new Fiber
 		m_fiberPool.wait_dequeue(tls_fiberToSwitchTo);
 
