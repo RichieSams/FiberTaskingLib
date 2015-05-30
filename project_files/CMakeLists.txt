@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.2)
 project(FiberTaskingLib)
 
+if(WIN32)
+	message(FATAL_ERROR "For Windows builds, use the supplied Visual Studio files")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 include_directories(../source ../libs ../libs/EASTL/include)
