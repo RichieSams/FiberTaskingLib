@@ -20,12 +20,12 @@ namespace FiberTaskingLib {
 
 struct GlobalArgs {
 	GlobalArgs()
-		: Heap(2097152) {
+		: g_heap(2097152) {
 	}
 
-	TaskScheduler TaskScheduler;
-	TaggedHeap Heap;
-	TaggedHeapBackedLinearAllocator Allocator;
+	TaskScheduler g_taskScheduler;
+	TaggedHeap g_heap;
+	TaggedHeapBackedLinearAllocator g_allocator;
 };
 
 } // End of namespace FiberTaskingLib

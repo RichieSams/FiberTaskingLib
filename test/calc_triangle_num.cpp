@@ -49,8 +49,8 @@ TASK_ENTRY_POINT(AddNumberSubset) {
  */
 TEST(FiberTaskingLib, CalcTriangleNum) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(25, globalArgs);
-	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
+	globalArgs->g_taskScheduler.Initialize(25, globalArgs);
+	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
 
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
@@ -78,8 +78,8 @@ TEST(FiberTaskingLib, CalcTriangleNum) {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(numTasks, tasks);
-	globalArgs->TaskScheduler.WaitForCounter(counter, 0);
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->g_taskScheduler.AddTasks(numTasks, tasks);
+	globalArgs->g_taskScheduler.WaitForCounter(counter, 0);
 
 
 	// Add the results
@@ -93,8 +93,8 @@ TEST(FiberTaskingLib, CalcTriangleNum) {
 
 
 	// Cleanup
-	globalArgs->TaskScheduler.Quit();
-	globalArgs->Allocator.destroy();
+	globalArgs->g_taskScheduler.Quit();
+	globalArgs->g_allocator.destroy();
 	delete globalArgs;
 	delete[] subsets;
 }

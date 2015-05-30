@@ -81,7 +81,7 @@ private:
 	 * Counter is the counter for the task(group). It will be decremented when the task completes
 	 */
 	struct TaskBundle {
-		Task Task;
+		Task TaskToExecute;
 		std::shared_ptr<AtomicCounter> Counter;
 	};
 

@@ -116,8 +116,8 @@ TASK_ENTRY_POINT(CheckBranch) {
 
 TEST(FunctionalTest, Maze10x10) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(110, globalArgs);
-	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
+	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
+	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
 
 	FiberTaskingLib::AtomicCounter *completed = new FiberTaskingLib::AtomicCounter();
 	completed->store(0);
@@ -131,14 +131,14 @@ TEST(FunctionalTest, Maze10x10) {
 	PrintMaze(*startBranch->Maze);
 
 	FiberTaskingLib::Task task = {CheckBranch, startBranch};
-	globalArgs->TaskScheduler.AddTask(task);
+	globalArgs->g_taskScheduler.AddTask(task);
 
-	globalArgs->TaskScheduler.WaitForCounter(std::shared_ptr<FiberTaskingLib::AtomicCounter>(completed), 1);
+	globalArgs->g_taskScheduler.WaitForCounter(std::shared_ptr<FiberTaskingLib::AtomicCounter>(completed), 1);
 
 	PrintMaze(*startBranch->Maze);
 
 	// Cleanup
-	globalArgs->TaskScheduler.Quit();
-	globalArgs->Allocator.destroy();
+	globalArgs->g_taskScheduler.Quit();
+	globalArgs->g_allocator.destroy();
 	delete globalArgs;
 }

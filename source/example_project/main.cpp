@@ -48,8 +48,8 @@ TASK_ENTRY_POINT(FirstLevel) {
 
 int main() {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(25, globalArgs);
-	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
+	globalArgs->g_taskScheduler.Initialize(25, globalArgs);
+	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
 
 
 	for (uint j = 0; j < 10; ++j) {
@@ -58,15 +58,15 @@ int main() {
 			tasks[i] = {FirstLevel, nullptr};
 		}
 
-		std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(10, tasks);
-		globalArgs->TaskScheduler.WaitForCounter(counter, 0);
+		std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->g_taskScheduler.AddTasks(10, tasks);
+		globalArgs->g_taskScheduler.WaitForCounter(counter, 0);
 
-		globalArgs->Heap.FreeAllPagesWithId(1234);
-		globalArgs->Allocator.reset(1234);
+		globalArgs->g_heap.FreeAllPagesWithId(1234);
+		globalArgs->g_allocator.reset(1234);
 	}
 
-	globalArgs->TaskScheduler.Quit();
-	globalArgs->Allocator.destroy();
+	globalArgs->g_taskScheduler.Quit();
+	globalArgs->g_allocator.destroy();
 	delete globalArgs;
 
 	return 1;

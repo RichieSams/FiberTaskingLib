@@ -43,8 +43,8 @@ TASK_ENTRY_POINT(Producer) {
  */
 TEST(FiberTaskingLib, ProducerConsumer) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->TaskScheduler.Initialize(110, globalArgs);
-	globalArgs->Allocator.init(&globalArgs->Heap, 1234);
+	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
+	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
 
 	FiberTaskingLib::AtomicCounter *globalCounter = new FiberTaskingLib::AtomicCounter();
 	globalCounter->store(0);
@@ -54,8 +54,8 @@ TEST(FiberTaskingLib, ProducerConsumer) {
 		tasks[i] = {Producer, globalCounter};
 	}
 
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->TaskScheduler.AddTasks(kNumProducerTasks, tasks);
-	globalArgs->TaskScheduler.WaitForCounter(counter, 0);
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->g_taskScheduler.AddTasks(kNumProducerTasks, tasks);
+	globalArgs->g_taskScheduler.WaitForCounter(counter, 0);
 
 
 	// Test to see that all tasks finished
@@ -63,7 +63,7 @@ TEST(FiberTaskingLib, ProducerConsumer) {
 
 
 	// Cleanup
-	globalArgs->TaskScheduler.Quit();
-	globalArgs->Allocator.destroy();
+	globalArgs->g_taskScheduler.Quit();
+	globalArgs->g_allocator.destroy();
 	delete globalArgs;
 }
