@@ -101,15 +101,26 @@ namespace FiberTaskingLib {
 
 typedef pthread_t ThreadId;
 typedef void *(*ThreadStartRoutine)(void *arg);
-typedef void * THREAD_FUNC_RETURN_TYPE
+typedef void * THREAD_FUNC_RETURN_TYPE;
 typedef THREAD_FUNC_RETURN_TYPE THREAD_FUNC_DECL;
 
-inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, ) {
-	pthread_attr_t *threadAttr;
-	pthread_attr_init(threadAttr);
-	pthread_attr_setstacksize(threadAttr, stackSize);
+inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
+	pthread_attr_t threadAttr;
+	pthread_attr_init(&threadAttr);
+
+	// Set stack size
+	pthread_attr_setstacksize(&threadAttr, stackSize);
+
+	// Set core affinity
+	cpu_set_t cpuSet;
+	CPU_ZERO(&cpuSet);
+	CPU_SET(coreAffinity, &cpuSet);
+	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
 	
-	int success = pthread_create(returnId, NULL, StartFunc, arg);
+	int success = pthread_create(returnId, NULL, startRoutine, arg);
+
+	// Cleanup
+	pthread_attr_destroy(&threadAttr);
 
 	return success == 0;
 }
@@ -130,6 +141,14 @@ inline uint FTLGetNumHardwareThreads() {
 
 inline ThreadId FTLGetCurrentThread() {
 	return pthread_self();
+}
+
+inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
+	cpu_set_t cpuSet;
+	CPU_ZERO(&cpuSet);
+	CPU_SET(coreAffinity, &cpuSet);
+
+	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
 }
 
 } // End of namespace FiberTaskingLib
