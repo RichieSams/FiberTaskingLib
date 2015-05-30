@@ -190,7 +190,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 
 	// Create an additional thread for each logical processor
 	m_numThreads = FTLGetNumHardwareThreads();
-	m_threads = new HANDLE[m_numThreads];
+	m_threads = new ThreadId[m_numThreads];
 	m_fiberSwitchingFibers = new void *[m_numThreads];
 	m_counterWaitingFibers = new void *[m_numThreads];
 
@@ -212,7 +212,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	#endif
 	
 	// Create the remaining threads
-	for (DWORD i = 1; i < m_numThreads; ++i) {
+	for (uint i = 1; i < m_numThreads; ++i) {
 		ThreadStartArgs *threadArgs = new ThreadStartArgs();
 		threadArgs->globalArgs = globalArgs;
 		threadArgs->threadId = i;
@@ -301,7 +301,7 @@ void TaskScheduler::Quit() {
 	m_quit.store(true);
 	FTLConvertFiberToThread();
 
-	std::vector<HANDLE> workerThreads;
+	std::vector<ThreadId> workerThreads;
 	for (uint i = 0; i < m_numThreads; ++i) {
 		if (m_threads != FTLGetCurrentThread()) {
 			workerThreads.push_back(m_threads[i]);
@@ -311,7 +311,7 @@ void TaskScheduler::Quit() {
 	FTLJoinThreads((uint)workerThreads.size(), &workerThreads[0]);
 
 	for (auto &workerThread : workerThreads) {
-		CloseHandle(workerThread);
+		FTLTerminateThread(workerThread);
 	}
 }
 
