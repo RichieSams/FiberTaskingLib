@@ -244,7 +244,7 @@ void TaskScheduler::Quit() {
 		}
 	}
 
-	FTLJoinThreads(workerThreads.size(), &workerThreads[0]);
+	FTLJoinThreads((uint)workerThreads.size(), &workerThreads[0]);
 
 	for (auto &workerThread : workerThreads) {
 		CloseHandle(workerThread);
