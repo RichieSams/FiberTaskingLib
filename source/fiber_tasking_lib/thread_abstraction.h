@@ -53,6 +53,7 @@ typedef HANDLE ThreadId;
 typedef uint (__stdcall *ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE uint
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
+#define THREAD_FUNC_END return 0;
 	
 inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr);
@@ -105,6 +106,7 @@ typedef pthread_t ThreadId;
 typedef void *(*ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE void *
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
+#define THREAD_FUNC_END pthread_exit(NULL);
 
 inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	pthread_attr_t threadAttr;

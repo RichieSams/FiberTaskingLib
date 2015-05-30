@@ -70,7 +70,8 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	FiberStart(globalArgs);
 
 	FTLConvertFiberToThread();
-	return 1;
+
+	THREAD_FUNC_END;
 }
 
 void TaskScheduler::FiberStart(void *arg) {
