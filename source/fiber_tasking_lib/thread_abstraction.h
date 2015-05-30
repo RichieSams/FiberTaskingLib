@@ -51,8 +51,8 @@ namespace FiberTaskingLib {
 
 typedef HANDLE ThreadId;
 typedef uint (__stdcall *ThreadStartRoutine)(void *arg);
-typedef uint THREAD_FUNC_RETURN_TYPE;
-typedef THREAD_FUNC_RETURN_TYPE __stdcall THREAD_FUNC_DECL;
+#define THREAD_FUNC_RETURN_TYPE uint
+#define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
 	
 inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr);
@@ -64,6 +64,8 @@ inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRouti
 	DWORD_PTR mask = 1ull << coreAffinity;
 	SetThreadAffinityMask(*returnId, mask);
 	ResumeThread(*returnId);
+
+	return true;
 }
 
 inline bool FTLTerminateThread(ThreadId threadId) {
@@ -101,8 +103,8 @@ namespace FiberTaskingLib {
 
 typedef pthread_t ThreadId;
 typedef void *(*ThreadStartRoutine)(void *arg);
-typedef void * THREAD_FUNC_RETURN_TYPE;
-typedef THREAD_FUNC_RETURN_TYPE THREAD_FUNC_DECL;
+#define THREAD_FUNC_RETURN_TYPE void *
+#define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
 
 inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	pthread_attr_t threadAttr;
