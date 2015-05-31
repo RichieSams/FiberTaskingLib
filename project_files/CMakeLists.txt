@@ -7,9 +7,12 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-include_directories(../source ../libs ../libs/EASTL/include)
+find_package(Boost COMPONENTS context REQUIRED)
+find_package(Threads)
 
-set(SOURCE_FILES
+include_directories(../source ../libs ../libs/EASTL/include ${Boost_INCLUDE_DIR})
+
+set(FIBER_TASKING_LIB_SRC
 	../libs/EASTL/src/allocator.cpp
 	../libs/EASTL/src/assert.cpp
 	../libs/EASTL/src/fixed_pool.cpp
@@ -23,4 +26,6 @@ set(SOURCE_FILES
 	../source/fiber_tasking_lib/tagged_heap_backed_linear_allocator.cpp
 	../source/fiber_tasking_lib/task_scheduler.cpp)
 
-add_library(FiberTaskingLib ${SOURCE_FILES})
+add_library(FiberTaskingLib ${FIBER_TASKING_LIB_SRC})
+target_link_libraries(FiberTaskingLib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
