@@ -16,8 +16,8 @@ before_script:
   - sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
   - sudo update-alternatives --set cc /usr/bin/gcc
   - sudo update-alternatives --set c++ /usr/bin/g++
-  - update-alternatives --set gcc "/usr/bin/gcc-5"
-  - update-alternatives --set g++ "/usr/bin/g++-5"
+  - sudo update-alternatives --set gcc "/usr/bin/gcc-5"
+  - sudo update-alternatives --set g++ "/usr/bin/g++-5"
   # Install latest boost
   - wget https://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.gz/download
   - tar xf download
