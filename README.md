@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/yhx0vf00v45m8qcr?svg=true)](https://ci.appveyor.com/project/RichieSams/fibertaskinglib)
+[![Build status](https://ci.appveyor.com/api/projects/status/yhx0vf00v45m8qcr?svg=true)](https://ci.appveyor.com/project/RichieSams/fibertaskinglib)      [![Build Status](https://travis-ci.org/RichieSams/FiberTaskingLib.svg?branch=master)](https://travis-ci.org/RichieSams/FiberTaskingLib)
 
 **Fiber Tasking Lib**
 ====================
