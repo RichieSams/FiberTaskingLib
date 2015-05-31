@@ -349,7 +349,7 @@ public:
 	explicit BlockingConcurrentQueue(size_t capacity = 6 * BLOCK_SIZE)
 		: inner(capacity), sema(create<LightweightSemaphore>(), &BlockingConcurrentQueue::template destroy<LightweightSemaphore>)
 	{
-		assert(reinterpret_cast<ConcurrentQueue*>((BlockingConcurrentQueue*)0) == &((BlockingConcurrentQueue*)0)->inner && "BlockingConcurrentQueue must have ConcurrentQueue as its first member");
+		//assert(reinterpret_cast<ConcurrentQueue*>((BlockingConcurrentQueue*)0) == &((BlockingConcurrentQueue*)0)->inner && "BlockingConcurrentQueue must have ConcurrentQueue as its first member");
 		if (!sema) {
 			throw std::bad_alloc();
 		}
