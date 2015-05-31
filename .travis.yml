@@ -1,0 +1,21 @@
+language: cpp
+
+compiler:
+  - gcc
+
+# need to install the Boost libraries to the sandbox
+before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install libboost-context-dev
+
+script: 
+  - mkdir build
+  - cd build
+  - cmake ../project_files
+  - make
+  
+notifications:
+  email:
+    recipients: adastley@gmail.com
+    on_success: change
+    on_failure: change
