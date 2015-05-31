@@ -29,3 +29,10 @@ set(FIBER_TASKING_LIB_SRC
 add_library(FiberTaskingLib ${FIBER_TASKING_LIB_SRC})
 target_link_libraries(FiberTaskingLib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
+
+set(EXAMPLE_PROJECT_SRC
+	../source/example_project/eastl_defaults.cpp
+	../source/example_project/main.cpp)
+
+add_executable(ExampleProject ${EXAMPLE_PROJECT_SRC})
+target_link_libraries(ExampleProject FiberTaskingLib)
