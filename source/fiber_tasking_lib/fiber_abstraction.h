@@ -56,6 +56,7 @@ inline void FTLSwitchToFiber(FiberId currentFiber, FiberId destFiber) {
 #define BOOST_CONTEXT
 
 #include <boost/context/fcontext.hpp>
+#include <boost/context/fixedsize_stack.hpp>
 
 namespace FiberTaskingLib {
 
@@ -67,22 +68,24 @@ typedef intptr_t fiber_arg_t;
 class Fiber {
 public:
 	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg)
-			: m_arg(arg) {
-		m_stack = malloc(stackSize);
-		m_fiberContext = boost::context::make_fcontext((void *)((char *)m_stack + stackSize), stackSize, startRoutine);
+			: m_stack(stackSize),
+			  m_stackContext(m_stack.allocate()),
+			  m_arg(arg) {
+		m_fiberContext = boost::context::make_fcontext(m_stackContext.sp, m_stackContext.size, startRoutine);
 	}
 	~Fiber() {
-		free(m_stack);
+		m_stack.deallocate(m_stackContext);
 	}
 
 private:
-	boost::context::fcontext_t *m_fiberContext;
-	void *m_stack;
+	boost::context::fcontext_t m_fiberContext;
+	boost::context::fixedsize_stack m_stack;
+	boost::context::stack_context m_stackContext;
 	fiber_arg_t m_arg;
 
 public:
 	inline void SwitchToFiber(Fiber *fiber) {
-		boost::context::jump_fcontext(m_fiberContext, fiber->m_fiberContext, m_arg);
+		boost::context::jump_fcontext(&m_fiberContext, fiber->m_fiberContext, m_arg);
 	}
 };
 
