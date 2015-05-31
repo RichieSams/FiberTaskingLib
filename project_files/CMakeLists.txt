@@ -20,7 +20,6 @@ set(FIBER_TASKING_LIB_SRC
 	../libs/EASTL/src/red_black_tree.cpp
 	../libs/EASTL/src/string.cpp
 	../source/fiber_tasking_lib/basic_linear_allocator.cpp
-	../source/fiber_tasking_lib/fiber_abstraction.cpp
 	../source/fiber_tasking_lib/read_write_lock.cpp
 	../source/fiber_tasking_lib/tagged_heap.cpp
 	../source/fiber_tasking_lib/tagged_heap_backed_linear_allocator.cpp

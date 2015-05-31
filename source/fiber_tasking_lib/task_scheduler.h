@@ -14,6 +14,7 @@
 #include "fiber_tasking_lib/typedefs.h"
 #include "fiber_tasking_lib/portability.h"
 #include "fiber_tasking_lib/thread_abstraction.h"
+#include "fiber_tasking_lib/fiber_abstraction.h"
 
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
@@ -95,13 +96,13 @@ private:
 			  Counter(nullptr), 
 			  Value(0) {
 		}
-		WaitingTask(void *fiber, AtomicCounter *counter, int value)
+		WaitingTask(FiberId fiber, AtomicCounter *counter, int value)
 			: Fiber(fiber),
 			  Counter(counter),
 			  Value(value) {
 		}
 
-		void *Fiber;
+		FiberId Fiber;
 		AtomicCounter *Counter;
 		int Value;
 	};
@@ -110,7 +111,7 @@ private:
 	std::list<WaitingTask> m_waitingTasks;
 	std::mutex m_waitingTaskLock;
 
-	moodycamel::BlockingConcurrentQueue<void *> m_fiberPool;
+	moodycamel::BlockingConcurrentQueue<FiberId> m_fiberPool;
 
 	/**
 	 * In order to put the current fiber on the waitingTasks list or the fiber pool, we have to
@@ -123,8 +124,8 @@ private:
 	 * fiber for each thread. Otherwise, two threads could try to switch to the same helper fiber
 	 * at the same time. Again, this leads to stack corruption and/or general undefined behavior.
 	 */
-	void **m_fiberSwitchingFibers;
-	void **m_counterWaitingFibers;
+	FiberId *m_fiberSwitchingFibers;
+	FiberId *m_counterWaitingFibers;
 
 	std::atomic_bool m_quit;
 
@@ -184,7 +185,7 @@ private:
 	 *
 	 * @param fiberToSwitchTo    The fiber to switch to
 	 */
-	void SwitchFibers(void *fiberToSwitchTo);
+	void SwitchFibers(FiberId fiberToSwitchTo);
 
 	/**
 	 * The threadProc function for all worker threads
@@ -198,19 +199,19 @@ private:
 	 *
 	 * @param arg    An instance of GlobalArgs
 	 */
-	static void STDCALL FiberStart(void *arg);
+	static FIBER_START_FUNCTION(FiberStart);
 	/**
 	 * The fiberProc function for the fiber switching helper fiber
 	 *
 	 * @param arg    An instance of TaskScheduler
 	 */
-	static void STDCALL FiberSwitchStart(void *arg);
+	static FIBER_START_FUNCTION(FiberSwitchStart);
 	/**
 	 * The fiberProc function for the counter wait helper fiber
 	 *
 	 * @param arg    An instance of TaskScheduler  
 	 */
-	static void STDCALL CounterWaitStart(void *arg);
+	static FIBER_START_FUNCTION(CounterWaitStart);
 };
 
 } // End of namespace FiberTaskingLib

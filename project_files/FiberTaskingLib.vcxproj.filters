@@ -24,7 +24,6 @@
     <ClCompile Include="..\libs\EASTL\src\string.cpp">
       <Filter>libs\EASTL\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\fiber_tasking_lib\fiber_abstraction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
