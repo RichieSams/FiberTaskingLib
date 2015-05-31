@@ -3,11 +3,19 @@ language: cpp
 compiler:
   - gcc
 
-# need to install the Boost libraries to the sandbox
 before_script:
-  - yes | sudo add-apt-repository ppa:boost-latest/ppa
+  # Add ppa for newest boost
+  # Default boost for 12.04 doesn't have Boost.Context
+  - sudo add-apt-repository -y ppa:boost-latest/ppa
+  # Add ppa for newest gcc
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
   - sudo apt-get install libboost-context1.54-dev
+  # Install new gcc / g++
+  - sudo apt-get install gcc-5 g++-5
+  # Add new references
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 90
 
 script: 
   - mkdir build
