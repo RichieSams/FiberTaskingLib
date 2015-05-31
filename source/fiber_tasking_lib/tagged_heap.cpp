@@ -68,7 +68,7 @@ MemoryPage *TaggedHeap::GetNextFreePage(uint64 id) {
 }
 
 void TaggedHeap::FreeAllPagesWithId(uint64 id) {
-	m_memoryLock.unlock();
+	m_memoryLock.lock();
 
 	auto iter = m_usedMemory.find(id);
 	if (iter == m_usedMemory.end()) {
