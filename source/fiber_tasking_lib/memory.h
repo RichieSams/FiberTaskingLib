@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-#if defined( __GNUC__) || defined(__GNUG__)
+#if (defined( __GNUC__) || defined(__GNUG__)) && __GNUC__ < 5
 
 namespace std {
 
