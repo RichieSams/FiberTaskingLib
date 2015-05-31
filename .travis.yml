@@ -4,18 +4,20 @@ compiler:
   - gcc
 
 before_script:
-  # Add ppa for newest boost
-  # Default boost for 12.04 doesn't have Boost.Context
-  - sudo add-apt-repository -y ppa:boost-latest/ppa
   # Add ppa for newest gcc
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
-  - sudo apt-get install libboost-context1.54-dev
   # Install new gcc / g++
   - sudo apt-get install gcc-5 g++-5
   # Add new references
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 90
+  # Install latest boost
+  - wget https://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.gz/download
+  - tar xf download
+  - cd boost_1_58_0
+  - ./bootstrap.sh --with-libraries=context
+  - sudo ./b2 install
 
 script: 
   - mkdir build
