@@ -7,7 +7,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-find_package(Boost COMPONENTS context REQUIRED)
+find_package(Boost 1.56 COMPONENTS context REQUIRED)
 find_package(Threads)
 
 include_directories(../source ../libs ../libs/EASTL/include ${Boost_INCLUDE_DIR})
