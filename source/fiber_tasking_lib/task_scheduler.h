@@ -75,6 +75,7 @@ public:
 private:
 	std::size_t m_numThreads;
 	ThreadId *m_threads;
+	std::atomic_uint m_numActiveWorkerThreads;
 
 	/**
 	 * Holds a task that is ready to to be executed by the worker threads

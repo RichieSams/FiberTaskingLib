@@ -69,8 +69,6 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	FTLConvertThreadToFiber();
 	FiberStart(globalArgs);
 
-	FTLConvertFiberToThread();
-
 	THREAD_FUNC_END;
 }
 
@@ -122,6 +120,10 @@ void TaskScheduler::FiberStart(void *arg) {
 			nextTask.Counter->fetch_sub(1);
 		}
 	}
+
+	FTLConvertFiberToThread();
+	globalArgs->g_taskScheduler.m_numActiveWorkerThreads.fetch_sub(1);
+	FTLEndCurrentThread();
 }
 
 void STDCALL TaskScheduler::FiberSwitchStart(void *arg) {
@@ -192,6 +194,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	// Create an additional thread for each logical processor
 	m_numThreads = FTLGetNumHardwareThreads();
 	m_threads = new ThreadId[m_numThreads];
+	m_numActiveWorkerThreads.store(m_numThreads - 1);
 	m_fiberSwitchingFibers = new void *[m_numThreads];
 	m_counterWaitingFibers = new void *[m_numThreads];
 
@@ -204,8 +207,9 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 
 	// Set the affinity for the current thread and convert it to a fiber
 	FTLSetCurrentThreadAffinity(1);
-	FTLConvertThreadToFiber();
 	m_threads[0] = FTLGetCurrentThread();
+	FTLConvertThreadToFiber();
+
 	#if defined(_MSC_VER)
 		tls_threadId = 0;
 	#else
@@ -302,17 +306,18 @@ void TaskScheduler::Quit() {
 	m_quit.store(true);
 	FTLConvertFiberToThread();
 
-	std::vector<ThreadId> workerThreads;
-	for (uint i = 0; i < m_numThreads; ++i) {
-		if (m_threads != FTLGetCurrentThread()) {
-			workerThreads.push_back(m_threads[i]);
-		}
+	// Wait until all worker threads have finished
+	// 
+	// We can't use traditional thread join mechanisms because we can't
+	// guarantee the ThreadIds we started with are the ones we finish with
+	// The 'physical' threads are always there, but the ThreadIds change
+	// when we convert to/from fibers
+	while (m_numActiveWorkerThreads.load() > 0) {
+		std::this_thread::yield();
 	}
 
-	FTLJoinThreads((uint)workerThreads.size(), &workerThreads[0]);
-
-	for (auto &workerThread : workerThreads) {
-		FTLTerminateThread(workerThread);
+	for (uint i = 0; i < m_numThreads; ++i) {
+		FTLCleanupThread(m_threads[i]);
 	}
 }
 

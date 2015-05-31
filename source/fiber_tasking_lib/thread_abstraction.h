@@ -69,8 +69,13 @@ inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRouti
 	return true;
 }
 
-inline bool FTLTerminateThread(ThreadId threadId) {
-	return CloseHandle(threadId) == 0;
+inline void FTLEndCurrentThread() {
+	_endthreadex(0);
+}
+
+inline void FTLCleanupThread(ThreadId threadId) {
+	// No op
+	// _endthread will automatically close the handle for us
 }
 
 inline void FTLJoinThreads(uint numThreads, ThreadId *threads) {
@@ -129,8 +134,12 @@ inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRouti
 	return success == 0;
 }
 
-inline bool FTLTerminateThread(ThreadId threadId) {
-	return pthread_cancel(threadId) == 0;
+inline void FTLEndCurrentThread() {
+	pthread_exit(NULL);
+}
+
+inline void FTLCleanupThread(ThreadId threadId) {
+	pthread_cancel(threadId);
 }
 
 inline void FTLJoinThreads(uint numThreads, ThreadId *threads) {
