@@ -17,10 +17,16 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 <br />
 
 
-##Platforms
-Currently the library is Windows exclusive. This is mostly due to the fact that I happened to start the project with the Win32 API since it was so simple. The Win32 API has functions for easily creating / working with fibers. 
+##Supported Platforms
+-Windows
+-Any platform that can compile / use Boost.Context
+	- Currently, I have only tested this with GCC in Ubuntu
+	- I am planning on testing other setups
 
-When I looked into trying to create support for *nix, I ran into problems. In *nix, the only similar API is the [setcontext family of functions](http://en.wikipedia.org/wiki/Setcontext). However, as of POSIX 1-2004, the functions were depreciated, and of POSIX 1-2008, they were removed. So currently, the only options are to use an old API, or create the fiber API from scratch. If anyone has another option, please let me know. I would be happy to try to implement this library on another platform.
+Comments:
+Windows has native support for fibers through the Win32 API. So, Windows support is quite easy.
+At the moment, *nix does not have an API for fibers. The only similar API is the [setcontext] (http://en.wikipedia.org/wiki/Setcontext). family of functions. However, as of POSIX 1-2004, the functions were depreciated, and of POSIX 1-2008, they were removed. 
+However, Boost.Context creates a fiber API for us (using low level assembly). So any system that can use Boost.Context can support fibers. That said, Boost.Context comes with a few limitations, namely, it does not support thread-local storage.
 
 <br />
 
