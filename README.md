@@ -18,8 +18,8 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 
 
 ##Supported Platforms
--Windows
--Any platform that can compile / use Boost.Context
+- Windows
+- Any platform that can compile / use Boost.Context
 	- Currently, I have only tested this with GCC in Ubuntu
 	- I am planning on testing other setups
 
