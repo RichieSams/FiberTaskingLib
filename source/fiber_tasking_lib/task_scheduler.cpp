@@ -77,7 +77,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	#endif
 	GlobalArgs *globalArgs = threadArgs->globalArgs;
 
-	FiberId threadFiber = FTLConvertThreadToFiber(524288, FiberStart, (fiber_arg_t)globalArgs);
+	FiberId threadFiber = FTLConvertThreadToFiber();
 	#if defined(BOOST_CONTEXT)
 		tlsFake_currentFiber[threadArgs->threadId] = threadFiber;
 	#endif
@@ -253,7 +253,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	// Set the affinity for the current thread and convert it to a fiber
 	FTLSetCurrentThreadAffinity(1);
 	m_threads[0] = FTLGetCurrentThread();
-	FiberId mainThreadFiber = FTLConvertThreadToFiber(524288, FiberStart, (fiber_arg_t)globalArgs);
+	FiberId mainThreadFiber = FTLConvertThreadToFiber();
 
 	#if defined(BOOST_CONTEXT)
 		g_threadIdToIndexMap[FTLGetCurrentThread()] = 0;

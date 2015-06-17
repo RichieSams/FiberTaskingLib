@@ -31,7 +31,7 @@ typedef void * fiber_arg_t;
 
 typedef void * FiberId;
 
-inline FiberId FTLConvertThreadToFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
+inline FiberId FTLConvertThreadToFiber() {
 	return ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
 }
 inline void FTLConvertFiberToThread() {
@@ -67,19 +67,25 @@ typedef intptr_t fiber_arg_t;
 
 class Fiber {
 public:
+	Fiber()
+		: m_stack(nullptr) {
+	}
 	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg)
-			: m_stack(stackSize),
-			  m_stackContext(m_stack.allocate()),
+			: m_stack(new boost::context::fixedsize_stack(stackSize)),
+			  m_stackContext(m_stack->allocate()),
 			  m_arg(arg) {
 		m_fiberContext = boost::context::make_fcontext(m_stackContext.sp, m_stackContext.size, startRoutine);
 	}
 	~Fiber() {
-		m_stack.deallocate(m_stackContext);
+		if (m_stack) {
+			m_stack->deallocate(m_stackContext);
+		}
+		delete m_stack;
 	}
 
 private:
 	boost::context::fcontext_t m_fiberContext;
-	boost::context::fixedsize_stack m_stack;
+	boost::context::fixedsize_stack *m_stack;
 	boost::context::stack_context m_stackContext;
 	fiber_arg_t m_arg;
 
@@ -92,8 +98,8 @@ public:
 typedef Fiber * FiberId;
 
 
-inline FiberId FTLConvertThreadToFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
-	return new Fiber(stackSize, startRoutine, arg);
+inline FiberId FTLConvertThreadToFiber() {
+	return new Fiber();
 }
 inline void FTLConvertFiberToThread() {
 	// No op
