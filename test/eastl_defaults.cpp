@@ -12,6 +12,7 @@
 #include <EASTL/internal/config.h>
 
 #include <cstdio>
+#include <malloc.h>
 
 
 // EASTL expects us to define these, see allocator.h line 194
