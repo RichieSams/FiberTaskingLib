@@ -30,7 +30,7 @@ before_script:
 script: 
   - mkdir build
   - cd build
-  - cmake ../project_files
+  - cmake ../
   - make
   
 notifications:
