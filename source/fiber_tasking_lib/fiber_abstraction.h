@@ -91,7 +91,7 @@ private:
 
 public:
 	inline void SwitchToFiber(Fiber *fiber) {
-		boost::context::jump_fcontext(&m_fiberContext, fiber->m_fiberContext, m_arg);
+		boost::context::jump_fcontext(&m_fiberContext, fiber->m_fiberContext, fiber->m_arg, true);
 	}
 };
 
