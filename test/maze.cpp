@@ -127,15 +127,12 @@ TEST(FunctionalTest, Maze10x10) {
 
 	BranchArgs *startBranch = new BranchArgs(new MazeType(mazeData, 21, 21), 
 	                                         0, 1,
-											 completed);
-	PrintMaze(*startBranch->Maze);
+											 completed.get());
 
 	FiberTaskingLib::Task task = {CheckBranch, startBranch};
 	globalArgs->g_taskScheduler.AddTask(task);
 
 	globalArgs->g_taskScheduler.WaitForCounter(completed, 1);
-
-	PrintMaze(*startBranch->Maze);
 
 	// Cleanup
 	globalArgs->g_taskScheduler.Quit();
