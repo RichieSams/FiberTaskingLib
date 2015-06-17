@@ -119,7 +119,7 @@ TEST(FunctionalTest, Maze10x10) {
 	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
 	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
 
-	FiberTaskingLib::AtomicCounter *completed = new FiberTaskingLib::AtomicCounter();
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> completed = std::make_shared<FiberTaskingLib::AtomicCounter>();
 	completed->store(0);
 
 	char *mazeData = new char[21 *21];
@@ -133,7 +133,7 @@ TEST(FunctionalTest, Maze10x10) {
 	FiberTaskingLib::Task task = {CheckBranch, startBranch};
 	globalArgs->g_taskScheduler.AddTask(task);
 
-	globalArgs->g_taskScheduler.WaitForCounter(std::shared_ptr<FiberTaskingLib::AtomicCounter>(completed), 1);
+	globalArgs->g_taskScheduler.WaitForCounter(completed, 1);
 
 	PrintMaze(*startBranch->Maze);
 
