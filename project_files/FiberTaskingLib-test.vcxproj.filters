@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\test\main.cpp" />
     <ClCompile Include="..\test\eastl_defaults.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -14,6 +13,10 @@
     <ClCompile Include="..\test\maze.cpp">
       <Filter>Maze</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\fiber_abstraction.cpp">
+      <Filter>FiberAbstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -27,6 +30,9 @@
     </Filter>
     <Filter Include="Maze">
       <UniqueIdentifier>{9868d855-abaf-4c46-bdc5-329697ad67f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FiberAbstraction">
+      <UniqueIdentifier>{a6e5daef-81bf-4067-86d6-f47783f8e753}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
