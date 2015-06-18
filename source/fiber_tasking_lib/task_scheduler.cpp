@@ -139,7 +139,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 		}
 	}
 
-	FTLConvertFiberToThread();
+	FTLConvertFiberToThread(FTLGetCurrentFiber());
 	globalArgs->g_taskScheduler.m_numActiveWorkerThreads.fetch_sub(1);
 	FTLEndCurrentThread();
 }
@@ -350,7 +350,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 
 void TaskScheduler::Quit() {
 	m_quit.store(true);
-	FTLConvertFiberToThread();
+	FTLConvertFiberToThread(FTLGetCurrentFiber());
 
 	// Wait until all worker threads have finished
 	// 

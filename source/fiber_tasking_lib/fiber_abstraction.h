@@ -34,7 +34,7 @@ typedef void * FiberId;
 inline FiberId FTLConvertThreadToFiber() {
 	return ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
 }
-inline void FTLConvertFiberToThread() {
+inline void FTLConvertFiberToThread(FiberId fiber) {
 	ConvertFiberToThread();
 }
 
@@ -101,8 +101,8 @@ typedef Fiber * FiberId;
 inline FiberId FTLConvertThreadToFiber() {
 	return new Fiber();
 }
-inline void FTLConvertFiberToThread() {
-	// No op
+inline void FTLConvertFiberToThread(FiberId fiber) {
+	delete fiber;
 }
 
 inline FiberId FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {

@@ -45,8 +45,7 @@ TEST(FiberAbstraction, SingleFiberSwitch) {
 
     // Cleanup
     delete counter;
-    FiberTaskingLib::FTLConvertFiberToThread();
-    FiberTaskingLib::FTLDeleteFiber(mainFiber);
+    FiberTaskingLib::FTLConvertFiberToThread(mainFiber);
     FiberTaskingLib::FTLDeleteFiber(otherFiber);
 }
 
