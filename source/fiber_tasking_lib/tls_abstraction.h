@@ -11,10 +11,11 @@
 
 #pragma once
 
+#include "fiber_tasking_lib/config.h"
 #include "fiber_tasking_lib/thread_abstraction.h"
 
 
-#if defined(_MSC_VER)
+#if defined(FIBER_IMPL_SUPPORTS_TLS)
 
 namespace FiberTaskingLib {
 

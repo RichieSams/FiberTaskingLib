@@ -66,6 +66,7 @@
     <ClInclude Include="..\libs\EASTL\include\EASTL\utility.h" />
     <ClInclude Include="..\libs\EASTL\include\EASTL\vector.h" />
     <ClInclude Include="..\libs\EASTL\include\EASTL\vector_map.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\config.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\fiber_abstraction.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\global_args.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\basic_linear_allocator.h" />
