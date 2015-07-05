@@ -13,10 +13,13 @@
     <ClCompile Include="..\test\maze.cpp">
       <Filter>Maze</Filter>
     </ClCompile>
-    <ClCompile Include="..\test\fiber_abstraction.cpp">
+    <ClCompile Include="..\test\main.cpp" />
+    <ClCompile Include="..\test\single_fiber_switch.cpp">
       <Filter>FiberAbstraction</Filter>
     </ClCompile>
-    <ClCompile Include="..\test\main.cpp" />
+    <ClCompile Include="..\test\nested_fiber_switch.cpp">
+      <Filter>FiberAbstraction</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

@@ -3,7 +3,8 @@ find_package(GTest QUIET)
 set (TEST_PROJECT_SRC
 	calc_triangle_num.cpp
 	eastl_defaults.cpp
-	fiber_abstraction.cpp
+	single_fiber_switch.cpp
+	nested_fiber_switch.cpp
 	main.cpp
 	maze.cpp
 	producer_consumer.cpp

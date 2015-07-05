@@ -166,7 +166,8 @@
   <ItemGroup>
     <ClCompile Include="..\test\calc_triangle_num.cpp" />
     <ClCompile Include="..\test\eastl_defaults.cpp" />
-    <ClCompile Include="..\test\fiber_abstraction.cpp" />
+    <ClCompile Include="..\test\nested_fiber_switch.cpp" />
+    <ClCompile Include="..\test\single_fiber_switch.cpp" />
     <ClCompile Include="..\test\main.cpp" />
     <ClCompile Include="..\test\maze.cpp" />
     <ClCompile Include="..\test\producer_consumer.cpp" />
