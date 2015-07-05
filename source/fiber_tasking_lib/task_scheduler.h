@@ -19,7 +19,7 @@
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
 #include <atomic>
-#include <list>
+#include <vector>
 #include <mutex>
 
 
@@ -108,7 +108,7 @@ private:
 	};
 
 	moodycamel::ConcurrentQueue<TaskBundle> m_taskQueue;
-	std::list<WaitingTask> m_waitingTasks;
+	std::vector<WaitingTask> m_waitingTasks;
 	std::mutex m_waitingTaskLock;
 
 	moodycamel::BlockingConcurrentQueue<FiberId> m_fiberPool;
