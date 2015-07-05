@@ -12,6 +12,7 @@
 #pragma once
 
 #include "fiber_tasking_lib/portability.h"
+#include "fiber_tasking_lib/tls_abstraction.h"
 
 #include <cstddef>
 
@@ -47,6 +48,22 @@ inline void FTLDeleteFiber(FiberId fiber) {
 
 inline void FTLSwitchToFiber(FiberId currentFiber, FiberId destFiber) {
 	SwitchToFiber(destFiber);
+}
+
+inline void FTLInitializeCurrentFiber(size_t numThreads) {
+	// No op
+}
+
+inline void FTLDestroyCurrentFiber() {
+	// No op
+}
+
+inline FiberId FTLGetCurrentFiber() {
+	return GetCurrentFiber();
+}
+
+inline void FTLSetCurrentFiber(FiberId currentFiber) {
+	// No op
 }
 
 } // End of namespace FiberTaskingLib
@@ -114,6 +131,24 @@ inline void FTLDeleteFiber(FiberId fiber) {
 
 inline void FTLSwitchToFiber(FiberId currentFiber, FiberId destFiber) {
 	currentFiber->SwitchToFiber(destFiber);
+}
+
+extern TLS_VARIABLE(FiberId, tls_currentFiber);
+
+inline void FTLInitializeCurrentFiber(size_t numThreads) {
+	CreateTLSVariable(&tls_currentFiber, numThreads);
+}
+
+inline void FTLDestroyCurrentFiber() {
+	DestroyTLSVariable(tls_currentFiber);
+}
+
+inline FiberId FTLGetCurrentFiber() {
+	return GetTLSData(tls_currentFiber);
+}
+
+inline void FTLSetCurrentFiber(FiberId currentFiber) {
+	return SetTLSData(tls_currentFiber, currentFiber);
 }
 
 } // End of namespace FiberTaskingLib

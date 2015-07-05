@@ -12,7 +12,6 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 
 #include "fiber_tasking_lib/global_args.h"
-#include "fiber_tasking_lib/tls_abstraction.h"
 
 
 namespace FiberTaskingLib {
@@ -21,22 +20,6 @@ TLS_VARIABLE(FiberId, tls_destFiber);
 TLS_VARIABLE(FiberId, tls_originFiber);
 TLS_VARIABLE(AtomicCounter *, tls_waitingCounter);
 TLS_VARIABLE(int, tls_waitingValue);
-
-
-#if defined(BOOST_CONTEXT)
-	// Boost.Context doesn't have a global way to get the current fiber
-	TLS_VARIABLE(FiberId, tls_currentFiber);
-
-	inline FiberId FTLGetCurrentFiber() {
-		return GetTLSData(tls_currentFiber);
-	}
-#else
-	inline FiberId FTLGetCurrentFiber() {
-		return GetCurrentFiber();
-	}
-#endif
-
-
 
 
 struct ThreadStartArgs {
@@ -51,9 +34,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	GlobalArgs *globalArgs = threadArgs->globalArgs;
 
 	FiberId threadFiber = FTLConvertThreadToFiber();
-	#if defined(BOOST_CONTEXT)
-		SetTLSData(tls_currentFiber, threadFiber);
-	#endif
+	FTLSetCurrentFiber(threadFiber);
 
 	// Clean up
 	delete threadArgs;
@@ -125,10 +106,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberSwitchStart) {
 		taskScheduler->m_fiberPool.enqueue(GetTLSData(tls_originFiber));
 		FiberId destFiber = GetTLSData(tls_destFiber);
 
-		#if defined(BOOST_CONTEXT)
-			SetTLSData(tls_currentFiber, destFiber);
-		#endif
-
+		FTLSetCurrentFiber(destFiber);
 		FTLSwitchToFiber(taskScheduler->m_fiberSwitchingFibers[threadId], destFiber);
 	}
 }
@@ -144,9 +122,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, CounterWaitStart) {
 
 		FiberId destFiber = GetTLSData(tls_destFiber);
 
-		#if defined(BOOST_CONTEXT)
-			SetTLSData(tls_currentFiber, destFiber);
-		#endif
+		FTLSetCurrentFiber(destFiber);
 		FTLSwitchToFiber(taskScheduler->m_counterWaitingFibers[threadId], destFiber);
 	}
 }
@@ -181,9 +157,7 @@ TaskScheduler::~TaskScheduler() {
 	DestroyTLSVariable(tls_waitingCounter);
 	DestroyTLSVariable(tls_waitingValue);
 
-	#if defined(BOOST_CONTEXT)
-		DestroyTLSVariable(tls_currentFiber);
-	#endif
+	FTLDestroyCurrentFiber();
 }
 
 bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
@@ -204,9 +178,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	CreateTLSVariable(&tls_waitingCounter, m_numThreads);
 	CreateTLSVariable(&tls_waitingValue, m_numThreads);
 
-	#if defined(BOOST_CONTEXT)
-		CreateTLSVariable(&tls_currentFiber, m_numThreads);
-	#endif
+    FTLInitializeCurrentFiber(m_numThreads);
 
 
 	// Create a switching fiber for each thread
@@ -221,9 +193,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	FiberId mainThreadFiber = FTLConvertThreadToFiber();
 
 	SetThreadId(0);
-	#if defined(BOOST_CONTEXT)
-		SetTLSData(tls_currentFiber, mainThreadFiber);
-	#endif
+	FTLSetCurrentFiber(mainThreadFiber);
 	
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {

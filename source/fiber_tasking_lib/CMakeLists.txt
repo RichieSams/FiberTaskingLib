@@ -3,6 +3,7 @@ find_package(Threads)
 
 set(FIBER_TASKING_LIB_SRC
 	basic_linear_allocator.cpp
+	fiber_abstraction.cpp
 	read_write_lock.cpp
 	tagged_heap.cpp
 	tagged_heap_backed_linear_allocator.cpp
