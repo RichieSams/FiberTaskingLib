@@ -76,6 +76,7 @@
     <ClInclude Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\task_scheduler.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\thread_abstraction.h" />
+    <ClInclude Include="..\source\fiber_tasking_lib\tls_abstraction.h" />
     <ClInclude Include="..\source\fiber_tasking_lib\typedefs.h" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +91,7 @@
     <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\tagged_heap_backed_linear_allocator.cpp" />
     <ClCompile Include="..\source\fiber_tasking_lib\task_scheduler.cpp" />
+    <ClCompile Include="..\source\fiber_tasking_lib\tls_abstraction.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A9751C33-878C-43EE-AF0B-F77F50FC2DD6}</ProjectGuid>
