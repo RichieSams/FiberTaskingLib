@@ -18,7 +18,7 @@
 
 namespace FiberTaskingLib {
 
-extern __declspec(thread) uint tls_threadId;
+extern THREAD_LOCAL uint tls_threadId;
 
 inline void SetThreadId(uint threadId) {
 	tls_threadId = threadId;

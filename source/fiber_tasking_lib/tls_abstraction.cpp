@@ -15,7 +15,7 @@
 
 #if defined(_MSC_VER)
     namespace FiberTaskingLib {
-        __declspec(thread) uint tls_threadId;
+        THREAD_LOCAL uint tls_threadId;
     } // End of namespace FiberTaskingLib
 #else
     #include <unordered_map>
