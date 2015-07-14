@@ -20,6 +20,9 @@
     <ClCompile Include="..\test\nested_fiber_switch.cpp">
       <Filter>FiberAbstraction</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\tls_abstraction.cpp">
+      <Filter>TLSAbstraction</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -36,6 +39,9 @@
     </Filter>
     <Filter Include="FiberAbstraction">
       <UniqueIdentifier>{a6e5daef-81bf-4067-86d6-f47783f8e753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TLSAbstraction">
+      <UniqueIdentifier>{6bdf8590-c5e5-44bd-b912-1c150e0adeca}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
