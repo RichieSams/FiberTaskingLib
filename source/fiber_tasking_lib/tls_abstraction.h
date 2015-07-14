@@ -21,11 +21,11 @@ namespace FiberTaskingLib {
 
 extern THREAD_LOCAL uint tls_threadId;
 
-inline void SetThreadId(uint threadId) {
+inline void SetThreadIndex(uint threadId) {
 	tls_threadId = threadId;
 }
 
-inline uint GetThreadId() {
+inline uint GetThreadIndex() {
 	return tls_threadId;
 }
 
@@ -62,12 +62,12 @@ namespace FiberTaskingLib {
 
 extern std::unordered_map<ThreadId, uint> g_threadIdToIndexMap;
 
-inline void SetThreadId(uint threadId) {
-    g_threadIdToIndexMap[FTLGetCurrentThread()] = threadId;
+inline void SetThreadIndex(uint threadId) {
+	g_threadIdToIndexMap[FTLGetCurrentThread()] = threadId;
 }
 
-inline uint GetThreadId() {
-    return g_threadIdToIndexMap[FTLGetCurrentThread()];
+inline uint GetThreadIndex() {
+	return g_threadIdToIndexMap[FTLGetCurrentThread()];
 }
 
 
