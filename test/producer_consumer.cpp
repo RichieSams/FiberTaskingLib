@@ -43,7 +43,7 @@ TASK_ENTRY_POINT(Producer) {
 /**
  * Tests that all scheduled tasks finish properly
  */
-TEST(FiberTaskingLib, ProducerConsumer) {
+TEST(FunctionalTests, ProducerConsumer) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
 	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
 	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);

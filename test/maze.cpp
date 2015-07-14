@@ -114,7 +114,7 @@ TASK_ENTRY_POINT(CheckBranch) {
 }
 
 
-TEST(FunctionalTest, Maze10x10) {
+TEST(FunctionalTests, Maze10x10) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
 	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
 	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);

@@ -47,7 +47,7 @@ TASK_ENTRY_POINT(AddNumberSubset) {
  * 
  * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
  */
-TEST(FiberTaskingLib, CalcTriangleNum) {
+TEST(FunctionalTests, CalcTriangleNum) {
 	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
 	globalArgs->g_taskScheduler.Initialize(25, globalArgs);
 	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
