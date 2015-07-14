@@ -85,7 +85,8 @@ typedef intptr_t fiber_arg_t;
 class Fiber {
 public:
 	Fiber()
-		: m_stack(nullptr) {
+		: m_stack(nullptr),
+		  m_arg(0ull) {
 	}
 	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg)
 			: m_stack(new boost::context::fixedsize_stack(stackSize)),
