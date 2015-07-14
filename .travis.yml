@@ -18,10 +18,11 @@ addons:
 
 before_script:
   # Install latest boost
+  - mkdir boost_install_loc
   - wget https://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.gz/download
   - tar xf download
   - cd boost_1_58_0
-  - ./bootstrap.sh --with-libraries=context
+  - ./bootstrap.sh --with-libraries=context --prefix=../boost_install_loc
   - ./b2 install
   # Get back to the root
   - cd ../
