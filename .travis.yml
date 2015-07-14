@@ -23,7 +23,7 @@ before_script:
   - tar xf download
   - cd boost_1_58_0
   - ./bootstrap.sh --with-libraries=context --prefix=../boost_install_loc
-  - ./b2 install
+  - ./b2 install > /dev/null
   # Set the boost install location
   - export BOOST_ROOT="../boost_install_loc"
   # Get back to the root
