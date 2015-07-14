@@ -43,6 +43,7 @@
 #include <Windows.h>
 
 #include <process.h>
+#include <atomic>
 
 
 #define THREAD_LOCAL __declspec( thread )
@@ -50,12 +51,24 @@
 namespace FiberTaskingLib {
 
 typedef HANDLE ThreadId;
-typedef uint (__stdcall *ThreadStartRoutine)(void *arg);
+struct EventId {
+	HANDLE event;
+	std::atomic_ulong countWaiters;
+};
+const uint32 EVENTWAIT_INFINITE = INFINITE;
+
+typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE uint
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
 #define THREAD_FUNC_END return 0;
-	
-inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
+
+inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
+	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr);
+
+	return *returnId != nullptr;
+}
+
+inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr);
 
 	if (*returnId == nullptr) {
@@ -96,6 +109,33 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	SetThreadAffinityMask(GetCurrentThread(), coreAffinity);
 }
 
+inline EventId FTLCreateEvent() {
+	EventId ret;
+	ret.event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+	ret.countWaiters = 0;
+	return ret;
+}
+
+inline void FTLCloseEvent(EventId eventId) {
+	CloseHandle(eventId.event);
+}
+
+inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
+	eventId.countWaiters.fetch_add(1u);
+	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
+	uint prev = eventId.countWaiters.fetch_sub(1u);
+	if (1 == prev) {
+		// we were the last to awaken, so reset event.
+		ResetEvent(eventId.event);
+	}
+	assert(retval != WAIT_FAILED);
+	assert(prev != 0);
+}
+
+inline void FTLSignalEvent(EventId eventId) {
+	SetEvent(eventId.event);
+}
+
 } // End of namespace FiberTaskingLib
 
 
@@ -108,12 +148,33 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 namespace FiberTaskingLib {
 
 typedef pthread_t ThreadId;
+struct EventId {
+	pthread_cond_t  cond;
+	pthread_mutex_t mutex;
+};
+const uint32 EVENTWAIT_INFINITE = -1;
+
 typedef void *(*ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE void *
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
 #define THREAD_FUNC_END pthread_exit(NULL);
 
-inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
+inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
+	pthread_attr_t threadAttr;
+	pthread_attr_init(&threadAttr);
+
+	// Set stack size
+	pthread_attr_setstacksize(&threadAttr, stackSize);
+
+	int success = pthread_create(returnId, NULL, startRoutine, arg);
+
+	// Cleanup
+	pthread_attr_destroy(&threadAttr);
+
+	return success == 0;
+}
+
+inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -125,7 +186,7 @@ inline bool FTLCreateThread(ThreadId* returnId, uint stackSize, ThreadStartRouti
 	CPU_ZERO(&cpuSet);
 	CPU_SET(coreAffinity, &cpuSet);
 	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
-	
+
 	int success = pthread_create(returnId, NULL, startRoutine, arg);
 
 	// Cleanup
@@ -162,6 +223,38 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	CPU_SET(coreAffinity, &cpuSet);
 
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
+}
+
+inline EventId FTLCreateEvent() {
+	EventId event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+
+	return event;
+}
+
+inline void FTLCloseEvent(EventId eventId) {
+	// No op
+}
+
+inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
+	pthread_mutex_lock(&eventId.mutex);
+
+	if(milliseconds == EVENTWAIT_INFINITE) {
+		pthread_cond_wait(&eventId.cond, &eventId.mutex);
+	} else {
+		timespec waittime;
+		waittime.tv_sec = milliseconds / 1000;
+		milliseconds -= waittime.tv_sec * 1000;
+		waittime.tv_nsec = milliseconds * 1000;
+		pthread_cond_timedwait(&eventId.cond, &eventId.mutex, &waittime);
+	}
+
+	pthread_mutex_unlock(&eventId.mutex);
+}
+
+inline void FTLSignalEvent(EventId eventId) {
+	pthread_mutex_lock(&eventId.mutex);
+	pthread_cond_broadcast(&eventId.cond);
+	pthread_mutex_unlock(&eventId.mutex);
 }
 
 } // End of namespace FiberTaskingLib
