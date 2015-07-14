@@ -9,6 +9,8 @@
  * Copyright Adrian Astley 2015
  */
 
+#if defined(BOOST_CONTEXT)
+
 #include "fiber_tasking_lib/fiber_abstraction.h"
 
 #include "fiber_tasking_lib/tls_abstraction.h"
@@ -16,9 +18,9 @@
 
 namespace FiberTaskingLib {
 
-#if defined(BOOST_CONTEXT)
 // Boost.Context doesn't have a global way to get the current fiber
 TLS_VARIABLE(FiberId, tls_currentFiber);
-#endif
 
 } // End of namespace FiberTaskingLib
+
+#endif
