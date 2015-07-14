@@ -26,12 +26,14 @@ TASK_ENTRY_POINT(Consumer) {
 }
 
 TASK_ENTRY_POINT(Producer) {
-	FiberTaskingLib::Task tasks[kNumConsumerTasks];
+	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = {Consumer, arg};
 	}
 
 	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = g_taskScheduler->AddTasks(kNumConsumerTasks, tasks);
+	delete[] tasks;
+
 	g_taskScheduler->WaitForCounter(counter, 0);
 }
 

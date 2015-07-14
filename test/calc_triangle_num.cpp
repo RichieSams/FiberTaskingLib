@@ -58,7 +58,7 @@ TEST(FiberTaskingLib, CalcTriangleNum) {
 	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
 
 	// Create the tasks
-	FiberTaskingLib::Task tasks[numTasks];
+	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[numTasks];
 	// We have to declare this on the heap so other threads can access it
 	NumberSubset *subsets = new NumberSubset[numTasks];
 	uint64 nextNumber = 1ull;
@@ -79,6 +79,8 @@ TEST(FiberTaskingLib, CalcTriangleNum) {
 
 	// Schedule the tasks and wait for them to complete
 	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->g_taskScheduler.AddTasks(numTasks, tasks);
+	delete[] tasks;
+
 	globalArgs->g_taskScheduler.WaitForCounter(counter, 0);
 
 
