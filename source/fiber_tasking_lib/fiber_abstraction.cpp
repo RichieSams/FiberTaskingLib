@@ -19,7 +19,7 @@
 namespace FiberTaskingLib {
 
 // Boost.Context doesn't have a global way to get the current fiber
-TLS_VARIABLE(FiberId, tls_currentFiber);
+TLS_VARIABLE(FiberType, tls_currentFiber);
 
 } // End of namespace FiberTaskingLib
 

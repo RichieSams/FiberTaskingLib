@@ -19,13 +19,13 @@
 
 struct SingleFiberArg {
     uint64 Counter;
-    FiberTaskingLib::FiberId MainFiber;
-    FiberTaskingLib::FiberId FirstFiber;
-	FiberTaskingLib::FiberId SecondFiber;
-	FiberTaskingLib::FiberId ThirdFiber;
-	FiberTaskingLib::FiberId FourthFiber;
-	FiberTaskingLib::FiberId FifthFiber;
-	FiberTaskingLib::FiberId SixthFiber;
+    FiberTaskingLib::FiberType MainFiber;
+    FiberTaskingLib::FiberType FirstFiber;
+	FiberTaskingLib::FiberType SecondFiber;
+	FiberTaskingLib::FiberType ThirdFiber;
+	FiberTaskingLib::FiberType FourthFiber;
+	FiberTaskingLib::FiberType FifthFiber;
+	FiberTaskingLib::FiberType SixthFiber;
 };
 
 FIBER_START_FUNCTION(FirstLevelFiberStart) {

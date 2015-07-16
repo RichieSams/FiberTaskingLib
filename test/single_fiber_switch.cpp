@@ -18,8 +18,8 @@
 
 struct SingleFiberArg {
     std::atomic_long Counter;
-    FiberTaskingLib::FiberId MainFiber;
-    FiberTaskingLib::FiberId OtherFiber;
+    FiberTaskingLib::FiberType MainFiber;
+    FiberTaskingLib::FiberType OtherFiber;
 };
 
 FIBER_START_FUNCTION(SingleFiberStart) {

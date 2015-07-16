@@ -50,8 +50,9 @@
 
 namespace FiberTaskingLib {
 
-typedef HANDLE ThreadId;
-struct EventId {
+typedef HANDLE ThreadType;
+typedef DWORD ThreadId; 
+struct EventType {
 	HANDLE event;
 	std::atomic_ulong countWaiters;
 };
@@ -62,14 +63,14 @@ typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
 #define THREAD_FUNC_END return 0;
 
-inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
-	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr);
+inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
+	*returnId = (ThreadType)_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr);
 
 	return *returnId != nullptr;
 }
 
-inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
-	*returnId = (ThreadId)_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr);
+inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
+	*returnId = (ThreadType)_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr);
 
 	if (*returnId == nullptr) {
 		return false;
@@ -86,12 +87,12 @@ inline void FTLEndCurrentThread() {
 	_endthreadex(0);
 }
 
-inline void FTLCleanupThread(ThreadId threadId) {
+inline void FTLCleanupThread(ThreadType threadId) {
 	// No op
 	// _endthread will automatically close the handle for us
 }
 
-inline void FTLJoinThreads(uint numThreads, ThreadId *threads) {
+inline void FTLJoinThreads(uint numThreads, ThreadType *threads) {
 	WaitForMultipleObjects(numThreads, threads, true, INFINITE);
 }
 
@@ -101,7 +102,7 @@ inline uint FTLGetNumHardwareThreads() {
 	return sysInfo.dwNumberOfProcessors;
 }
 
-inline ThreadId FTLGetCurrentThread() {
+inline ThreadType FTLGetCurrentThread() {
 	return GetCurrentThread();
 }
 
@@ -109,18 +110,18 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	SetThreadAffinityMask(GetCurrentThread(), coreAffinity);
 }
 
-inline EventId FTLCreateEvent() {
-	EventId ret;
+inline EventType FTLCreateEvent() {
+	EventType ret;
 	ret.event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 	ret.countWaiters = 0;
 	return ret;
 }
 
-inline void FTLCloseEvent(EventId eventId) {
+inline void FTLCloseEvent(EventType eventId) {
 	CloseHandle(eventId.event);
 }
 
-inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
+inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
 	eventId.countWaiters.fetch_add(1u);
 	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
 	uint prev = eventId.countWaiters.fetch_sub(1u);
@@ -132,7 +133,7 @@ inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
 	assert(prev != 0);
 }
 
-inline void FTLSignalEvent(EventId eventId) {
+inline void FTLSignalEvent(EventType eventId) {
 	SetEvent(eventId.event);
 }
 
@@ -159,7 +160,7 @@ typedef void *(*ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
 #define THREAD_FUNC_END pthread_exit(NULL);
 
-inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
+inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -174,7 +175,7 @@ inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRouti
 	return success == 0;
 }
 
-inline bool FTLCreateThread(ThreadId *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
+inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -199,11 +200,11 @@ inline void FTLEndCurrentThread() {
 	pthread_exit(NULL);
 }
 
-inline void FTLCleanupThread(ThreadId threadId) {
+inline void FTLCleanupThread(ThreadType threadId) {
 	pthread_cancel(threadId);
 }
 
-inline void FTLJoinThreads(uint numThreads, ThreadId *threads) {
+inline void FTLJoinThreads(uint numThreads, ThreadType *threads) {
 	for (uint i = 0; i < numThreads; ++i) {
 		pthread_join(threads[i], nullptr);
 	}
@@ -213,9 +214,18 @@ inline uint FTLGetNumHardwareThreads() {
 	return (uint)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-inline ThreadId FTLGetCurrentThread() {
+inline ThreadType FTLGetCurrentThread() {
 	return pthread_self();
 }
+
+#if defined(__linux__)
+	inline ThreadId FTLGetCurrentThreadId() {
+		return syscall(SYS_gettid);
+	}
+#else
+	#error Implement FTLGetCurrentThreadId for this platform
+#endif
+
 
 inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	cpu_set_t cpuSet;
@@ -225,17 +235,17 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
 }
 
-inline EventId FTLCreateEvent() {
-	EventId event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+inline EventType FTLCreateEvent() {
+	EventType event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
 	return event;
 }
 
-inline void FTLCloseEvent(EventId eventId) {
+inline void FTLCloseEvent(EventType eventId) {
 	// No op
 }
 
-inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
+inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
 	if(milliseconds == EVENTWAIT_INFINITE) {
@@ -251,7 +261,7 @@ inline void FTLWaitForEvent(EventId &eventId, uint32 milliseconds) {
 	pthread_mutex_unlock(&eventId.mutex);
 }
 
-inline void FTLSignalEvent(EventId eventId) {
+inline void FTLSignalEvent(EventType eventId) {
 	pthread_mutex_lock(&eventId.mutex);
 	pthread_cond_broadcast(&eventId.cond);
 	pthread_mutex_unlock(&eventId.mutex);

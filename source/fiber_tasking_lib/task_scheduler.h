@@ -75,7 +75,7 @@ public:
 
 private:
 	std::size_t m_numThreads;
-	ThreadId *m_threads;
+	ThreadType *m_threads;
 	std::atomic_uint m_numActiveWorkerThreads;
 
 	/**
@@ -96,13 +96,13 @@ private:
 			  Counter(nullptr), 
 			  Value(0) {
 		}
-		WaitingTask(FiberId fiber, AtomicCounter *counter, int value)
+		WaitingTask(FiberType fiber, AtomicCounter *counter, int value)
 			: Fiber(fiber),
 			  Counter(counter),
 			  Value(value) {
 		}
 
-		FiberId Fiber;
+		FiberType Fiber;
 		AtomicCounter *Counter;
 		int Value;
 	};
@@ -111,7 +111,7 @@ private:
 	std::vector<WaitingTask> m_waitingTasks;
 	std::mutex m_waitingTaskLock;
 
-	moodycamel::BlockingConcurrentQueue<FiberId> m_fiberPool;
+	moodycamel::BlockingConcurrentQueue<FiberType> m_fiberPool;
 
 	/**
 	 * In order to put the current fiber on the waitingTasks list or the fiber pool, we have to
@@ -185,7 +185,7 @@ private:
 	 *
 	 * @param fiberToSwitchTo    The fiber to switch to
 	 */
-	void SwitchFibers(FiberId fiberToSwitchTo);
+	void SwitchFibers(FiberType fiberToSwitchTo);
 
 	/**
 	 * The threadProc function for all worker threads

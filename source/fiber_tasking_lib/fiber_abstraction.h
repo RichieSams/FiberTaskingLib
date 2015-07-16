@@ -30,31 +30,31 @@ typedef void * fiber_arg_t;
 #define FIBER_START_FUNCTION(functionName) void STDCALL functionName(void *arg)
 #define FIBER_START_FUNCTION_CLASS_IMPL(className, functionName) void className::functionName(void *arg)
 
-typedef void * FiberId;
+typedef void * FiberType;
 
-inline FiberId FTLConvertThreadToFiber() {
+inline FiberType FTLConvertThreadToFiber() {
 	return ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
 }
-inline void FTLConvertFiberToThread(FiberId fiber) {
+inline void FTLConvertFiberToThread(FiberType fiber) {
 	ConvertFiberToThread();
 }
 
-inline FiberId FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
+inline FiberType FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
 	return CreateFiberEx(stackSize, 0, FIBER_FLAG_FLOAT_SWITCH, startRoutine, arg);
 }
-inline void FTLDeleteFiber(FiberId fiber) {
+inline void FTLDeleteFiber(FiberType fiber) {
 	DeleteFiber(fiber);
 }
 
-inline void FTLSwitchToFiber(FiberId currentFiber, FiberId destFiber) {
+inline void FTLSwitchToFiber(FiberType currentFiber, FiberType destFiber) {
 	SwitchToFiber(destFiber);
 }
 
-inline FiberId FTLGetCurrentFiber() {
+inline FiberType FTLGetCurrentFiber() {
 	return GetCurrentFiber();
 }
 
-inline void FTLSetCurrentFiber(FiberId currentFiber) {
+inline void FTLSetCurrentFiber(FiberType currentFiber) {
 	// No op
 }
 
@@ -105,34 +105,34 @@ public:
 	}
 };
 
-typedef Fiber * FiberId;
+typedef Fiber * FiberType;
 
 
-inline FiberId FTLConvertThreadToFiber() {
+inline FiberType FTLConvertThreadToFiber() {
 	return new Fiber();
 }
-inline void FTLConvertFiberToThread(FiberId fiber) {
+inline void FTLConvertFiberToThread(FiberType fiber) {
 	delete fiber;
 }
 
-inline FiberId FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
+inline FiberType FTLCreateFiber(size_t stackSize, FiberStartRoutine startRoutine, fiber_arg_t arg) {
 	return new Fiber(stackSize, startRoutine, arg);
 }
-inline void FTLDeleteFiber(FiberId fiber) {
+inline void FTLDeleteFiber(FiberType fiber) {
 	delete fiber;
 }
 
-inline void FTLSwitchToFiber(FiberId currentFiber, FiberId destFiber) {
+inline void FTLSwitchToFiber(FiberType currentFiber, FiberType destFiber) {
 	currentFiber->SwitchToFiber(destFiber);
 }
 
-extern TLS_VARIABLE(FiberId, tls_currentFiber);
+extern TLS_VARIABLE(FiberType, tls_currentFiber);
 
-inline FiberId FTLGetCurrentFiber() {
+inline FiberType FTLGetCurrentFiber() {
 	return GetTLSData(tls_currentFiber);
 }
 
-inline void FTLSetCurrentFiber(FiberId currentFiber) {
+inline void FTLSetCurrentFiber(FiberType currentFiber) {
 	return SetTLSData(tls_currentFiber, currentFiber);
 }
 
