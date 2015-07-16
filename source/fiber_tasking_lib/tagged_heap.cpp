@@ -15,7 +15,7 @@
 namespace FiberTaskingLib {
 
 TaggedHeap::TaggedHeap(size_t pageSize)
-		: m_pageSize(pageSize) {
+	: m_pageSize(pageSize) {
 }
 
 TaggedHeap::~TaggedHeap() {

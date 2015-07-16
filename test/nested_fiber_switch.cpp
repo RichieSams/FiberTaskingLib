@@ -18,9 +18,9 @@
 
 
 struct SingleFiberArg {
-    uint64 Counter;
-    FiberTaskingLib::FiberType MainFiber;
-    FiberTaskingLib::FiberType FirstFiber;
+	uint64 Counter;
+	FiberTaskingLib::FiberType MainFiber;
+	FiberTaskingLib::FiberType FirstFiber;
 	FiberTaskingLib::FiberType SecondFiber;
 	FiberTaskingLib::FiberType ThirdFiber;
 	FiberTaskingLib::FiberType FourthFiber;
@@ -29,10 +29,10 @@ struct SingleFiberArg {
 };
 
 FIBER_START_FUNCTION(FirstLevelFiberStart) {
-    SingleFiberArg *singleFiberArg = (SingleFiberArg *)arg;
+	SingleFiberArg *singleFiberArg = (SingleFiberArg *)arg;
 
-    singleFiberArg->Counter += 8;
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->FirstFiber, singleFiberArg->SecondFiber);
+	singleFiberArg->Counter += 8;
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->FirstFiber, singleFiberArg->SecondFiber);
 
 	// Return from sixth
 	// We just finished 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1
@@ -49,9 +49,9 @@ FIBER_START_FUNCTION(FirstLevelFiberStart) {
 	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->FirstFiber, singleFiberArg->ThirdFiber);
 
 
-    // We should never get here
-    FAIL();
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->FirstFiber, singleFiberArg->MainFiber);
+	// We should never get here
+	FAIL();
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->FirstFiber, singleFiberArg->MainFiber);
 }
 
 FIBER_START_FUNCTION(SecondLevelFiberStart) {
@@ -155,10 +155,10 @@ FIBER_START_FUNCTION(SixthLevelFiberStart) {
 }
 
 TEST(FiberAbstraction, NestedFiberSwitch) {
-    SingleFiberArg *singleFiberArg = new SingleFiberArg();
-    singleFiberArg->Counter = 0ull;
-    singleFiberArg->MainFiber = FiberTaskingLib::FTLConvertThreadToFiber();
-    singleFiberArg->FirstFiber = FiberTaskingLib::FTLCreateFiber(524288, FirstLevelFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
+	SingleFiberArg *singleFiberArg = new SingleFiberArg();
+	singleFiberArg->Counter = 0ull;
+	singleFiberArg->MainFiber = FiberTaskingLib::FTLConvertThreadToFiber();
+	singleFiberArg->FirstFiber = FiberTaskingLib::FTLCreateFiber(524288, FirstLevelFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
 	singleFiberArg->SecondFiber = FiberTaskingLib::FTLCreateFiber(524288, SecondLevelFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
 	singleFiberArg->ThirdFiber = FiberTaskingLib::FTLCreateFiber(524288, ThirdLevelFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
 	singleFiberArg->FourthFiber = FiberTaskingLib::FTLCreateFiber(524288, FourthLevelFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
@@ -168,13 +168,13 @@ TEST(FiberAbstraction, NestedFiberSwitch) {
 	// The order should be:
 	// 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1 -> 5 -> 1 -> 3 -> 2 -> 4 -> 6 -> 4 -> 2 -> 5 -> 3 -> 6 -> Main
 
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->MainFiber, singleFiberArg->FirstFiber);
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->MainFiber, singleFiberArg->FirstFiber);
 
-    GTEST_ASSERT_EQ(((((((((((((((((((0ull + 8ull) * 3ull) + 7ull) * 6ull) - 9ull) * 2ull) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), singleFiberArg->Counter);
+	GTEST_ASSERT_EQ(((((((((((((((((((0ull + 8ull) * 3ull) + 7ull) * 6ull) - 9ull) * 2ull) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), singleFiberArg->Counter);
 
-    // Cleanup
-    FiberTaskingLib::FTLConvertFiberToThread(singleFiberArg->MainFiber);
-    FiberTaskingLib::FTLDeleteFiber(singleFiberArg->FirstFiber);
-    delete singleFiberArg;
+	// Cleanup
+	FiberTaskingLib::FTLConvertFiberToThread(singleFiberArg->MainFiber);
+	FiberTaskingLib::FTLDeleteFiber(singleFiberArg->FirstFiber);
+	delete singleFiberArg;
 }
 

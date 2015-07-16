@@ -41,10 +41,10 @@ TASK_ENTRY_POINT(AddNumberSubset) {
  *
  * A triangle number is defined as:
  *         Tn = 1 + 2 + 3 + ... + n
- * 
+ *
  * The code is checked against the numerical solution which is:
  *         Tn = n * (n + 1) / 2
- * 
+ *
  * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
  */
 TEST(FunctionalTests, CalcTriangleNum) {

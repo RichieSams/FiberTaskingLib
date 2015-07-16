@@ -92,9 +92,9 @@ private:
 	 * Holds a fiber that is waiting on a counter to be a certain value
 	 */
 	struct WaitingTask {
-		WaitingTask() 
-			: Fiber(nullptr), 
-			  Counter(nullptr), 
+		WaitingTask()
+			: Fiber(nullptr),
+			  Counter(nullptr),
 			  Value(0) {
 		}
 		WaitingTask(FiberType fiber, AtomicCounter *counter, int value)
@@ -140,7 +140,7 @@ public:
 	bool Initialize(uint fiberPoolSize, GlobalArgs *globalArgs);
 
 	/**
-	 * Adds a task to the internal queue. 
+	 * Adds a task to the internal queue.
 	 *
 	 * @param task    The task to queue
 	 * @return        An atomic counter corresponding to this task. Initially it will equal 1. When the task completes, it will be decremented.
@@ -166,7 +166,7 @@ public:
 	 * Tells all worker threads to quit, then waits for all threads to complete.
 	 * Any currently running task will finish before the worker thread returns.
 	 *
-	 * @return        
+	 * @return
 	 */
 	void Quit();
 
@@ -210,7 +210,7 @@ private:
 	/**
 	 * The fiberProc function for the counter wait helper fiber
 	 *
-	 * @param arg    An instance of TaskScheduler  
+	 * @param arg    An instance of TaskScheduler
 	 */
 	static FIBER_START_FUNCTION(CounterWaitStart);
 };

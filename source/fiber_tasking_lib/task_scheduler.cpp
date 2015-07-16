@@ -57,7 +57,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 
 		taskScheduler->m_waitingTaskLock.lock();
 		auto iter = taskScheduler->m_waitingTasks.begin();
-		for ( ; iter != taskScheduler->m_waitingTasks.end(); ++iter) {
+		for (; iter != taskScheduler->m_waitingTasks.end(); ++iter) {
 			if (iter->Counter->load() == iter->Value) {
 				waitingTaskReady = true;
 				break;
@@ -65,12 +65,12 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 		}
 		if (waitingTaskReady) {
 			waitingTask = *iter;
-			
+
 			// Optimization for removing an item from a vector as suggested by ryeguy on reddit
 			// Explained here: http://stackoverflow.com/questions/4442477/remove-ith-item-from-c-stdvector/4442529#4442529
 			// Essentially, rather than forcing a memcpy to shift all the remaining elements down after the erase,
 			// we move the last element into the place where the erased element was. Then we pop off the last element
-			
+
 			// Check that we're not already the last item
 			// Move assignment to self is not defined
 			if (iter != (--taskScheduler->m_waitingTasks.end())) {
@@ -174,7 +174,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	FiberType mainThreadFiber = FTLConvertThreadToFiber();
 
 	FTLSetCurrentFiber(mainThreadFiber);
-	
+
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {
 		ThreadStartArgs *threadArgs = new ThreadStartArgs();
@@ -209,7 +209,7 @@ std::shared_ptr<AtomicCounter> TaskScheduler::AddTasks(uint numTasks, Task *task
 		TaskBundle bundle = {tasks[i], counter};
 		m_taskQueue.enqueue(bundle);
 	}
-	
+
 	return counter;
 }
 
@@ -220,7 +220,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 }
 
 void TaskScheduler::SwitchFibers(FiberType fiberToSwitchTo) {
-    FiberType currentFiber = FTLGetCurrentFiber();
+	FiberType currentFiber = FTLGetCurrentFiber();
 	SetTLSData(tls_originFiber, currentFiber);
 	SetTLSData(tls_destFiber, fiberToSwitchTo);
 
@@ -237,7 +237,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 	m_fiberPool.wait_dequeue(fiberToSwitchTo);
 	SetTLSData(tls_destFiber, fiberToSwitchTo);
 
-    FiberType currentFiber = FTLGetCurrentFiber();
+	FiberType currentFiber = FTLGetCurrentFiber();
 	SetTLSData(tls_originFiber, currentFiber);
 	SetTLSData(tls_waitingCounter, counter.get());
 	SetTLSData(tls_waitingValue, value);
@@ -250,7 +250,7 @@ void TaskScheduler::Quit() {
 	FTLConvertFiberToThread(FTLGetCurrentFiber());
 
 	// Wait until all worker threads have finished
-	// 
+	//
 	// We can't use traditional thread join mechanisms because we can't
 	// guarantee the ThreadIds we started with are the ones we finish with
 	// The 'physical' threads are always there, but the ThreadIds change

@@ -27,11 +27,11 @@
 namespace FiberTaskingLib {
 
 typedef void (STDCALL *FiberStartRoutine)(void *arg);
-typedef void * fiber_arg_t;
+typedef void *fiber_arg_t;
 #define FIBER_START_FUNCTION(functionName) void STDCALL functionName(void *arg)
 #define FIBER_START_FUNCTION_CLASS_IMPL(className, functionName) void className::functionName(void *arg)
 
-typedef void * FiberType;
+typedef void *FiberType;
 
 inline FiberType FTLConvertThreadToFiber() {
 	return ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
@@ -105,7 +105,7 @@ public:
 	}
 };
 
-typedef Fiber * FiberType;
+typedef Fiber *FiberType;
 
 
 inline FiberType FTLConvertThreadToFiber() {

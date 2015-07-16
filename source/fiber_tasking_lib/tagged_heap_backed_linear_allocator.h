@@ -39,7 +39,7 @@ public:
 
 private:
 	#if EASTL_NAME_ENABLED
-		const char* m_name;
+		const char *m_name;
 	#endif
 
 	TaggedHeap *m_heap;
@@ -70,14 +70,14 @@ public:
 	// Name info
 	inline const char *get_name() const {
 		#if EASTL_NAME_ENABLED
-				return m_name;
+			return m_name;
 		#else
-				return TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME;
+			return TAGGED_HEAP_LINEAR_ALLOCATOR_DEFAULT_NAME;
 		#endif
 	}
-	inline void set_name(const char * name) {
+	inline void set_name(const char *name) {
 		#if EASTL_NAME_ENABLED
-				m_name = name;
+			m_name = name;
 		#endif
 	}
 

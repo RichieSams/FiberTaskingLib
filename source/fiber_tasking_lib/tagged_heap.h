@@ -35,11 +35,11 @@ struct MemoryPage {
 
 class TaggedHeap {
 public:
-    TaggedHeap(size_t pageSize);
+	TaggedHeap(size_t pageSize);
 	~TaggedHeap();
 
 private:
-    const size_t m_pageSize;
+	const size_t m_pageSize;
 
 	struct MemoryNode {
 		MemoryNode(size_t pageSize)
@@ -53,7 +53,7 @@ private:
 
 	std::unordered_map<uint64, MemoryNode *> m_usedMemory;
 	std::queue<MemoryNode *> m_freeMemory;
-    
+
 	std::mutex m_memoryLock;
 
 public:

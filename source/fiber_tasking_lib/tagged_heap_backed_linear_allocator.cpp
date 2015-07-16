@@ -18,7 +18,7 @@
 namespace FiberTaskingLib {
 
 EASTL_ALLOCATOR_EXPLICIT TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const char *name)
-		: m_heap(nullptr), 
+		: m_heap(nullptr),
 		  m_id(0u),
 		  m_currentPage(nullptr),
 		  m_lock(nullptr),
@@ -41,7 +41,7 @@ TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHea
 	#endif
 }
 
-TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc, const char *name) 
+TaggedHeapBackedLinearAllocator::TaggedHeapBackedLinearAllocator(const TaggedHeapBackedLinearAllocator &alloc, const char *name)
 		: m_heap(alloc.m_heap),
 		  m_id(alloc.m_id),
 		  m_currentPage(alloc.m_currentPage),
@@ -109,7 +109,7 @@ void *TaggedHeapBackedLinearAllocator::allocate(size_t n, int flags) {
 		AskForNewPageFromHeap();
 	}
 
-	void* userPtr = *m_current;
+	void *userPtr = *m_current;
 	*m_current += n;
 
 	m_lock->unlock();

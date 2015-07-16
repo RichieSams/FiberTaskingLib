@@ -50,7 +50,7 @@ private:
 public:
 	T Get() {
 		ThreadId id = FTLGetCurrentThreadId();
-		
+
 		// operator[] is not thread-safe, since it will create a node if one doesn't already exist
 		// So we have to lock on reads as well
 		// We *could* use find() first, then only lock if it doesn't exist, but the

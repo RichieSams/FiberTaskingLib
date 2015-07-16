@@ -43,7 +43,7 @@ BasicLinearAllocator::~BasicLinearAllocator() {
 }
 
 void *BasicLinearAllocator::Allocate(std::size_t size) {
-    if (m_current + size >= m_end) {
+	if (m_current + size >= m_end) {
 		// Check if we already have a new page allocated
 		if (m_currentPage->NextPage != nullptr) {
 			m_currentPage = m_currentPage->NextPage;
@@ -56,15 +56,15 @@ void *BasicLinearAllocator::Allocate(std::size_t size) {
 
 			++m_numPages;
 		}
-        
-        m_current = reinterpret_cast<byte *>(m_currentPage->Data);
-        m_end = m_current + m_pageSize;
-    }
-    
-    void* userPtr = m_current;
-    m_current += size;
-    
-    return userPtr;
+
+		m_current = reinterpret_cast<byte *>(m_currentPage->Data);
+		m_end = m_current + m_pageSize;
+	}
+
+	void *userPtr = m_current;
+	m_current += size;
+
+	return userPtr;
 }
 
 } // End of namespace Common

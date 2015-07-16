@@ -31,7 +31,7 @@ private:
 
 public:
 	/**
-	 * Checks for a write lock. If none exists, increments the reader count       
+	 * Checks for a write lock. If none exists, increments the reader count
 	 */
 	void LockRead();
 	/**

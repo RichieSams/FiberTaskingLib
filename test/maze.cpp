@@ -67,8 +67,7 @@ bool CheckDirection(char *areaToCheck, MazeType *maze, int newX, int newY, Fiber
 	} else if (*areaToCheck == ' ') {
 		*areaToCheck = '*';
 
-		BranchArgs *newBranchArgs = new(allocator->allocate(sizeof(BranchArgs)))
-			BranchArgs(maze, newX, newY, completed);
+		BranchArgs *newBranchArgs = new(allocator->allocate(sizeof(BranchArgs))) BranchArgs(maze, newX, newY, completed);
 
 		FiberTaskingLib::Task newBranch = {CheckBranch, newBranchArgs};
 		taskScheduler->AddTask(newBranch);
@@ -78,7 +77,7 @@ bool CheckDirection(char *areaToCheck, MazeType *maze, int newX, int newY, Fiber
 }
 
 TASK_ENTRY_POINT(CheckBranch) {
-	BranchArgs * branchArgs = (BranchArgs *)arg;
+	BranchArgs *branchArgs = (BranchArgs *)arg;
 
 	// Check right
 	if (branchArgs->CurrX + 1 < branchArgs->Maze->Width) {
@@ -122,12 +121,12 @@ TEST(FunctionalTests, Maze10x10) {
 	std::shared_ptr<FiberTaskingLib::AtomicCounter> completed = std::make_shared<FiberTaskingLib::AtomicCounter>();
 	completed->store(0);
 
-	char *mazeData = new char[21 *21];
+	char *mazeData = new char[21 * 21];
 	memcpy(mazeData, kMaze10x10, 21 * 21);
 
-	BranchArgs *startBranch = new BranchArgs(new MazeType(mazeData, 21, 21), 
+	BranchArgs *startBranch = new BranchArgs(new MazeType(mazeData, 21, 21),
 	                                         0, 1,
-											 completed.get());
+	                                         completed.get());
 
 	FiberTaskingLib::Task task = {CheckBranch, startBranch};
 	globalArgs->g_taskScheduler.AddTask(task);

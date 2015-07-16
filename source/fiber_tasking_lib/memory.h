@@ -18,7 +18,7 @@
 namespace std {
 
 inline void *align(size_t alignment, size_t size, void *start, size_t bufferSize) {
-	return (void*)((reinterpret_cast<uintptr_t>(start) + static_cast<uintptr_t>(alignment - 1)) & static_cast<uintptr_t>(~(alignment - 1)));
+	return (void *)((reinterpret_cast<uintptr_t>(start) + static_cast<uintptr_t>(alignment - 1)) & static_cast<uintptr_t>(~(alignment - 1)));
 }
 
 } // End of namespace std

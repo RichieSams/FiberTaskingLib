@@ -17,36 +17,36 @@
 
 
 struct SingleFiberArg {
-    std::atomic_long Counter;
-    FiberTaskingLib::FiberType MainFiber;
-    FiberTaskingLib::FiberType OtherFiber;
+	std::atomic_long Counter;
+	FiberTaskingLib::FiberType MainFiber;
+	FiberTaskingLib::FiberType OtherFiber;
 };
 
 FIBER_START_FUNCTION(SingleFiberStart) {
-    SingleFiberArg *singleFiberArg = (SingleFiberArg *)arg;
+	SingleFiberArg *singleFiberArg = (SingleFiberArg *)arg;
 
-    singleFiberArg->Counter.fetch_add(1);
+	singleFiberArg->Counter.fetch_add(1);
 
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
 
-    // We should never get here
-    FAIL();
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
+	// We should never get here
+	FAIL();
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
 }
 
 TEST(FiberAbstraction, SingleFiberSwitch) {
-    SingleFiberArg *singleFiberArg = new SingleFiberArg();
-    singleFiberArg->Counter.store(0);
-    singleFiberArg->MainFiber = FiberTaskingLib::FTLConvertThreadToFiber();
-    singleFiberArg->OtherFiber = FiberTaskingLib::FTLCreateFiber(524288, SingleFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
+	SingleFiberArg *singleFiberArg = new SingleFiberArg();
+	singleFiberArg->Counter.store(0);
+	singleFiberArg->MainFiber = FiberTaskingLib::FTLConvertThreadToFiber();
+	singleFiberArg->OtherFiber = FiberTaskingLib::FTLCreateFiber(524288, SingleFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
 
-    FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->MainFiber, singleFiberArg->OtherFiber);
+	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->MainFiber, singleFiberArg->OtherFiber);
 
-    GTEST_ASSERT_EQ(1, singleFiberArg->Counter.load());
+	GTEST_ASSERT_EQ(1, singleFiberArg->Counter.load());
 
-    // Cleanup
-    FiberTaskingLib::FTLConvertFiberToThread(singleFiberArg->MainFiber);
-    FiberTaskingLib::FTLDeleteFiber(singleFiberArg->OtherFiber);
-    delete singleFiberArg;
+	// Cleanup
+	FiberTaskingLib::FTLConvertFiberToThread(singleFiberArg->MainFiber);
+	FiberTaskingLib::FTLDeleteFiber(singleFiberArg->OtherFiber);
+	delete singleFiberArg;
 }
 
