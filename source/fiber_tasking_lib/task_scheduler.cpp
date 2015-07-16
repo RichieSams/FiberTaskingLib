@@ -34,6 +34,10 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	FiberType threadFiber = FTLConvertThreadToFiber();
 	FTLSetCurrentFiber(threadFiber);
 
+	// Create switching fibers for this thread
+	globalArgs->g_taskScheduler.m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, FiberSwitchStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
+	globalArgs->g_taskScheduler.m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, CounterWaitStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
+
 	// Clean up
 	delete threadArgs;
 
@@ -129,9 +133,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, CounterWaitStart) {
 
 TaskScheduler::TaskScheduler()
 		: m_numThreads(0),
-		  m_threads(nullptr),
-		  m_fiberSwitchingFibers(nullptr),
-		  m_counterWaitingFibers(nullptr) {
+		  m_threads(nullptr) {
 	m_quit.store(false);
 }
 
@@ -143,19 +145,12 @@ TaskScheduler::~TaskScheduler() {
 		FTLDeleteFiber(fiber);
 	}
 
-	for (uint i = 0; i < m_numThreads; ++i) {
-		FTLDeleteFiber(m_fiberSwitchingFibers[i]);
-		FTLDeleteFiber(m_counterWaitingFibers[i]);
+	for (auto iter = m_fiberSwitchingFibers.begin(); iter != m_fiberSwitchingFibers.end(); ++iter) {
+		FTLDeleteFiber(iter->second);
 	}
-	delete[] m_fiberSwitchingFibers;
-	delete[] m_counterWaitingFibers;
-
-	DestroyTLSVariable(tls_destFiber);
-	DestroyTLSVariable(tls_originFiber);
-	DestroyTLSVariable(tls_waitingCounter);
-	DestroyTLSVariable(tls_waitingValue);
-
-	FTLDestroyCurrentFiber();
+	for (auto iter = m_counterWaitingFibers.begin(); iter != m_counterWaitingFibers.end(); ++iter) {
+		FTLDeleteFiber(iter->second);
+	}
 }
 
 bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
@@ -168,29 +163,16 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	m_numThreads = FTLGetNumHardwareThreads();
 	m_threads = new ThreadType[m_numThreads];
 	m_numActiveWorkerThreads.store((uint)m_numThreads - 1);
-	m_fiberSwitchingFibers = new FiberId[m_numThreads];
-	m_counterWaitingFibers = new FiberId[m_numThreads];
 
-	CreateTLSVariable(&tls_destFiber, m_numThreads);
-	CreateTLSVariable(&tls_originFiber, m_numThreads);
-	CreateTLSVariable(&tls_waitingCounter, m_numThreads);
-	CreateTLSVariable(&tls_waitingValue, m_numThreads);
-
-    FTLInitializeCurrentFiber(m_numThreads);
-
-
-	// Create a switching fiber for each thread
-	for (uint i = 0; i < m_numThreads; ++i) {
-		m_fiberSwitchingFibers[i] = FTLCreateFiber(32768, FiberSwitchStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
-		m_counterWaitingFibers[i] = FTLCreateFiber(32768, CounterWaitStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
-	}
+	// Create switching fibers for this thread
+	m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, FiberSwitchStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
+	m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, CounterWaitStart, (fiber_arg_t)&globalArgs->g_taskScheduler);
 
 	// Set the affinity for the current thread and convert it to a fiber
 	FTLSetCurrentThreadAffinity(1);
 	m_threads[0] = FTLGetCurrentThread();
 	FiberType mainThreadFiber = FTLConvertThreadToFiber();
 
-	SetThreadIndex(0);
 	FTLSetCurrentFiber(mainThreadFiber);
 	
 	// Create the remaining threads
