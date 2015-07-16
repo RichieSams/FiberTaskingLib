@@ -29,8 +29,6 @@ struct ThreadStartArgs {
 
 THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = (ThreadStartArgs *)arg;
-
-	SetThreadIndex(threadArgs->threadIndex);
 	GlobalArgs *globalArgs = threadArgs->globalArgs;
 
 	FiberId threadFiber = FTLConvertThreadToFiber();

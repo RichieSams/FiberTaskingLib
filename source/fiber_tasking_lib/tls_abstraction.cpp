@@ -9,21 +9,3 @@
  * Copyright Adrian Astley 2015
  */
 
-#include "fiber_tasking_lib/config.h"
-#include "fiber_tasking_lib/typedefs.h"
-#include "fiber_tasking_lib/thread_abstraction.h"
-
-
-#if defined(FIBER_IMPL_SUPPORTS_TLS)
-    namespace FiberTaskingLib {
-        THREAD_LOCAL uint tls_threadId;
-    } // End of namespace FiberTaskingLib
-#else
-    #include <unordered_map>
-
-    namespace FiberTaskingLib {
-        std::unordered_map<ThreadId, uint> g_threadIdToIndexMap;
-    } // End of namespace FiberTaskingLib
-#endif
-
-

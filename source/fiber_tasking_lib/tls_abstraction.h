@@ -19,28 +19,7 @@
 
 namespace FiberTaskingLib {
 
-extern THREAD_LOCAL uint tls_threadId;
-
-inline void SetThreadIndex(uint threadId) {
-	tls_threadId = threadId;
-}
-
-inline uint GetThreadIndex() {
-	return tls_threadId;
-}
-
-
 #define TLS_VARIABLE(type, name) __declspec(thread) type name;
-
-template<class T>
-inline void CreateTLSVariable(T *tlsVariable, size_t numThreads) {
-	// No op
-}
-
-template<class T>
-inline void DestroyTLSVariable(T tlsVariable) {
-	// No op
-}
 
 template<class T>
 inline T GetTLSData(T &tlsVariable) {
@@ -56,41 +35,48 @@ inline void SetTLSData(T &tlsVariable, T value) {
 
 #else
 
-#include<unordered_map>
+#include <unordered_map>
+#include <mutex>
 
 namespace FiberTaskingLib {
 
-extern std::unordered_map<ThreadId, uint> g_threadIdToIndexMap;
+template<class T>
+class TlsVariable {
 
-inline void SetThreadIndex(uint threadId) {
-	g_threadIdToIndexMap[FTLGetCurrentThread()] = threadId;
-}
+private:
+	std::unordered_map<ThreadId, T> data;
+	std::mutex lock;
 
-inline uint GetThreadIndex() {
-	return g_threadIdToIndexMap[FTLGetCurrentThread()];
-}
+public:
+	T Get() {
+		ThreadId id = FTLGetCurrentThreadId();
+		
+		// operator[] is not thread-safe, since it will create a node if one doesn't already exist
+		// So we have to lock on reads as well
+		// We *could* use find() first, then only lock if it doesn't exist, but the
+		// thread-contention should be low enough that it's not worth the extra code
+		std::lock_guard<std::mutex> lockGuard(lock);
+		return data[id];
+	}
 
+	void Set(T value) {
+		ThreadId id = FTLGetCurrentThreadId();
 
-#define TLS_VARIABLE(type, name) type *name
+		std::lock_guard<std::mutex> lockGuard(lock);
+		data[id] = value;
+	}
+};
+
+#define TLS_VARIABLE(type, name) ::FiberTaskingLib::TlsVariable<type> name
 
 template<class T>
-inline void CreateTLSVariable(T **tlsVariable, size_t numThreads) {
-    *tlsVariable = new T[numThreads];
+inline T GetTLSData(TlsVariable<T> &tlsVariable) {
+	return tlsVariable.Get();
 }
 
 template<class T>
-inline void DestroyTLSVariable(T *tlsVariable) {
-    delete[] tlsVariable;
-}
-
-template<class T>
-inline T GetTLSData(T *tlsVariable) {
-    return tlsVariable[g_threadIdToIndexMap[FTLGetCurrentThread()]];
-}
-
-template<class T>
-inline void SetTLSData(T *tlsVariable, T value) {
-    tlsVariable[g_threadIdToIndexMap[FTLGetCurrentThread()]] = value;
+inline void SetTLSData(TlsVariable<T> &tlsVariable, T value) {
+	tlsVariable.Set(value);
 }
 
 } // End of namespace FiberTaskingLib
