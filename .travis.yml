@@ -9,6 +9,8 @@ install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 - mkdir boost_install_loc
 - export BOOST_ROOT=$(pwd)/boost_install_loc
+- export BOOST_INCLUDEDIR=$(pwd)/boost_install_loc/include
+- export BOOST_LIBRARYDIR=$(pwd)/boost_install_loc/lib
 
 addons:
   apt:
