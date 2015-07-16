@@ -98,7 +98,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 
 FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberSwitchStart) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
-	uint threadId = GetThreadIndex();
+	ThreadId threadId = FTLGetCurrentThreadId();
 
 	while (true) {
 		taskScheduler->m_fiberPool.enqueue(GetTLSData(tls_originFiber));
@@ -111,7 +111,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberSwitchStart) {
 
 FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, CounterWaitStart) {
 	TaskScheduler *taskScheduler = (TaskScheduler *)arg;
-	uint threadId = GetThreadIndex();
+	ThreadId threadId = FTLGetCurrentThreadId();
 
 	while (true) {
 		taskScheduler->m_waitingTaskLock.lock();

@@ -106,6 +106,10 @@ inline ThreadType FTLGetCurrentThread() {
 	return GetCurrentThread();
 }
 
+inline ThreadId FTLGetCurrentThreadId() {
+	return GetCurrentThreadId();
+}
+
 inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	SetThreadAffinityMask(GetCurrentThread(), coreAffinity);
 }
@@ -144,12 +148,21 @@ inline void FTLSignalEvent(EventType eventId) {
 
 #include <pthread.h>
 #include <unistd.h>
+#if defined(__linux__)
+	#include <unistd.h>
+	#include <sys/syscall.h>
+#endif
+
 #define THREAD_LOCAL __thread
+
 
 namespace FiberTaskingLib {
 
-typedef pthread_t ThreadId;
-struct EventId {
+typedef pthread_t ThreadType;
+#if defined(__linux__)
+typedef pid_t ThreadId;
+#endif
+struct EventType {
 	pthread_cond_t  cond;
 	pthread_mutex_t mutex;
 };
