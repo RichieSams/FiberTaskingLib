@@ -14,3 +14,9 @@
 #if defined(_MSC_VER)
 	#define FIBER_IMPL_SUPPORTS_TLS
 #endif
+
+#if defined(_MSC_VER)
+	#define WIN32_FIBER_IMPL
+#else
+	#define BOOST_CONTEXT_FIBER_IMPL
+#endif
