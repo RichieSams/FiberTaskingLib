@@ -17,30 +17,6 @@
 TLS_VARIABLE(uint, tls_var);
 
 
-TEST(TLSAbstraction, GetSet) {
-	FiberTaskingLib::CreateTLSVariable(&tls_var, 1);
-	FiberTaskingLib::SetThreadIndex(0u);
-
-
-	FiberTaskingLib::SetTLSData(tls_var, 8u);
-	GTEST_ASSERT_EQ(8u, FiberTaskingLib::GetTLSData(tls_var));
-
-	FiberTaskingLib::SetTLSData(tls_var, 12345u);
-	GTEST_ASSERT_EQ(12345u, FiberTaskingLib::GetTLSData(tls_var));
-
-	FiberTaskingLib::SetTLSData(tls_var, 74234u);
-	GTEST_ASSERT_EQ(74234u, FiberTaskingLib::GetTLSData(tls_var));
-
-
-	FiberTaskingLib::DestroyTLSVariable(tls_var);
-}
-
-
-struct ThreadArg {
-	uint threadIndex;
-};
-
-
 void TestTLSGetSet() {
 	for (uint i = 0; i < 10000; ++i) {
 		FiberTaskingLib::SetTLSData(tls_var, 8u);
@@ -54,10 +30,17 @@ void TestTLSGetSet() {
 	}
 }
 
+TEST(TLSAbstraction, GetSet) {
+	TestTLSGetSet();
+}
+
+
+struct ThreadArg {
+	uint threadIndex;
+};
 
 THREAD_FUNC_DECL ThreadStart(void *arg) {
 	ThreadArg *threadArg = (ThreadArg *)arg;
-	FiberTaskingLib::SetThreadIndex(threadArg->threadIndex);
 
 	TestTLSGetSet();
 
@@ -65,18 +48,14 @@ THREAD_FUNC_DECL ThreadStart(void *arg) {
 }
 
 TEST(TLSAbstraction, MultipleThreadGetSet) {
-	FiberTaskingLib::CreateTLSVariable(&tls_var, 8);
-	FiberTaskingLib::SetThreadIndex(0u);
+	const uint kNumThreads = 8;
 
-	FiberTaskingLib::ThreadId threads[7];
-	ThreadArg *args = new ThreadArg[7];
-	for (uint i = 0; i < 7; ++i) {
-		args[i].threadIndex = i + 1;
-		FiberTaskingLib::FTLCreateThread(&threads[i], 524288u, ThreadStart, &args[i]);
+	FiberTaskingLib::ThreadType threads[kNumThreads];
+	ThreadArg *args = new ThreadArg[kNumThreads];
+	for (uint i = 0; i < kNumThreads; ++i) {
+		args[i].threadIndex = i;
+		FiberTaskingLib::FTLCreateThread(&threads[i], 5524288u, ThreadStart, &args[i]);
 	}
 
-	TestTLSGetSet();
-
-	FiberTaskingLib::FTLJoinThreads(7u, threads);
-	FiberTaskingLib::DestroyTLSVariable(tls_var);
+	FiberTaskingLib::FTLJoinThreads(kNumThreads, threads);
 }
