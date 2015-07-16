@@ -11,13 +11,14 @@
 
 #pragma once
 
+#include "fiber_tasking_lib/config.h"
 #include "fiber_tasking_lib/portability.h"
 #include "fiber_tasking_lib/tls_abstraction.h"
 
 #include <cstddef>
 
 
-#if defined(_MSC_VER)
+#if defined(WIN32_FIBER_IMPL)
 
 // VC++ implementation
 #define WIN32_LEAN_AND_MEAN
@@ -60,9 +61,8 @@ inline void FTLSetCurrentFiber(FiberType currentFiber) {
 
 } // End of namespace FiberTaskingLib
 
-#else
+#elif defined(BOOST_CONTEXT_FIBER_IMPL)
 // Boost.Context implementation
-#define BOOST_CONTEXT
 
 #include <boost/context/fcontext.hpp>
 #include <boost/context/fixedsize_stack.hpp>
@@ -138,5 +138,7 @@ inline void FTLSetCurrentFiber(FiberType currentFiber) {
 
 } // End of namespace FiberTaskingLib
 
+#else
+	#error This platform does not support fibers (currently). See fiber_tasking_lib/config.h
 #endif
 
