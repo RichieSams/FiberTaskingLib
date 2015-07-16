@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FiberTaskingLib", "FiberTas
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleProject", "ExampleProject.vcxproj", "{8D3E6072-7F9C-4A9D-939D-814B0ECB5A8F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FiberTaskingLib-test", "FiberTaskingLib-test.vcxproj", "{371BE813-5704-44B4-B3BC-EE20C562257A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,14 @@ Global
 		{8D3E6072-7F9C-4A9D-939D-814B0ECB5A8F}.Release|Win32.Build.0 = Release|Win32
 		{8D3E6072-7F9C-4A9D-939D-814B0ECB5A8F}.Release|x64.ActiveCfg = Release|x64
 		{8D3E6072-7F9C-4A9D-939D-814B0ECB5A8F}.Release|x64.Build.0 = Release|x64
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Debug|Win32.Build.0 = Debug|Win32
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Debug|x64.ActiveCfg = Debug|x64
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Debug|x64.Build.0 = Debug|x64
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Release|Win32.ActiveCfg = Release|Win32
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Release|Win32.Build.0 = Release|Win32
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Release|x64.ActiveCfg = Release|x64
+		{371BE813-5704-44B4-B3BC-EE20C562257A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
