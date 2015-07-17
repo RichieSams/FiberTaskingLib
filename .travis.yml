@@ -13,11 +13,13 @@ addons:
     packages:
     - gcc-5
     - g++-5
+    - p7zip-full
 
 before_script:
+  - openssl version -a
   # Install latest boost
-  - wget https://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.gz/download
-  - tar xf download
+  - curl https://files.adrianastley.com/programming/boost_1_58_0.7z > boost_1_58_0.7z
+  - 7z x boost_1_58_0.7z
   - cd boost_1_58_0
   - ./bootstrap.sh --with-libraries=context
   - sudo ./b2 install > /dev/null
