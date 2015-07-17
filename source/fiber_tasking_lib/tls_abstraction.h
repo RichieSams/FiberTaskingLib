@@ -19,7 +19,7 @@
 
 namespace FiberTaskingLib {
 
-#define TLS_VARIABLE(type, name) __declspec(thread) type name;
+#define TLS_VARIABLE(type, name) THREAD_LOCAL type name;
 
 template<class T>
 inline T GetTLSData(T &tlsVariable) {
