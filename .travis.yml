@@ -19,8 +19,10 @@ before_script:
   - openssl version -a
   # Install latest boost
   - curl https://files.adrianastley.com/programming/boost_1_58_0.7z > boost_1_58_0.7z
-  - 7z x boost_1_58_0.7z
+  - 7z x boost_1_58_0.7z > /dev/null
+  - ls -l
   - cd boost_1_58_0
+  - ls -l
   - ./bootstrap.sh --with-libraries=context
   - sudo ./b2 install > /dev/null
   # Get back to the root
