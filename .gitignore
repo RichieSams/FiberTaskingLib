@@ -12,6 +12,4 @@ obj/
 
 
 # CLion Project files
-workspace.xml
-tasks.xml
-misc.xml
+.idea/
