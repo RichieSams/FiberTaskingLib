@@ -114,11 +114,9 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	SetThreadAffinityMask(GetCurrentThread(), coreAffinity);
 }
 
-inline EventType FTLCreateEvent() {
-	EventType ret;
-	ret.event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-	ret.countWaiters = 0;
-	return ret;
+inline void FTLCreateEvent(EventType *event) {
+	event->event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+	event->countWaiters = 0;
 }
 
 inline void FTLCloseEvent(EventType eventId) {
@@ -248,10 +246,8 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
 }
 
-inline EventType FTLCreateEvent() {
-	EventType event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
-
-	return event;
+inline void FTLCreateEvent(EventType event) {
+	*event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 }
 
 inline void FTLCloseEvent(EventType eventId) {
