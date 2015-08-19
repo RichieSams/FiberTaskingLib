@@ -35,8 +35,10 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	FTLSetCurrentFiber(threadFiber);
 
 	// Create switching fibers for this thread
+	globalArgs->g_taskScheduler.m_waitingTaskLock.lock();
 	globalArgs->g_taskScheduler.m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, FiberSwitchStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
 	globalArgs->g_taskScheduler.m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, CounterWaitStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
+	globalArgs->g_taskScheduler.m_waitingTaskLock.unlock();
 
 	// Clean up
 	delete threadArgs;
