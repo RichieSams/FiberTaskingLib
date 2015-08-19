@@ -15,10 +15,22 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 
 
 ##Supported Platforms
-- [![Windows build status](https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?label=Windows&style=flat)](https://ci.appveyor.com/project/RichieSams/fibertaskinglib)
-- Any platform that can use Boost.Context. Currently, I have tested the following:
-	- [![Linux build status](https://img.shields.io/travis/RichieSams/FiberTaskingLib.svg?label=Ubuntu%20Linux&style=flat)](https://travis-ci.org/RichieSams/FiberTaskingLib)  
-
+<table>
+	<tr>
+		<th>Native Fiber API</th>
+		<th colspan="2">Boost.Context</th>
+	<tr>
+	<tr>
+		<td>Windows</td>
+		<td>Linux</td>
+		<td>OS X</td>
+	</tr>
+	<tr>
+		<td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?label=Windows&style=flat" alt="Windows build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://img.shields.io/travis/RichieSams/FiberTaskingLib.svg?label=Ubuntu%20Linux&style=flat" alt="Linux build status"</img></a></td>
+		<td>Soon</td>
+	</tr>
+</table>
 
 <br />
 
