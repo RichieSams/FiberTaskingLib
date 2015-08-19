@@ -246,7 +246,7 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
 }
 
-inline void FTLCreateEvent(EventType event) {
+inline void FTLCreateEvent(EventType *event) {
 	*event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 }
 
