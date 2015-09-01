@@ -20,3 +20,17 @@
 #else
 	#define BOOST_CONTEXT_FIBER_IMPL
 #endif
+
+
+#if __APPLE__
+    #include "TargetConditionals.h"
+
+    #if defined(TARGET_OS_MAC)
+        #define FTL_OS_MAC
+    #endif
+
+    #if defined(TARGET_OS_IPHONE)
+        #define FTL_OS_iOS
+    #endif
+
+#endif //__APPLE__
