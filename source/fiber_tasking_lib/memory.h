@@ -12,8 +12,9 @@
 #pragma once
 
 #include <cstdint>
+#include "fiber_tasking_lib/config.h"
 
-#if (defined( __GNUC__) || defined(__GNUG__)) && __GNUC__ < 5
+#if (defined( __GNUC__) || defined(__GNUG__)) && __GNUC__ < 5 && !defined(FTL_OS_MAC)
 
 namespace std {
 
