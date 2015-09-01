@@ -36,8 +36,8 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 
 	// Create switching fibers for this thread
 	globalArgs->g_taskScheduler.m_waitingTaskLock.lock();
-	globalArgs->g_taskScheduler.m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, FiberSwitchStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
-	globalArgs->g_taskScheduler.m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, CounterWaitStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
+	globalArgs->g_taskScheduler.m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(FTL_FIBER_STACK_SIZE, FiberSwitchStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
+	globalArgs->g_taskScheduler.m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(FTL_FIBER_STACK_SIZE, CounterWaitStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
 	globalArgs->g_taskScheduler.m_waitingTaskLock.unlock();
 
 	// Clean up
@@ -167,8 +167,8 @@ bool TaskScheduler::Initialize(uint fiberPoolSize, GlobalArgs *globalArgs) {
 	m_numActiveWorkerThreads.store((uint)m_numThreads - 1);
 
 	// Create switching fibers for this thread
-	m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, FiberSwitchStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
-	m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(32768, CounterWaitStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
+	m_fiberSwitchingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(FTL_FIBER_STACK_SIZE, FiberSwitchStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
+	m_counterWaitingFibers[FTLGetCurrentThreadId()] = FTLCreateFiber(FTL_FIBER_STACK_SIZE, CounterWaitStart, reinterpret_cast<fiber_arg_t>(&globalArgs->g_taskScheduler));
 
 	// Set the affinity for the current thread and convert it to a fiber
 	FTLSetCurrentThreadAffinity(1);
