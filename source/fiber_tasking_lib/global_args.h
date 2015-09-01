@@ -15,6 +15,7 @@
 #include "fiber_tasking_lib/tagged_heap.h"
 #include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
+#define FTL_FIBER_STACK_SIZE 32768*4
 
 namespace FiberTaskingLib {
 
