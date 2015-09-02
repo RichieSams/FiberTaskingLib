@@ -33,6 +33,7 @@
 #pragma once
 
 #include "fiber_tasking_lib/typedefs.h"
+#include "fiber_tasking_lib/config.h"
 
 #include <cassert>
 
@@ -159,6 +160,8 @@ namespace FiberTaskingLib {
 typedef pthread_t ThreadType;
 #if defined(__linux__)
 	typedef pid_t ThreadId;
+#elif defined(FTL_OS_MAC)
+	typedef mach_port_t ThreadId;
 #endif
 struct EventType {
 	pthread_cond_t  cond;
@@ -193,11 +196,14 @@ inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRou
 	// Set stack size
 	pthread_attr_setstacksize(&threadAttr, stackSize);
 
-	// Set core affinity
-	cpu_set_t cpuSet;
-	CPU_ZERO(&cpuSet);
-	CPU_SET(coreAffinity, &cpuSet);
-	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
+	//:todo: OSX Thread Affinity
+	#ifndef FTL_OS_MAC
+		// Set core affinity
+		cpu_set_t cpuSet;
+		CPU_ZERO(&cpuSet);
+		CPU_SET(coreAffinity, &cpuSet);
+		pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
+	#endif
 
 	int success = pthread_create(returnId, NULL, startRoutine, arg);
 
@@ -233,17 +239,26 @@ inline ThreadType FTLGetCurrentThread() {
 	inline ThreadId FTLGetCurrentThreadId() {
 		return syscall(SYS_gettid);
 	}
+#elif defined(FTL_OS_MAC)
+	inline ThreadId FTLGetCurrentThreadId() {
+		return pthread_mach_thread_np(pthread_self());
+	}
 #else
 	#error Implement FTLGetCurrentThreadId for this platform
 #endif
 
 
 inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
-	cpu_set_t cpuSet;
-	CPU_ZERO(&cpuSet);
-	CPU_SET(coreAffinity, &cpuSet);
 
-	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
+	//:todo: OSX Thread Affinity
+	#ifndef	FTL_OS_MAC
+		cpu_set_t cpuSet;
+		CPU_ZERO(&cpuSet);
+		CPU_SET(coreAffinity, &cpuSet);
+
+		pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
+	#endif
+
 }
 
 inline void FTLCreateEvent(EventType *event) {
