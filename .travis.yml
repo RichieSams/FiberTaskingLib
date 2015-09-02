@@ -1,31 +1,18 @@
 language: cpp
 
+os:
+  - linux
+  - osx
+
 compiler:
   - gcc
   
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-5
-    - g++-5
-    - p7zip-full
-
 before_script:
-  - openssl version -a
-  # Install latest boost
-  - curl https://files.adrianastley.com/programming/boost_1_58_0.tar.7z > boost_1_58_0.tar.7z
-  - 7z x boost_1_58_0.tar.7z > /dev/null
-  - tar xf boost_1_58_0.tar
-  - cd boost_1_58_0
-  - ./bootstrap.sh --with-libraries=context
-  - sudo ./b2 install > /dev/null
-  # Get back to the root
-  - cd ../
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./build_scripts/linux_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build_scripts/osx_setup.sh; fi 
 
 script:
   - mkdir build
