@@ -5,4 +5,4 @@ sudo brew update
 sudo brew tap homebrew/versions
 sudo brew install --enable-cxx gcc5
 
-brew install boost
+brew outdated boost || brew upgrade boost
