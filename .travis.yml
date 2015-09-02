@@ -13,8 +13,8 @@ install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
 before_script:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sh ./build_scripts/linux_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sh ./build_scripts/osx_setup.sh; fi 
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sh build_scripts/linux_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sh build_scripts/osx_setup.sh; fi 
 
 script:
   - mkdir build
