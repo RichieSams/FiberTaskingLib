@@ -11,18 +11,16 @@ compiler:
   - clang
   
 install:
-- if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
-
-before_script:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sh build_scripts/linux_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sh build_scripts/osx_setup.sh; fi 
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then sh ci_scripts/linux_gcc_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then sh ci_scripts/linux_clang_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then sh ci_scripts/osx_gcc_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then sh ci_scripts/osx_clang_setup.sh; fi  
 
 script:
   - mkdir build
   - cd build
   - cmake ../
-  - make VERBOSE=1
+  - make
   - make test
   
 notifications:

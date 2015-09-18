@@ -1,9 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -x
 
 sudo brew update
 
 sudo brew tap homebrew/versions
 sudo brew install --enable-cxx gcc5
-sudo brew install llvm --with-clang --HEAD
+
+export CXX="g++-5" CC="gcc-5"
 
 brew outdated boost || brew upgrade boost
