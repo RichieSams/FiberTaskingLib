@@ -1,6 +1,6 @@
 #!/usr/bin/env bash -x
 
-sudo brew update
+sudo brew update > /dev/null
 
 curl http://llvm.org/releases/3.7.0/clang+llvm-3.7.0-x86_64-apple-darwin.tar.xz > clang+llvm-3.7.tar.xz
 sudo tar xzf clang+llvm-3.7.tar.xz
