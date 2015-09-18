@@ -26,9 +26,9 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 		<td>OS X</td>
 	</tr>
 	<tr>
-		<td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?label=Windows&style=flat" alt="Windows build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://img.shields.io/travis/RichieSams/FiberTaskingLib.svg?label=Ubuntu%20Linux&style=flat" alt="Linux build status"</img></a></td>
-		<td>Soon</td>
+		<td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?style=flat" alt="Windows build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux" alt="Linux build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx" alt="Linux build status"</img></a></td>
 	</tr>
 </table>
 
