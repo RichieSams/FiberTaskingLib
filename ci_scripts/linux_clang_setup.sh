@@ -6,7 +6,8 @@ sudo add-apt-repository 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise
 sudo add-apt-repository 'deb-src http://llvm.org/apt/precise/ llvm-toolchain-precise-3.7 main'
 wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
 sudo apt-get -qq update
-sudo apt-get install clang-3.7 lldb-3.7
+sudo apt-get -qq install p7zip-full -y
+sudo apt-get -qq install clang-3.7 lldb-3.7 -y
 
 export CXX="clang++-3.7" CC="clang-3.7"
 
