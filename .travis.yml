@@ -11,10 +11,10 @@ compiler:
   - clang
   
 install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then sh ci_scripts/linux_gcc_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then sh ci_scripts/linux_clang_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then sh ci_scripts/osx_gcc_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then sh ci_scripts/osx_clang_setup.sh; fi  
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/linux_gcc_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/linux_clang_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/osx_gcc_setup.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/osx_clang_setup.sh; fi  
 
 script:
   - mkdir build
