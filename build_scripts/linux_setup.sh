@@ -10,6 +10,7 @@ deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main
 deb-src http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main
 EOF"
 wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
+sudo apt-get update
 sudo apt-get install clang-3.6 lldb-3.6
 
 
