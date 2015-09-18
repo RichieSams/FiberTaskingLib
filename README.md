@@ -18,17 +18,24 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 <table>
 	<tr>
 		<th>Native Fiber API</th>
-		<th colspan="2">Boost.Context</th>
+		<th colspan="4">Boost.Context</th>
 	<tr>
 	<tr>
 		<td>Windows</td>
-		<td>Linux</td>
-		<td>OS X</td>
+		<td colspan="2">Linux</td>
+		<td colspan="2">OS X</td>
+	</tr>
+	<tr>
+		<td>VC++</td>
+		<td>gcc</td><td>clang</td>
+		<td>gcc</td><td>clang</td>
 	</tr>
 	<tr>
 		<td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?style=flat" alt="Windows build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux" alt="Linux build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx" alt="Linux build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=gcc" alt="Linux build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang" alt="Linux build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=gcc" alt="Linux build status"</img></a></td>
+		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang" alt="Linux build status"</img></a></td>
 	</tr>
 </table>
 
