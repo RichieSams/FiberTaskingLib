@@ -1,6 +1,6 @@
 #!/usr/bin/env bash -x
 
-sudo brew update
+sudo brew update > /dev/null
 
 sudo brew tap homebrew/versions
 sudo brew install --enable-cxx gcc5
