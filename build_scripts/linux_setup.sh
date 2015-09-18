@@ -5,15 +5,10 @@ sudo apt-get -qq update
 sudo apt-get -qq install gcc-5 g++-5 p7zip-full -y
 
 # Install clang
-sudo bash -c "cat <<EOF > /etc/apt/sources.list
-deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main
-deb-src http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main
-EOF"
+sudo add-apt-repository -s 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.7 main'
 wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
-sudo apt-get update
-sudo apt-get install clang-3.6 lldb-3.6
-
-
+sudo apt-get -qq update
+sudo apt-get install clang-3.7 lldb-3.7
 
 # Install latest boost
 curl https://files.adrianastley.com/programming/boost_1_58_0.tar.7z > boost_1_58_0.tar.7z
