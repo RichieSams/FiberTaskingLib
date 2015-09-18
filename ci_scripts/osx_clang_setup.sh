@@ -3,7 +3,7 @@
 sudo brew update
 
 sudo brew tap homebrew/versions
-sudo brew install llvm --with-clang
+sudo brew -v install llvm --with-clang
 
 clang --version
 
