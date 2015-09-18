@@ -2,10 +2,10 @@
 
 sudo brew update > /dev/null
 
-curl http://llvm.org/releases/3.7.0/clang+llvm-3.7.0-x86_64-apple-darwin.tar.xz > clang+llvm-3.7.tar.xz
-sudo tar xzf clang+llvm-3.7.tar.xz
+curl http://llvm.org/releases/3.7.0/clang+llvm-3.7.0-x86_64-apple-darwin.tar.xz > clang+llvm-3.7.0-x86_64-apple-darwin.tar.xz
+sudo tar xzf clang*
 ls -l
-cd clang+llvm-3.7
+cd clang*
 sudo cp -R * /usr/local/
 cd ../
 
