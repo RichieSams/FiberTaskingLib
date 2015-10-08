@@ -34,3 +34,53 @@
     #endif
 
 #endif //__APPLE__
+
+
+// Determine what stdlib type and version we have
+
+#if defined(_LIBCPP_VERSION)
+    // libc++
+    #define FTL_STD_LIB_LIBCPP
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+    // GNU libstdc++ 3
+    #define FTL_STD_LIB_LIBSTDCPP3
+#elif (defined(_YVALS) && !defined(__IBMCPP__)) || defined(_CPPLIB_VER)
+    // Dinkumware Library (this has to appear after any possible replacement libraries):
+    #define FTL_STD_LIB_DINKUMWARE
+#endif
+
+
+#if defined(FTL_STD_LIB_LIBCPP)
+    #if __cplusplus < 201103
+        #define FTL_NO_CXX11_STD_ALIGN
+    #endif
+#endif
+
+
+#if defined(FTL_STD_LIB_LIBSTDCPP3)
+    #ifdef __clang__
+        #if __has_include(<experimental/any>)
+            #define LIBSTDCPP3_VERSION 50100
+        #elif __has_include(<shared_mutex>)
+            #define LIBSTDCPP3_VERSION 40900
+        #elif __has_include(<ext/cmath>)
+            #define LIBSTDCPP3_VERSION 40800
+        #elif __has_include(<scoped_allocator>)
+            #define LIBSTDCPP3_VERSION 40700
+        #elif __has_include(<typeindex>)
+            #define LIBSTDCPP3_VERSION 40600
+        #elif __has_include(<future>)
+            #define LIBSTDCPP3_VERSION 40500
+        #elif  __has_include(<ratio>)
+            #define LIBSTDCPP3_VERSION 40400
+        #elif __has_include(<array>)
+            #define LIBSTDCPP3_VERSION 40300
+        #endif
+    #else
+        #define LIBSTDCPP3_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+    #endif
+    
+    #if (LIBSTDCPP3_VERSION < 50100)
+        #define FTL_NO_CXX11_STD_ALIGN
+    #endif
+#endif
