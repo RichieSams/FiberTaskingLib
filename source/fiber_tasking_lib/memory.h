@@ -17,7 +17,7 @@
 
 // clang also defines __GNUC__ / __GNUG__ for some reason
 // So we have to check for it to make sure we have the *real* gcc
-#if ((defined(__GNUC__) && __GNUC__ < 5) || (defined(__GNUG__) && __GNUG__ < 5)) && !defined(__clang__)
+#if ((defined(__GNUC__) && __GNUC__ < 5) || (defined(__GNUG__) && __GNUG__ < 5))
 
 namespace std {
 
