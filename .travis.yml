@@ -11,10 +11,10 @@ compiler:
   - clang
   
 install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/linux_gcc_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/linux_clang_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/osx_gcc_setup.sh; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/osx_clang_setup.sh; fi  
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/linux_gcc_setup.sh; export CXX="g++-5" CC="gcc-5"; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/linux_clang_setup.sh; export CXX="clang++-3.7" CC="clang-3.7"; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/osx_gcc_setup.sh; export CXX="g++-5" CC="gcc-5"; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/osx_clang_setup.sh; export CXX="clang++-3.7" CC="clang-3.7"; fi  
 
 script:
   - mkdir build

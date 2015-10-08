@@ -9,6 +9,4 @@ cd clang*
 sudo cp -R * /usr/local/
 cd ../
 
-export CXX="clang++-3.7" CC="clang-3.7"
-
 brew outdated boost || brew upgrade boost

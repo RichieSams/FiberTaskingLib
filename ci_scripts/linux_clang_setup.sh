@@ -9,8 +9,6 @@ sudo apt-get -qq update
 sudo apt-get -qq install p7zip-full -y
 sudo apt-get -qq install clang-3.7 lldb-3.7 -y
 
-export CXX="clang++-3.7" CC="clang-3.7"
-
 # Install latest boost
 curl https://files.adrianastley.com/programming/boost_1_58_0.tar.7z > boost_1_58_0.tar.7z
 7z x boost_1_58_0.tar.7z > /dev/null
