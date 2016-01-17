@@ -10,6 +10,12 @@
  ##
 
 macro(Config)
+	set( CMAKE_CXX_STANDARD 11 )
+	
+	if (MSVC)
+		SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /GT" )
+	endif()
+	
 	# Determine what fiber implementation we should use
 	if (MSVC)
 		set(FTL_WIN32_FIBER_IMPL ON)
