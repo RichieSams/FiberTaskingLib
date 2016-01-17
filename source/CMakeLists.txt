@@ -1,4 +1,3 @@
-if (NOT MSVC)
 ## FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  #
  # This library was created as a proof of concept of the ideas presented by
@@ -10,6 +9,7 @@ if (NOT MSVC)
  # Copyright Adrian Astley 2015 - 2016
  ##
 
+if (FTL_BOOST_CONTEXT_FIBER_IMPL)
 	find_package(Boost 1.56 COMPONENTS context REQUIRED)
 	find_package(Threads)
 	include_directories(${Boost_INCLUDE_DIR})
@@ -54,8 +54,10 @@ set(FIBER_TASKING_LIB_SRC
 
 
 add_library(FiberTaskingLib ${FIBER_TASKING_LIB_SRC})
-target_link_libraries(FiberTaskingLib EASTL ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-set_target_properties(FiberTaskingLib PROPERTIES PREFIX "")
+target_link_libraries(FiberTaskingLib EASTL)
 
-set_property(TARGET FiberTaskingLib PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET FiberTaskingLib PROPERTY CXX_STANDARD 11)
+if (FTL_BOOST_CONTEXT_FIBER_IMPL)
+	target_link_libraries(FiberTaskingLib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+set_target_properties(FiberTaskingLib PROPERTIES PREFIX "")
