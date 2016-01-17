@@ -14,7 +14,7 @@
  * http://gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine
  *
  * FiberTaskingLib is the legal property of Adrian Astley
- * Copyright Adrian Astley 2015
+ * Copyright Adrian Astley 2015 - 2016
  */
 
 

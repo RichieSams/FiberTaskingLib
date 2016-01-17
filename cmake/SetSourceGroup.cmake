@@ -1,3 +1,5 @@
+# Copyright Adrian Astley 2016
+
 include(CMakeParseArguments)
 
 macro( SetSourceGroup )
