@@ -43,6 +43,13 @@
 #
 # Thanks to Daniel Blezek <blezek@gmail.com> for the GTEST_ADD_TESTS code
 
+# CMake 4.1 and greater allow you to use if(test)
+# If we don't explicitly set the policy, newer cmakes throw a warning
+if(POLICY CMP0064)
+	cmake_policy(SET CMP0064 NEW)
+endif(POLICY CMP0064)
+
+
 function(GTEST_ADD_TESTS executable extra_args)
     if(NOT ARGN)
         message(FATAL_ERROR "Missing ARGN: Read the documentation for GTEST_ADD_TESTS")
