@@ -1,3 +1,5 @@
+include(CMakeParseArguments)
+
 macro( SetSourceGroup )
 	set(oneValueArgs NAME)
 	set(multiValuesArgs SOURCE_FILES)
