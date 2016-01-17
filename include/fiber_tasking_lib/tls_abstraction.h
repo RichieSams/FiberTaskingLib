@@ -15,7 +15,7 @@
 #include "fiber_tasking_lib/thread_abstraction.h"
 
 
-#if defined(FIBER_IMPL_SUPPORTS_TLS)
+#if defined(FTL_FIBER_IMPL_SUPPORTS_TLS)
 
 namespace FiberTaskingLib {
 

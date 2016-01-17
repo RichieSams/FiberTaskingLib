@@ -18,7 +18,7 @@
 #include <cstddef>
 
 
-#if defined(WIN32_FIBER_IMPL)
+#if defined(FTL_WIN32_FIBER_IMPL)
 
 // VC++ implementation
 #define WIN32_LEAN_AND_MEAN
@@ -61,7 +61,7 @@ inline void FTLSetCurrentFiber(FiberType currentFiber) {
 
 } // End of namespace FiberTaskingLib
 
-#elif defined(BOOST_CONTEXT_FIBER_IMPL)
+#elif defined(FTL_BOOST_CONTEXT_FIBER_IMPL)
 // Boost.Context implementation
 
 #include <boost/context/fcontext.hpp>

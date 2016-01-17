@@ -11,7 +11,7 @@
 
 #include "fiber_tasking_lib/config.h"
 
-#if defined(BOOST_CONTEXT_FIBER_IMPL)
+#if defined(FTL_BOOST_CONTEXT_FIBER_IMPL)
 
 #include "fiber_tasking_lib/fiber_abstraction.h"
 #include "fiber_tasking_lib/tls_abstraction.h"

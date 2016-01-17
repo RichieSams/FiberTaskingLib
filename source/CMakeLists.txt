@@ -1,12 +1,14 @@
-find_package(Boost 1.56 COMPONENTS context REQUIRED)
-find_package(Threads)
-include_directories(${Boost_INCLUDE_DIR})
-
+if (NOT MSVC)
+	find_package(Boost 1.56 COMPONENTS context REQUIRED)
+	find_package(Threads)
+	include_directories(${Boost_INCLUDE_DIR})
+endif()
 
 include(SetSourceGroup)
 
 SetSourceGroup(NAME "Core"
-	SOURCE_FILES ../include/fiber_tasking_lib/global_args.h
+	SOURCE_FILES ../include/fiber_tasking_lib/config.h
+	             ../include/fiber_tasking_lib/global_args.h
 	             ../include/fiber_tasking_lib/task_scheduler.h
 	             core/task_scheduler.cpp
 )
@@ -21,8 +23,7 @@ SetSourceGroup(NAME "Memory"
 )
 
 SetSourceGroup(NAME "Util"
-	SOURCE_FILES ../include/fiber_tasking_lib/config.h
-	             ../include/fiber_tasking_lib/fiber_abstraction.h
+	SOURCE_FILES ../include/fiber_tasking_lib/fiber_abstraction.h
 	             util/fiber_abstraction.cpp
 	             ../include/fiber_tasking_lib/portability.h
 	             ../include/fiber_tasking_lib/read_write_lock.h

@@ -13,3 +13,6 @@ obj/
 
 # CLion Project files
 .idea/
+
+# Config.h
+include/fiber_tasking_lib/config.h

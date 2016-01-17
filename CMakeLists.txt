@@ -4,11 +4,12 @@ project(FiberTaskingLib)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
+include(Config)
+Config()
 
 if (MSVC)
 	SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /GT" )
 endif()
-
 
 # Build FiberTaskingLib
 include_directories(include third_party third_party/EASTL/include)
