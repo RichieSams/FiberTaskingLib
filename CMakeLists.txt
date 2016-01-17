@@ -1,24 +1,25 @@
 cmake_minimum_required(VERSION 2.8)
 project(FiberTaskingLib)
 
-if(WIN32)
-	message(FATAL_ERROR "For Windows builds, use the supplied Visual Studio files")
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+
+
+if (MSVC)
+	SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /GT" )
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-include_directories(source libs libs/EASTL/include libs/gtest/include ${Boost_INCLUDE_DIR})
 
 
 # Build FiberTaskingLib
-add_subdirectory(libs/EASTL)
-add_subdirectory(source/fiber_tasking_lib)
+include_directories(include third_party third_party/EASTL/include)
 
-# Build ExampleProject
-add_subdirectory(source/example_project)
+add_subdirectory(third_party/EASTL)
+add_subdirectory(source)
+
 
 #Build Tests
-include(CTest)
+include_directories(third_party/gtest/include)
+SET(gtest_force_shared_crt ON CACHE BOOL "Use the dll runtime" )
+add_subdirectory(third_party/gtest)
 
-add_subdirectory(libs/gtest)
-add_subdirectory(test)
+add_subdirectory(tests)
