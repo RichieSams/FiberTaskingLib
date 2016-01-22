@@ -6,13 +6,12 @@ brew update
 brew tap homebrew/versions
 
 install_brew_package() {
-  if brew list -1 | grep -q "^$1\$"; then
+  if brew list "$1"
     # Package is installed, upgrade if needed
-    brew outdated "$1" || brew upgrade "$@"
+    brew outdated "$1" || brew upgrade "$1"
   else
     # Package not installed yet, install.
-    # If there are conflicts, try overwriting the files (these are in /usr/local anyway so it should be ok).
-    brew install "$@" || brew link --overwrite gcc49
+    brew install "$1"
   fi
 }
 
