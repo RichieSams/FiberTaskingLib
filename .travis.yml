@@ -1,30 +1,85 @@
-sudo: true
-
+# We can't use docker builds at the moment because trusty apt sources are not yet whitelisted
+# See pull request here: https://github.com/travis-ci/apt-source-whitelist/pull/205
+#sudo: false
+sudo: required
+dist: trusty
 language: cpp
 
-os:
-  - linux
-  - osx
-
-compiler:
-  - gcc
-  - clang
-  
 install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/linux_gcc_setup.sh; export CXX="g++-5" CC="gcc-5"; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/linux_clang_setup.sh; export CXX="clang++-3.7" CC="clang-3.7"; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "g++" ]; then bash -x ci_scripts/osx_gcc_setup.sh; export CXX="g++-5" CC="gcc-5"; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$CXX" = "clang++" ]; then bash -x ci_scripts/osx_clang_setup.sh; fi  
+    - export CC="${MY_CC}"
+    - export CXX="${MY_CXX}"
+    - "if [ ${TRAVIS_OS_NAME} = 'linux' ]; then ./ci_scripts/travis_ci_install_linux.sh; fi"
+    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then ./ci_scripts/travis_ci_install_osx.sh; fi"
 
-script:
-  - mkdir build
-  - cd build
-  - cmake ../
-  - make
-  - make test
-  
-notifications:
-  email:
-    recipients: adastley@gmail.com
-    on_success: change
-    on_failure: change
+script: 
+    - export CC="${MY_CC}"
+    - export CXX="${MY_CXX}"
+    - mkdir build
+    - cd build
+    - cmake ../
+    - make
+    - make test
+
+branches:
+  only:
+    - master
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: MY_CC=gcc-4.8   MY_CXX=g++-4.8
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test']
+#          packages: ['g++-4.8']
+    - os: linux
+      compiler: gcc
+      env: MY_CC=gcc-4.9   MY_CXX=g++-4.9
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test']
+#          packages: ['g++-4.9']
+    - os: linux
+      compiler: gcc
+      env: MY_CC=gcc-5     MY_CXX=g++-5
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test']
+#          packages: ['g++-5']
+    - os: linux
+      compiler: clang
+      env: MY_CC=clang-3.5 MY_CXX=clang++-3.5
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.5']
+#          packages: ['clang-3.5']
+    - os: linux
+      compiler: clang
+      env: MY_CC=clang-3.6 MY_CXX=clang++-3.6
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.6']
+#          packages: ['clang-3.6']
+    - os: linux
+      compiler: clang
+      env: MY_CC=clang-3.7 MY_CXX=clang++-3.7
+#	  addons:
+#        apt:
+#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.7']
+#          packages: ['clang-3.7']
+    - os: osx
+      compiler: gcc
+      env: MY_CC=gcc-4.8   MY_CXX=g++-4.8
+    - os: osx
+      compiler: gcc
+      env: MY_CC=gcc-4.9   MY_CXX=g++-4.9
+    - os: osx
+      compiler: gcc
+      env: MY_CC=gcc-5     MY_CXX=g++-5
+    - os: osx
+      compiler: clang
+      env: MY_CC=clang-3.5 MY_CXX=clang++-3.5
+    - os: osx
+      compiler: clang
+      env: MY_CC=clang-3.6 MY_CXX=clang++-3.6
