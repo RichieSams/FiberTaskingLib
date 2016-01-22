@@ -15,6 +15,7 @@ add_subdirectory(source)
 
 
 #Build Tests
+include(CTest)
 include_directories(third_party/gtest/include)
 SET(gtest_force_shared_crt ON CACHE BOOL "Use the dll runtime" )
 add_subdirectory(third_party/gtest)

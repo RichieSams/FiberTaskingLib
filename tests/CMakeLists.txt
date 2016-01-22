@@ -9,7 +9,6 @@
  # Copyright Adrian Astley 2015 - 2016
  ##
 
-enable_testing()
 include(GTestAddTests)
 
 
