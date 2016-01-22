@@ -6,7 +6,7 @@ brew update
 brew tap homebrew/versions
 
 install_brew_package() {
-  if brew list "$1"
+  if [[ brew list "$1" ]] ; then
     # Package is installed, upgrade if needed
     brew outdated "$1" || brew upgrade "$1"
   else
