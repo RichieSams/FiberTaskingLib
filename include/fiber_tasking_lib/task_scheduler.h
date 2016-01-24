@@ -12,7 +12,6 @@
 #pragma once
 
 #include "fiber_tasking_lib/typedefs.h"
-#include "fiber_tasking_lib/portability.h"
 #include "fiber_tasking_lib/thread_abstraction.h"
 #include "fiber_tasking_lib/fiber_abstraction.h"
 

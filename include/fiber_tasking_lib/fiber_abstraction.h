@@ -12,7 +12,6 @@
 #pragma once
 
 #include "fiber_tasking_lib/config.h"
-#include "fiber_tasking_lib/portability.h"
 #include "fiber_tasking_lib/tls_abstraction.h"
 
 #include <cstddef>
@@ -26,9 +25,9 @@
 
 namespace FiberTaskingLib {
 
-typedef void (STDCALL *FiberStartRoutine)(void *arg);
+typedef void (__stdcall *FiberStartRoutine)(void *arg);
 typedef void *fiber_arg_t;
-#define FIBER_START_FUNCTION(functionName) void STDCALL functionName(void *arg)
+#define FIBER_START_FUNCTION(functionName) void __stdcall functionName(void *arg)
 #define FIBER_START_FUNCTION_CLASS_IMPL(className, functionName) void className::functionName(void *arg)
 
 typedef void *FiberType;
