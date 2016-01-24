@@ -14,6 +14,7 @@
 #include "fiber_tasking_lib/typedefs.h"
 #include "fiber_tasking_lib/thread_abstraction.h"
 #include "fiber_tasking_lib/fiber_abstraction.h"
+#include "fiber_tasking_lib/task.h"
 
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
@@ -25,39 +26,9 @@
 
 namespace FiberTaskingLib {
 
-class TaskScheduler;
-class TaggedHeap;
-class TaggedHeapBackedLinearAllocator;
 struct GlobalArgs;
 
-
-typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
-                            FiberTaskingLib::TaggedHeap *g_heap,
-                            FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator,
-                            void *arg);
-/**
- * Creates the correct function signature for a task entry point
- *
- * The function will have the following args:
- *     TaskScheduler *g_taskScheduler,
- *     TaggedHeap *g_heap,
- *     TaggedHeapBackedLinearAllocator *g_allocator,
- *     void *arg
- * where arg == Task::ArgData
- */
-#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, \
-                                                         FiberTaskingLib::TaggedHeap *g_heap, \
-                                                         FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator, \
-                                                         void *arg)
-
-
 typedef std::atomic_long AtomicCounter;
-
-
-struct Task {
-	TaskFunction Function;
-	void *ArgData;
-};
 
 
 /**

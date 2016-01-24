@@ -20,6 +20,7 @@ include(SetSourceGroup)
 SetSourceGroup(NAME "Core"
 	SOURCE_FILES ../include/fiber_tasking_lib/config.h
 	             ../include/fiber_tasking_lib/global_args.h
+				 ../include/fiber_tasking_lib/task.h
 	             ../include/fiber_tasking_lib/task_scheduler.h
 	             core/task_scheduler.cpp
 )
