@@ -19,7 +19,7 @@ namespace FiberTaskingLib {
 
 
 ReadWriteLock::ReadWriteLock() {
-	m_readerCount.store(0u, std::memory_order_relaxed);
+	m_readerCount.store(0u);
 }
 
 ReadWriteLock::~ReadWriteLock() {
@@ -32,7 +32,7 @@ void ReadWriteLock::LockRead() {
 }
 
 void ReadWriteLock::UnlockRead() {
-	assert(m_readerCount.load(std::memory_order_relaxed) >= 0);
+	assert(m_readerCount.load() >= 0);
 
 	m_readerCount.fetch_sub(1);
 }
@@ -42,7 +42,7 @@ void ReadWriteLock::LockWrite() {
 	m_writeLock.lock();
 
 	// Wait until all the reads are finished
-	while (m_readerCount.load(std::memory_order_relaxed) > 0) {
+	while (m_readerCount.load() > 0) {
 		// Yield timeslice
 		std::this_thread::yield();
 	}
@@ -61,7 +61,7 @@ bool ReadWriteLock::TryUpgradeReadToWriteLock() {
 	// We assume that the remaining reader is the one held by this thread
 	// So if this function is called without first acquiring a read lock,
 	// the last reader will have undefined behavior
-	while (m_readerCount.load(std::memory_order_relaxed) > 1) {
+	while (m_readerCount.load() > 1) {
 		// Yield timeslice
 		std::this_thread::yield();
 	}
