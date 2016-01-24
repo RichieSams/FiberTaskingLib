@@ -35,35 +35,62 @@ inline void SetTLSData(T &tlsVariable, T value) {
 
 #else
 
-#include <unordered_map>
-#include <mutex>
+#include "fiber_tasking_lib/read_write_lock.h"
+
+#include <vector>
 
 namespace FiberTaskingLib {
 
 template<class T>
 class TlsVariable {
-
 private:
-	std::unordered_map<ThreadId, T> data;
-	std::mutex lock;
+	struct DataPacket {
+		DataPacket() {};
+		DataPacket(ThreadId id, T data)
+			: Id(id),
+			  Data(data) {
+		}
+
+		ThreadId Id;
+		T Data;
+	};
+
+	std::vector<DataPacket> m_data;
+	ReadWriteLock m_lock;
 
 public:
 	T Get() {
 		ThreadId id = FTLGetCurrentThreadId();
 
-		// operator[] is not thread-safe, since it will create a node if one doesn't already exist
-		// So we have to lock on reads as well
-		// We *could* use find() first, then only lock if it doesn't exist, but the
-		// thread-contention should be low enough that it's not worth the extra code
-		std::lock_guard<std::mutex> lockGuard(lock);
-		return data[id];
+		m_lock.LockRead();
+		for (auto &packet : m_data) {
+			if (packet.Id == id) {
+				return packet.Data;
+			}
+		}
+		m_lock.UnlockRead();
+
+		// If we can't find it, default construct it
+		return T();
 	}
 
 	void Set(T value) {
 		ThreadId id = FTLGetCurrentThreadId();
 
-		std::lock_guard<std::mutex> lockGuard(lock);
-		data[id] = value;
+		m_lock.LockWrite();
+		for (auto &packet : m_data) {
+			if (packet.Id == id) {
+				packet.Data = value;
+
+				m_lock.UnlockWrite();
+				return;
+			}
+		}
+
+		// This thread has not yet set a value.
+		// Create an entry
+		m_data.emplace_back(id, value);
+		m_lock.UnlockWrite();
 	}
 };
 
