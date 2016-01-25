@@ -95,8 +95,8 @@ private:
 	 * fiber for each thread. Otherwise, two threads could try to switch to the same helper fiber
 	 * at the same time. Again, this leads to stack corruption and/or general undefined behavior.
 	 */
-	std::unordered_map<ThreadId, FiberType> m_fiberSwitchingFibers;
-	std::unordered_map<ThreadId, FiberType> m_counterWaitingFibers;
+	std::vector<FiberType> m_fiberSwitchingFibers;
+	std::vector<FiberType> m_counterWaitingFibers;
 
 	std::atomic_bool m_quit;
 
