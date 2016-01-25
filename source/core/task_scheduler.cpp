@@ -84,7 +84,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 
 		TaskBundle nextTask;
 		if (!taskScheduler->GetNextTask(&nextTask)) {
-			FTLYieldThread();
+			std::this_thread::yield();
 		} else {
 			nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
 			nextTask.Counter->fetch_sub(1);
@@ -255,7 +255,7 @@ void TaskScheduler::Quit() {
 	// The 'physical' threads are always there, but the ThreadIds change
 	// when we convert to/from fibers
 	while (m_numActiveWorkerThreads.load() > 0) {
-		FTLYieldThread();
+		std::this_thread::yield();
 	}
 
 	std::vector<ThreadType> threadsToCleanUp;
