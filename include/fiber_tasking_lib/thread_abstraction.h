@@ -47,8 +47,6 @@
 #include <atomic>
 
 
-#define THREAD_LOCAL __declspec( thread )
-
 namespace FiberTaskingLib {
 
 typedef HANDLE ThreadType;
@@ -155,8 +153,6 @@ inline void FTLSignalEvent(EventType eventId) {
 	#include <unistd.h>
 	#include <sys/syscall.h>
 #endif
-
-#define THREAD_LOCAL __thread
 
 
 namespace FiberTaskingLib {
