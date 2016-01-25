@@ -39,6 +39,7 @@ inline void SetTLSData(T &tlsVariable, T value) {
 
 #include <vector>
 
+
 namespace FiberTaskingLib {
 
 template<class T>
@@ -65,7 +66,9 @@ public:
 		m_lock.LockRead();
 		for (auto &packet : m_data) {
 			if (packet.Id == id) {
-				return packet.Data;
+				T temp = packet.Data;
+				m_lock.UnlockRead();
+				return temp;
 			}
 		}
 		m_lock.UnlockRead();
