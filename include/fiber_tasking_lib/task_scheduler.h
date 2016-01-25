@@ -15,13 +15,12 @@
 #include "fiber_tasking_lib/thread_abstraction.h"
 #include "fiber_tasking_lib/fiber_abstraction.h"
 #include "fiber_tasking_lib/task.h"
-
-#include "concurrentqueue/blockingconcurrentqueue.h"
+#include "fiber_tasking_lib/thread_safe_queue.h"
 
 #include <atomic>
 #include <vector>
 #include <mutex>
-#include <unordered_map>
+#include <memory>
 
 
 namespace FiberTaskingLib {
@@ -76,11 +75,11 @@ private:
 		int Value;
 	};
 
-	moodycamel::ConcurrentQueue<TaskBundle> m_taskQueue;
+	ThreadSafeQueue<TaskBundle> m_taskQueue;
 	std::vector<WaitingTask> m_waitingTasks;
 	std::mutex m_waitingTaskLock;
 
-	moodycamel::BlockingConcurrentQueue<FiberType> m_fiberPool;
+	ThreadSafeQueue<FiberType> m_fiberPool;
 
 	/**
 	 * In order to put the current fiber on the waitingTasks list or the fiber pool, we have to

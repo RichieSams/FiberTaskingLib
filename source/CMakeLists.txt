@@ -32,6 +32,7 @@ SetSourceGroup(NAME "Util"
 	             util/fiber_abstraction.cpp
 	             ../include/fiber_tasking_lib/read_write_lock.h
 	             ../include/fiber_tasking_lib/thread_abstraction.h
+	             ../include/fiber_tasking_lib/thread_safe_queue.h
 	             ../include/fiber_tasking_lib/tls_abstraction.h
 	             util/tls_abstraction.cpp
 	             ../include/fiber_tasking_lib/typedefs.h

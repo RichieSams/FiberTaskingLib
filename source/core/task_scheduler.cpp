@@ -102,7 +102,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberSwitchStart) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
 	while (true) {
-		taskScheduler->m_fiberPool.enqueue(GetTLSData(tls_originFiber));
+		taskScheduler->m_fiberPool.Push(GetTLSData(tls_originFiber));
 		FiberType destFiber = GetTLSData(tls_destFiber);
 
 		FTLSetCurrentFiber(destFiber);
@@ -136,9 +136,9 @@ TaskScheduler::TaskScheduler()
 TaskScheduler::~TaskScheduler() {
 	delete[] m_threads;
 
-	FiberType fiber;
-	while (m_fiberPool.try_dequeue(fiber)) {
-		FTLDeleteFiber(fiber);
+	FiberType temp;
+	while (m_fiberPool.Pop(&temp)) {
+		FTLDeleteFiber(temp);
 	}
 
 	for (auto &fiber : m_fiberSwitchingFibers) {
@@ -152,7 +152,7 @@ TaskScheduler::~TaskScheduler() {
 bool TaskScheduler::Initialize(uint fiberPoolSize) {
 	for (uint i = 0; i < fiberPoolSize; ++i) {
 		FiberType newFiber = FTLCreateFiber(524288, FiberStart, reinterpret_cast<fiber_arg_t>(this));
-		m_fiberPool.enqueue(newFiber);
+		m_fiberPool.Push(newFiber);
 	}
 
 	// 1 thread for each logical processor
@@ -197,7 +197,7 @@ std::shared_ptr<AtomicCounter> TaskScheduler::AddTask(Task task) {
 	counter->store(1);
 
 	TaskBundle bundle = {task, counter};
-	m_taskQueue.enqueue(bundle);
+	m_taskQueue.Push(bundle);
 
 	return counter;
 }
@@ -208,14 +208,14 @@ std::shared_ptr<AtomicCounter> TaskScheduler::AddTasks(uint numTasks, Task *task
 
 	for (uint i = 0; i < numTasks; ++i) {
 		TaskBundle bundle = {tasks[i], counter};
-		m_taskQueue.enqueue(bundle);
+		m_taskQueue.Push(bundle);
 	}
 
 	return counter;
 }
 
 bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
-	bool success = m_taskQueue.try_dequeue(*nextTask);
+	bool success = m_taskQueue.Pop(nextTask);
 
 	return success;
 }
@@ -233,9 +233,12 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 		return;
 	}
 
-	// Switch to a new Fiber
+	// Get a new fiber to switch to
 	FiberType fiberToSwitchTo;
-	m_fiberPool.wait_dequeue(fiberToSwitchTo);
+	while(!m_fiberPool.Pop(&fiberToSwitchTo)) {
+		// Spin
+	}
+
 	SetTLSData(tls_destFiber, fiberToSwitchTo);
 
 	FiberType currentFiber = FTLGetCurrentFiber();
