@@ -11,6 +11,8 @@
 
 #include "fiber_tasking_lib/task_scheduler.h"
 
+#include <thread>
+
 
 namespace FiberTaskingLib {
 
