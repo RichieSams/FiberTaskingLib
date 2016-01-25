@@ -10,9 +10,10 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
-#include "fiber_tasking_lib/global_args.h"
+#include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 #include <gtest/gtest.h>
+
 
 struct NumberSubset {
 	uint64 start;
@@ -48,9 +49,12 @@ TASK_ENTRY_POINT(AddNumberSubset) {
  * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
  */
 TEST(FunctionalTests, CalcTriangleNum) {
-	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->g_taskScheduler.Initialize(25, globalArgs);
-	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
+	FiberTaskingLib::TaskScheduler *taskScheduler = new FiberTaskingLib::TaskScheduler();
+	taskScheduler->Initialize(110);
+
+	FiberTaskingLib::TaggedHeap *taggedHeap = new FiberTaskingLib::TaggedHeap(2097152);
+	FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator = new FiberTaskingLib::TaggedHeapBackedLinearAllocator();
+	allocator->init(taggedHeap, 1234);
 
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
@@ -78,10 +82,10 @@ TEST(FunctionalTests, CalcTriangleNum) {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = globalArgs->g_taskScheduler.AddTasks(numTasks, tasks);
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = taskScheduler->AddTasks(numTasks, tasks);
 	delete[] tasks;
 
-	globalArgs->g_taskScheduler.WaitForCounter(counter, 0);
+	taskScheduler->WaitForCounter(counter, 0);
 
 
 	// Add the results
@@ -93,10 +97,11 @@ TEST(FunctionalTests, CalcTriangleNum) {
 	// Test
 	GTEST_ASSERT_EQ(triangleNum * (triangleNum + 1ull) / 2ull, result);
 
+	taskScheduler->Quit();
 
 	// Cleanup
-	globalArgs->g_taskScheduler.Quit();
-	globalArgs->g_allocator.destroy();
-	delete globalArgs;
-	delete[] subsets;
+	allocator->destroy();
+	delete allocator;
+	delete taggedHeap;
+	delete taskScheduler;
 }

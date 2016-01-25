@@ -26,8 +26,6 @@
 
 namespace FiberTaskingLib {
 
-struct GlobalArgs;
-
 typedef std::atomic_long AtomicCounter;
 
 
@@ -104,10 +102,8 @@ public:
 	/**
 	 * Creates the fiber pool and spawns worker threads for each (logical) CPU core. Each worker
 	 * thread is affinity bound to a single core.
-	 *
-	 * @param globalArgs    A valid GlobalArgs instance
 	 */
-	bool Initialize(uint fiberPoolSize, GlobalArgs *globalArgs);
+	bool Initialize(uint fiberPoolSize);
 
 	/**
 	 * Adds a task to the internal queue.
@@ -168,7 +164,7 @@ private:
 	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
-	 * @param arg    An instance of GlobalArgs
+	 * @param arg    An instance of TaskScheduler
 	 */
 	static FIBER_START_FUNCTION(FiberStart);
 	/**

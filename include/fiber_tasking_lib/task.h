@@ -14,31 +14,18 @@
 namespace FiberTaskingLib {
 
 class TaskScheduler;
-class TaggedHeap;
-class TaggedHeapBackedLinearAllocator;
 
-typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler,
-							FiberTaskingLib::TaggedHeap *g_heap,
-							FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator,
-							void *arg);
+typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg);
+
 /**
 * Creates the correct function signature for a task entry point
 *
 * The function will have the following args:
 *     TaskScheduler *g_taskScheduler,
-*     TaggedHeap *g_heap,
-*     TaggedHeapBackedLinearAllocator *g_allocator,
 *     void *arg
 * where arg == Task::ArgData
 */
-#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, \
-                                                         FiberTaskingLib::TaggedHeap *g_heap, \
-                                                         FiberTaskingLib::TaggedHeapBackedLinearAllocator *g_allocator, \
-                                                         void *arg)
-
-
-
-
+#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg)
 
 struct Task {
 	TaskFunction Function;

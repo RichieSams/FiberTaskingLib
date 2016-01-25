@@ -97,3 +97,6 @@
         #define FTL_NO_CXX11_STD_ALIGN
     #endif
 #endif
+
+
+#define FTL_FIBER_MIN_STACK_SIZE 131072

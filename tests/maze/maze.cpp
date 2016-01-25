@@ -10,15 +10,12 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
-#include "fiber_tasking_lib/global_args.h"
+#include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 #include "maze10x10.h"
 
 #include <cstdio>
-#include <fstream>
 #include <gtest/gtest.h>
-
-
 
 
 struct MazeType {
@@ -43,17 +40,19 @@ void PrintMaze(MazeType &maze) {
 }
 
 struct BranchArgs {
-	BranchArgs(MazeType *maze, int currX, int currY, FiberTaskingLib::AtomicCounter *completed)
+	BranchArgs(MazeType *maze, int currX, int currY, FiberTaskingLib::AtomicCounter *completed, FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator)
 		: Maze(maze),
 		  CurrX(currX),
 		  CurrY(currY),
-		  Completed(completed) {
+		  Completed(completed),
+		  Allocator(allocator) {
 	}
 
 	MazeType *Maze;
 	int CurrX;
 	int CurrY;
 	FiberTaskingLib::AtomicCounter *Completed;
+	FiberTaskingLib::TaggedHeapBackedLinearAllocator *Allocator;
 };
 
 // Forward declare
@@ -64,10 +63,12 @@ bool CheckDirection(char *areaToCheck, MazeType *maze, int newX, int newY, Fiber
 		// We found the end
 		completed->store(1);
 		return true;
-	} else if (*areaToCheck == ' ') {
+	}
+	
+	if (*areaToCheck == ' ') {
 		*areaToCheck = '*';
 
-		BranchArgs *newBranchArgs = new(allocator->allocate(sizeof(BranchArgs))) BranchArgs(maze, newX, newY, completed);
+		BranchArgs *newBranchArgs = new(allocator->allocate(sizeof(BranchArgs))) BranchArgs(maze, newX, newY, completed, allocator);
 
 		FiberTaskingLib::Task newBranch = {CheckBranch, newBranchArgs};
 		taskScheduler->AddTask(newBranch);
@@ -82,7 +83,7 @@ TASK_ENTRY_POINT(CheckBranch) {
 	// Check right
 	if (branchArgs->CurrX + 1 < branchArgs->Maze->Width) {
 		char *spaceToCheck = branchArgs->Maze->Data + (branchArgs->CurrY * branchArgs->Maze->Width + branchArgs->CurrX + 1);
-		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX + 1, branchArgs->CurrY, branchArgs->Completed, g_allocator, g_taskScheduler)) {
+		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX + 1, branchArgs->CurrY, branchArgs->Completed, branchArgs->Allocator, g_taskScheduler)) {
 			return;
 		}
 	}
@@ -90,7 +91,7 @@ TASK_ENTRY_POINT(CheckBranch) {
 	// Check left
 	if (branchArgs->CurrX - 1 >= 0) {
 		char *spaceToCheck = branchArgs->Maze->Data + (branchArgs->CurrY * branchArgs->Maze->Width + branchArgs->CurrX - 1);
-		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX - 1, branchArgs->CurrY, branchArgs->Completed, g_allocator, g_taskScheduler)) {
+		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX - 1, branchArgs->CurrY, branchArgs->Completed, branchArgs->Allocator, g_taskScheduler)) {
 			return;
 		}
 	}
@@ -98,7 +99,7 @@ TASK_ENTRY_POINT(CheckBranch) {
 	// Check up
 	if (branchArgs->CurrY - 1 >= 0) {
 		char *spaceToCheck = branchArgs->Maze->Data + ((branchArgs->CurrY - 1) * branchArgs->Maze->Width + branchArgs->CurrX);
-		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX, branchArgs->CurrY - 1, branchArgs->Completed, g_allocator, g_taskScheduler)) {
+		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX, branchArgs->CurrY - 1, branchArgs->Completed, branchArgs->Allocator, g_taskScheduler)) {
 			return;
 		}
 	}
@@ -106,7 +107,7 @@ TASK_ENTRY_POINT(CheckBranch) {
 	// Check down
 	if (branchArgs->CurrY + 1 < branchArgs->Maze->Height) {
 		char *spaceToCheck = branchArgs->Maze->Data + ((branchArgs->CurrY + 1) * branchArgs->Maze->Width + branchArgs->CurrX);
-		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX, branchArgs->CurrY + 1, branchArgs->Completed, g_allocator, g_taskScheduler)) {
+		if (CheckDirection(spaceToCheck, branchArgs->Maze, branchArgs->CurrX, branchArgs->CurrY + 1, branchArgs->Completed, branchArgs->Allocator, g_taskScheduler)) {
 			return;
 		}
 	}
@@ -114,27 +115,30 @@ TASK_ENTRY_POINT(CheckBranch) {
 
 
 TEST(FunctionalTests, Maze10x10) {
-	FiberTaskingLib::GlobalArgs *globalArgs = new FiberTaskingLib::GlobalArgs();
-	globalArgs->g_taskScheduler.Initialize(110, globalArgs);
-	globalArgs->g_allocator.init(&globalArgs->g_heap, 1234);
+	FiberTaskingLib::TaskScheduler *taskScheduler = new FiberTaskingLib::TaskScheduler();
+	taskScheduler->Initialize(110);
 
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> completed = std::make_shared<FiberTaskingLib::AtomicCounter>();
-	completed->store(0);
+	FiberTaskingLib::TaggedHeap *taggedHeap = new FiberTaskingLib::TaggedHeap(2097152);
+	FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator = new FiberTaskingLib::TaggedHeapBackedLinearAllocator();
+	allocator->init(taggedHeap, 1234);
 
-	char *mazeData = new char[21 * 21];
+	std::shared_ptr<FiberTaskingLib::AtomicCounter> completed = std::make_shared<FiberTaskingLib::AtomicCounter>(0u);
+
+	char *mazeData = reinterpret_cast<char *>(allocator->allocate(sizeof(char) * 21 * 21));
 	memcpy(mazeData, kMaze10x10, 21 * 21);
 
-	BranchArgs *startBranch = new BranchArgs(new MazeType(mazeData, 21, 21),
-	                                         0, 1,
-	                                         completed.get());
+	MazeType *maze10x10 = new(allocator->allocate(sizeof(MazeType)))  MazeType(mazeData, 21, 21);
+	BranchArgs *startBranch = new(allocator->allocate(sizeof(BranchArgs))) BranchArgs(maze10x10, 0u, 1u, completed.get(), allocator);
 
 	FiberTaskingLib::Task task = {CheckBranch, startBranch};
-	globalArgs->g_taskScheduler.AddTask(task);
+	taskScheduler->AddTask(task);
 
-	globalArgs->g_taskScheduler.WaitForCounter(completed, 1);
-
+	taskScheduler->WaitForCounter(completed, 1);
+	taskScheduler->Quit();
+	
 	// Cleanup
-	globalArgs->g_taskScheduler.Quit();
-	globalArgs->g_allocator.destroy();
-	delete globalArgs;
+	allocator->destroy();
+	delete allocator;
+	delete taggedHeap;
+	delete taskScheduler;
 }
