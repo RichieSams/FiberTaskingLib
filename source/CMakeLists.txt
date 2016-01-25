@@ -9,12 +9,6 @@
  # Copyright Adrian Astley 2015 - 2016
  ##
 
-if (FTL_BOOST_CONTEXT_FIBER_IMPL)
-	find_package(Boost 1.56 COMPONENTS context REQUIRED)
-	find_package(Threads)
-	include_directories(${Boost_INCLUDE_DIR})
-endif()
-
 include(SetSourceGroup)
 
 SetSourceGroup(NAME "Core"

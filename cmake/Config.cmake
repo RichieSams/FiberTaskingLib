@@ -23,6 +23,13 @@ macro(Config)
 		set(FTL_BOOST_CONTEXT_FIBER_IMPL ON)
 	endif()
 	
+	if (FTL_BOOST_CONTEXT_FIBER_IMPL)
+		find_package(Boost 1.56 COMPONENTS context REQUIRED)
+		find_package(Threads)
+		include_directories(${Boost_INCLUDE_DIR})
+		link_directories(${Boost_LIBRARY_DIRS})
+	endif()
+
 	# Determine if the compiler supports fiber-safe TLS
 	if (MSVC)
 		set(FTL_FIBER_IMPL_SUPPORTS_TLS ON)
