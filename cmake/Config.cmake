@@ -35,5 +35,5 @@ macro(Config)
 		set(FTL_FIBER_IMPL_SUPPORTS_TLS ON)
 	endif()	
 	
-	configure_file( ${CMAKE_SOURCE_DIR}/cmake/config.h.cmake ${CMAKE_SOURCE_DIR}/include/fiber_tasking_lib/config.h )
+	configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/include/fiber_tasking_lib/config.h )
 endmacro()
