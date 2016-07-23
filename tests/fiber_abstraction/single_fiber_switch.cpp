@@ -13,7 +13,7 @@
 
 #include <atomic>
 
-#include <gtest/include/gtest/gtest.h>
+#include <gtest/gtest.h>
 
 
 struct SingleFiberArg {
