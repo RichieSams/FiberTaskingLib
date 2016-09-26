@@ -1,8 +1,4 @@
-# We can't use docker builds at the moment because trusty apt sources are not yet whitelisted
-# See pull request here: https://github.com/travis-ci/apt-source-whitelist/pull/205
-#sudo: false
-sudo: required
-dist: trusty
+sudo: false
 language: cpp
 
 install:
@@ -16,59 +12,59 @@ script:
     - export CXX="${MY_CXX}"
     - mkdir build
     - cd build
-    - cmake ../
+    - "if [ ${TRAVIS_OS_NAME} = 'linux' ]; then cmake -DBOOST_ROOT=../boost_1_60_0 ../; fi"
+    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then cmake -DBOOST_ROOT=/usr/local/Cellar/boost160/1.60.0 ../; fi"
     - make
     - make test
 
 branches:
   only:
     - master
-    - test
 
 matrix:
   include:
     - os: linux
       compiler: gcc
       env: MY_CC=gcc-4.8   MY_CXX=g++-4.8
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test']
-#          packages: ['g++-4.8']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.8']
     - os: linux
       compiler: gcc
       env: MY_CC=gcc-4.9   MY_CXX=g++-4.9
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test']
-#          packages: ['g++-4.9']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.9']
     - os: linux
       compiler: gcc
       env: MY_CC=gcc-5     MY_CXX=g++-5
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test']
-#          packages: ['g++-5']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5']
     - os: linux
       compiler: clang
       env: MY_CC=clang-3.5 MY_CXX=clang++-3.5
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.5']
-#          packages: ['clang-3.5']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5']
+          packages: ['g++-4.8', 'clang-3.5'] # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang.
     - os: linux
       compiler: clang
       env: MY_CC=clang-3.6 MY_CXX=clang++-3.6
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.6']
-#          packages: ['clang-3.6']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6']
+          packages: ['g++-4.8', 'clang-3.6'] # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang.
     - os: linux
       compiler: clang
       env: MY_CC=clang-3.7 MY_CXX=clang++-3.7
-#	  addons:
-#        apt:
-#          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-3.7']
-#          packages: ['clang-3.7']
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          packages: ['g++-4.8', 'clang-3.7'] # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang.
     - os: osx
       compiler: gcc
       env: MY_CC=gcc-4.8   MY_CXX=g++-4.8
@@ -84,3 +80,6 @@ matrix:
     - os: osx
       compiler: clang
       env: MY_CC=clang-3.6 MY_CXX=clang++-3.6
+    - os: osx
+      compiler: clang
+      env: MY_CC=clang-3.7 MY_CXX=clang++-3.7

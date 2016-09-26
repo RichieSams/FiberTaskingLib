@@ -5,12 +5,13 @@ set -e
 brew update
 
 case "${CXX}" in
-g++-4.8)     brew outdated gcc48 || brew upgrade gcc48 ;;
-g++-4.9)     brew install gcc49 || brew link --overwrite gcc49;;
-g++-5)       brew install gcc5 ;;
-clang++-3.5) brew install llvm35 --with-clang ;;
-clang++-3.6) brew install llvm36 --with-clang ;;
+g++-4.8)     brew outdated homebrew/versions/gcc48 || brew upgrade homebrew/versions/gcc48 ;;
+g++-4.9)     brew install homebrew/versions/gcc49 || brew link --overwrite homebrew/versions/gcc49 ;;
+g++-5)       brew install homebrew/versions/gcc5 ;;
+clang++-3.5) brew install homebrew/versions/llvm35 ;;
+clang++-3.6) brew install homebrew/versions/llvm36;;
+clang++-3.7) brew install homebrew/versions/llvm37;;
 *) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac
 
-brew outdated boost || brew upgrade boost
+brew outdated homebrew/versions/boost160 || brew upgrade homebrew/versions/boost160
