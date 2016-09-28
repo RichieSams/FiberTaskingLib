@@ -44,7 +44,6 @@ public:
 private:
 	std::size_t m_numThreads;
 	ThreadType *m_threads;
-	std::atomic_uint m_numActiveWorkerThreads;
 
 	/**
 	 * Holds a task that is ready to to be executed by the worker threads
@@ -95,7 +94,20 @@ private:
 	std::vector<FiberType> m_fiberSwitchingFibers;
 	std::vector<FiberType> m_counterWaitingFibers;
 
+	/**
+	 * Boost fibers require that fibers created from threads finish on the same thread where they started
+	 *
+	 * To accommodate this, we have save the initial fibers created in each thread, and immediately switch 
+	 * out of them into the general fiber pool. Once we call Quit(), we need to return each thread to their
+	 * original starting fibers. This is tricky. For example, the "main" fiber could be running on thread 2.
+	 * Rather than switching each thread directly to their origin fiber, we use these helper fibers to do 
+	 * the switch for us.
+	 */
+	std::vector<FiberType> m_quitFibers;
+
 	std::atomic_bool m_quit;
+	std::atomic_uint m_threadsRemainingToQuit;
+
 
 public:
 	/**
@@ -178,6 +190,12 @@ private:
 	 * @param arg    An instance of TaskScheduler
 	 */
 	static FIBER_START_FUNCTION(CounterWaitStart);
+	/**
+	* The fiberProc function for the quit helper fiber
+	*
+	* @param arg    An instance of TaskScheduler
+	*/
+	static FIBER_START_FUNCTION(QuitStart);
 };
 
 } // End of namespace FiberTaskingLib
