@@ -50,7 +50,7 @@ TASK_ENTRY_POINT(AddNumberSubset) {
  */
 TEST(FunctionalTests, CalcTriangleNum) {
 	FiberTaskingLib::TaskScheduler *taskScheduler = new FiberTaskingLib::TaskScheduler();
-	taskScheduler->Initialize(110);
+	taskScheduler->Initialize(400);
 
 	FiberTaskingLib::TaggedHeap *taggedHeap = new FiberTaskingLib::TaggedHeap(2097152);
 	FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator = new FiberTaskingLib::TaggedHeapBackedLinearAllocator();
