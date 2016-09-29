@@ -45,7 +45,6 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 		// Spin
 		printf("spinning");
 	}
-	FTLSetCurrentFiber(fiberToSwitchTo);
 	
 	// Switch to it
 	FTLSwitchToFiber(threadFiber, fiberToSwitchTo);
@@ -119,7 +118,6 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberSwitchStart) {
 		taskScheduler->m_fiberPool.Push(GetTLSData(tls_originFiber));
 		FiberType destFiber = GetTLSData(tls_destFiber);
 
-		FTLSetCurrentFiber(destFiber);
 		FTLSwitchToFiber(taskScheduler->m_fiberSwitchingFibers[GetTLSData(tls_threadIndex)], destFiber);
 	}
 }
@@ -134,7 +132,6 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, CounterWaitStart) {
 
 		FiberType destFiber = GetTLSData(tls_destFiber);
 
-		FTLSetCurrentFiber(destFiber);
 		FTLSwitchToFiber(taskScheduler->m_counterWaitingFibers[GetTLSData(tls_threadIndex)], destFiber);
 	}
 }
@@ -207,8 +204,6 @@ bool TaskScheduler::Initialize(uint fiberPoolSize) {
 	m_threads[0] = FTLGetCurrentThread();
 	FiberType mainThreadFiber = FTLConvertThreadToFiber();
 	SetTLSData(tls_threadFibers, mainThreadFiber);
-
-	FTLSetCurrentFiber(mainThreadFiber);
 	SetTLSData(tls_threadIndex, 0u);
 
 	// Create the remaining threads

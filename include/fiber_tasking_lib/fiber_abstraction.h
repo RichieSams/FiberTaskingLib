@@ -107,9 +107,13 @@ public:
 
 typedef Fiber *FiberType;
 
+extern TLS_VARIABLE(FiberType, tls_currentFiber);
 
 inline FiberType FTLConvertThreadToFiber() {
-	return new Fiber();
+	FiberType newFiber = new Fiber();
+	
+	SetTLSData(tls_currentFiber, newFiber);
+	return newFiber;
 }
 inline void FTLConvertFiberToThread(FiberType fiber) {
 	delete fiber;
@@ -123,17 +127,12 @@ inline void FTLDeleteFiber(FiberType fiber) {
 }
 
 inline void FTLSwitchToFiber(FiberType currentFiber, FiberType destFiber) {
+	SetTLSData(tls_currentFiber, destFiber);
 	currentFiber->SwitchToFiber(destFiber);
 }
 
-extern TLS_VARIABLE(FiberType, tls_currentFiber);
-
 inline FiberType FTLGetCurrentFiber() {
 	return GetTLSData(tls_currentFiber);
-}
-
-inline void FTLSetCurrentFiber(FiberType currentFiber) {
-	return SetTLSData(tls_currentFiber, currentFiber);
 }
 
 } // End of namespace FiberTaskingLib
