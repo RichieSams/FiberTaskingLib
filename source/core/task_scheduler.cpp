@@ -94,6 +94,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	// And we've returned
 	taskScheduler->Log("Thread shutting down");
 
+	taskScheduler->m_threadsFinishedQuitting.fetch_add(1u);
 	FTLEndCurrentThread();
 	THREAD_FUNC_END;
 }
@@ -238,6 +239,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize) {
 	m_numThreads = FTLGetNumHardwareThreads();
 	m_threads = new ThreadType[m_numThreads];
 	m_threadsRemainingToQuit.store(static_cast<uint>(m_numThreads));
+	m_threadsFinishedQuitting.store(0u);
 	m_fiberSwitchingFibers.resize(m_numThreads);
 	m_counterWaitingFibers.resize(m_numThreads);
 	m_quitFibers.resize(m_numThreads);
@@ -343,18 +345,11 @@ void TaskScheduler::Quit() {
 	FTLSwitchToFiber(FTLGetCurrentFiber(), m_quitFibers[GetTLSData(tls_threadIndex)]);
 
 	// And we've returned
-	// Cleanup
-	std::vector<ThreadType> threadsToCleanUp;
-	ThreadType currentThread = FTLGetCurrentThread();
-	for (uint i = 0; i < m_numThreads; ++i) {
-		if (m_threads[i] != currentThread) {
-			threadsToCleanUp.push_back(m_threads[i]);
-		}
-	}
 	Log("Returned from quit fibers");
 
-	for (auto &thread : threadsToCleanUp) {
-		FTLCleanupThread(thread);
+	// Wait for all the threads to finish
+	while (m_threadsFinishedQuitting.load() != m_numThreads - 1) {
+		// Spin
 	}
 	
 

@@ -107,6 +107,7 @@ private:
 
 	std::atomic_bool m_quit;
 	std::atomic_uint m_threadsRemainingToQuit;
+	std::atomic_uint m_threadsFinishedQuitting;
 
 	std::vector<std::vector<std::string> > m_log;
 

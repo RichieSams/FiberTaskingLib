@@ -60,7 +60,7 @@ const uint32 EVENTWAIT_INFINITE = INFINITE;
 typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE uint
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
-#define THREAD_FUNC_END return 0;
+#define THREAD_FUNC_END return 0
 
 inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
 	*returnId = (ThreadType)_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr);
@@ -84,11 +84,6 @@ inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRou
 
 inline void FTLEndCurrentThread() {
 	_endthreadex(0);
-}
-
-inline void FTLCleanupThread(ThreadType threadId) {
-	// No op
-	// _endthread will automatically close the handle for us
 }
 
 inline void FTLJoinThreads(uint numThreads, ThreadType *threads) {
@@ -168,7 +163,7 @@ const uint32 EVENTWAIT_INFINITE = -1;
 typedef void *(*ThreadStartRoutine)(void *arg);
 #define THREAD_FUNC_RETURN_TYPE void *
 #define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
-#define THREAD_FUNC_END pthread_exit(NULL);
+#define THREAD_FUNC_END 
 
 inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRoutine startRoutine, void *arg) {
 	pthread_attr_t threadAttr;
@@ -211,10 +206,6 @@ inline bool FTLCreateThread(ThreadType *returnId, uint stackSize, ThreadStartRou
 
 inline void FTLEndCurrentThread() {
 	pthread_exit(NULL);
-}
-
-inline void FTLCleanupThread(ThreadType threadId) {
-	pthread_cancel(threadId);
 }
 
 inline void FTLJoinThreads(uint numThreads, ThreadType *threads) {
