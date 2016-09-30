@@ -58,4 +58,5 @@ TEST(TLSAbstraction, MultipleThreadGetSet) {
 	}
 
 	FiberTaskingLib::FTLJoinThreads(kNumThreads, threads);
+	delete[] args;
 }
