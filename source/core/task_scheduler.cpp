@@ -12,6 +12,9 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 
 #include <thread>
+#include <sstream>
+#include <fstream>
+#include <cstdarg>
 
 
 namespace FiberTaskingLib {
@@ -22,6 +25,41 @@ TLS_VARIABLE(AtomicCounter *, tls_waitingCounter);
 TLS_VARIABLE(int, tls_waitingValue);
 TLS_VARIABLE(uint, tls_threadIndex);
 TLS_VARIABLE(FiberType, tls_threadFibers);
+
+
+void TaskScheduler::Log(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	
+	char buffer[256];
+	snprintf(buffer, 256, "Thread: [%u] ", GetTLSData(tls_threadIndex));
+	std::string threadIndex(buffer);
+
+	snprintf(buffer, 256, "Fiber: [%p] ", FTLGetCurrentFiber());
+	std::string fiberNumber(buffer);
+
+	vsnprintf(buffer, 256, format, args);
+	std::string logLine(buffer);
+	m_log[GetTLSData(tls_threadIndex)].push_back(threadIndex + fiberNumber + logLine);
+
+	va_end(args);
+}
+
+//void TaskScheduler::Log(const char *format, ...) {}
+
+void TaskScheduler::DumpLogToFile() {
+	for (uint i = 0; i < m_log.size(); ++i) {
+		std::stringstream fileName;
+		fileName << "log" << i << ".txt";
+		
+		std::ofstream file;
+		file.open(fileName.str());
+		for (auto &line : m_log[i]) {
+			file << line << "\n";
+		}
+		file.close();
+	}
+}
 
 struct ThreadStartArgs {
 	TaskScheduler *taskScheduler;
@@ -39,17 +77,23 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	// Clean up
 	delete threadArgs;
 
+	taskScheduler->Log("Thread started", GetTLSData(tls_threadIndex));
+
 	// Get a new fiber to switch to
 	FiberType fiberToSwitchTo;
 	while (!taskScheduler->m_fiberPool.Pop(&fiberToSwitchTo)) {
 		// Spin
-		printf("spinning");
+		taskScheduler->Log("Waiting on a fiber to start");
 	}
 	
 	// Switch to it
+	taskScheduler->Log("Switching to first fiber");
 	FTLSwitchToFiber(threadFiber, fiberToSwitchTo);
 
+
 	// And we've returned
+	taskScheduler->Log("Thread shutting down");
+
 	FTLEndCurrentThread();
 	THREAD_FUNC_END;
 }
@@ -89,6 +133,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 		taskScheduler->m_waitingTaskLock.unlock();
 
 		if (waitingTaskReady) {
+			taskScheduler->Log("Found a waiting task that is ready to continue. Switching to it");
 			taskScheduler->SwitchFibers(waitingTask.Fiber);
 		}
 
@@ -97,6 +142,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 		if (!taskScheduler->GetNextTask(&nextTask)) {
 			std::this_thread::yield();
 		} else {
+			taskScheduler->Log("Executing a new task from the queue");
 			nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
 			nextTask.Counter->fetch_sub(1);
 		}
@@ -104,6 +150,7 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, FiberStart) {
 
 	
 	// Start the quit sequence
+	taskScheduler->Log("Switching to quit fibers");
 	FiberType currentFiber = FTLGetCurrentFiber();
 	FTLSwitchToFiber(currentFiber, taskScheduler->m_quitFibers[GetTLSData(tls_threadIndex)]);
 
@@ -139,12 +186,15 @@ FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, CounterWaitStart) {
 FIBER_START_FUNCTION_CLASS_IMPL(TaskScheduler, QuitStart) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
+	taskScheduler->Log("Quit fiber started. Waiting for others");
+
 	// Wait for the other threads to finish switching
 	taskScheduler->m_threadsRemainingToQuit.fetch_sub(1u);
 	while(taskScheduler->m_threadsRemainingToQuit.load() != 0u) {
 		// Spin
 	}
 	
+	taskScheduler->Log("Switching to threadFiber");
 	FiberType destFiber = GetTLSData(tls_threadFibers);
 	FTLSwitchToFiber(taskScheduler->m_quitFibers[GetTLSData(tls_threadIndex)], destFiber);
 	
@@ -191,6 +241,7 @@ bool TaskScheduler::Initialize(uint fiberPoolSize) {
 	m_fiberSwitchingFibers.resize(m_numThreads);
 	m_counterWaitingFibers.resize(m_numThreads);
 	m_quitFibers.resize(m_numThreads);
+	m_log.resize(m_numThreads);
 
 	// Create switching fibers for all the threads
 	for (uint i = 0; i < m_numThreads; ++i) {
@@ -267,7 +318,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 	FiberType fiberToSwitchTo;
 	while(!m_fiberPool.Pop(&fiberToSwitchTo)) {
 		// Spin
-		printf("Spinning");
+		Log("Waiting for a free fiber in the pool");
 	}
 
 	SetTLSData(tls_destFiber, fiberToSwitchTo);
@@ -277,12 +328,17 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int 
 	SetTLSData(tls_waitingCounter, counter.get());
 	SetTLSData(tls_waitingValue, value);
 
+	Log("Waiting for counter %ull. Switching to new fiber while we wait", counter.get());
 	FTLSwitchToFiber(currentFiber, m_counterWaitingFibers[GetTLSData(tls_threadIndex)]);
+	Log("Counter %ull is ready. Fiber returned", counter.get());
 }
 
 void TaskScheduler::Quit() {
 	m_quit.store(true);
 	
+	Log("Quit() called");
+	Log("Switching to quit fibers");
+
 	// Switch to the quit fibers and wait for the other threads to follow suit
 	FTLSwitchToFiber(FTLGetCurrentFiber(), m_quitFibers[GetTLSData(tls_threadIndex)]);
 
@@ -295,10 +351,14 @@ void TaskScheduler::Quit() {
 			threadsToCleanUp.push_back(m_threads[i]);
 		}
 	}
+	Log("Returned from quit fibers");
 
 	for (auto &thread : threadsToCleanUp) {
 		FTLCleanupThread(thread);
 	}
+	
+
+	DumpLogToFile();
 }
 
 } // End of namespace FiberTaskingLib

@@ -108,6 +108,8 @@ private:
 	std::atomic_bool m_quit;
 	std::atomic_uint m_threadsRemainingToQuit;
 
+	std::vector<std::vector<std::string> > m_log;
+
 
 public:
 	/**
@@ -196,6 +198,9 @@ private:
 	* @param arg    An instance of TaskScheduler
 	*/
 	static FIBER_START_FUNCTION(QuitStart);
+
+	void Log(const char *format, ...);
+	void DumpLogToFile();
 };
 
 } // End of namespace FiberTaskingLib
