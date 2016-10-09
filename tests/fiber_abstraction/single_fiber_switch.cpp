@@ -9,7 +9,7 @@
  * Copyright Adrian Astley 2015 - 2016
  */
 
-#include "fiber_tasking_lib/fiber_abstraction.h"
+#include "fiber_tasking_lib/fiber.h"
 
 #include <atomic>
 
@@ -18,35 +18,28 @@
 
 struct SingleFiberArg {
 	std::atomic_long Counter;
-	FiberTaskingLib::FiberType MainFiber;
-	FiberTaskingLib::FiberType OtherFiber;
+	FiberTaskingLib::Fiber MainFiber;
+	FiberTaskingLib::Fiber OtherFiber;
 };
 
-FIBER_START_FUNCTION(SingleFiberStart) {
-	SingleFiberArg *singleFiberArg = (SingleFiberArg *)arg;
+void SingleFiberStart(std::intptr_t arg) {
+	SingleFiberArg *singleFiberArg = reinterpret_cast<SingleFiberArg *>(arg);
 
 	singleFiberArg->Counter.fetch_add(1);
 
-	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
+	singleFiberArg->OtherFiber.SwitchToFiber(&singleFiberArg->MainFiber);
 
 	// We should never get here
 	FAIL();
-	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->OtherFiber, singleFiberArg->MainFiber);
 }
 
 TEST(FiberAbstraction, SingleFiberSwitch) {
-	SingleFiberArg *singleFiberArg = new SingleFiberArg();
-	singleFiberArg->Counter.store(0);
-	singleFiberArg->MainFiber = FiberTaskingLib::FTLConvertThreadToFiber();
-	singleFiberArg->OtherFiber = FiberTaskingLib::FTLCreateFiber(524288, SingleFiberStart, (FiberTaskingLib::fiber_arg_t)singleFiberArg);
+	SingleFiberArg singleFiberArg;
+	singleFiberArg.Counter.store(0);
+	singleFiberArg.OtherFiber = std::move(FiberTaskingLib::Fiber(512000, SingleFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
 
-	FiberTaskingLib::FTLSwitchToFiber(singleFiberArg->MainFiber, singleFiberArg->OtherFiber);
+	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 
-	GTEST_ASSERT_EQ(1, singleFiberArg->Counter.load());
-
-	// Cleanup
-	FiberTaskingLib::FTLConvertFiberToThread(singleFiberArg->MainFiber);
-	FiberTaskingLib::FTLDeleteFiber(singleFiberArg->OtherFiber);
-	delete singleFiberArg;
+	GTEST_ASSERT_EQ(1, singleFiberArg.Counter.load());
 }
 

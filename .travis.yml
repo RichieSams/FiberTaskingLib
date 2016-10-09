@@ -4,7 +4,6 @@ language: cpp
 install:
     - export CC="${MY_CC}"
     - export CXX="${MY_CXX}"
-    - "if [ ${TRAVIS_OS_NAME} = 'linux' ]; then ./ci_scripts/travis_ci_install_linux.sh; fi"
     - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then ./ci_scripts/travis_ci_install_osx.sh; fi"
 
 script: 
@@ -12,14 +11,9 @@ script:
     - export CXX="${MY_CXX}"
     - mkdir build
     - cd build
-    - "if [ ${TRAVIS_OS_NAME} = 'linux' ]; then cmake -DBOOST_ROOT=../boost_1_60_0 ../; fi"
-    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then cmake -DBOOST_ROOT=/usr/local/Cellar/boost160/1.60.0 ../; fi"
+    - cmake ../
     - make
     - make test
-
-branches:
-  only:
-    - master
 
 matrix:
   include:

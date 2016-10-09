@@ -10,7 +10,6 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
-#include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 #include <gtest/gtest.h>
 
@@ -20,7 +19,7 @@ const uint kNumConsumerTasks = 10000u;
 
 
 TASK_ENTRY_POINT(Consumer) {
-	FiberTaskingLib::AtomicCounter *globalCounter = (FiberTaskingLib::AtomicCounter *)arg;
+	std::atomic_uint *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
 
 	globalCounter->fetch_add(1);
 }
@@ -28,48 +27,39 @@ TASK_ENTRY_POINT(Consumer) {
 TASK_ENTRY_POINT(Producer) {
 	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
-		tasks[i] = {Consumer, arg};
+		tasks[i] = { Consumer, arg };
 	}
 
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = g_taskScheduler->AddTasks(kNumConsumerTasks, tasks);
+	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(kNumConsumerTasks, tasks);
 	delete[] tasks;
 
 	g_taskScheduler->WaitForCounter(counter, 0);
 }
 
 
+TASK_ENTRY_POINT(ProducerConsumerMainTask) {
+	std::atomic_uint globalCounter(0u);
+
+	FiberTaskingLib::Task tasks[kNumProducerTasks];
+	for (uint i = 0; i < kNumProducerTasks; ++i) {
+		tasks[i] = { Producer, &globalCounter };
+	}
+
+	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(kNumProducerTasks, tasks);
+	g_taskScheduler->WaitForCounter(counter, 0);
+
+
+	// Test to see that all tasks finished
+	GTEST_ASSERT_EQ(kNumProducerTasks * kNumConsumerTasks, globalCounter.load());
+
+	// Cleanup
+}
 
 
 /**
  * Tests that all scheduled tasks finish properly
  */
 TEST(FunctionalTests, ProducerConsumer) {
-	FiberTaskingLib::TaskScheduler *taskScheduler = new FiberTaskingLib::TaskScheduler();
-	taskScheduler->Initialize(400);
-
-	FiberTaskingLib::TaggedHeap *taggedHeap = new FiberTaskingLib::TaggedHeap(2097152);
-	FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator = new FiberTaskingLib::TaggedHeapBackedLinearAllocator();
-	allocator->init(taggedHeap, 1234);
-
-	std::atomic_uint *globalCounter = new std::atomic_uint(0u);
-
-	FiberTaskingLib::Task tasks[kNumProducerTasks];
-	for (uint i = 0; i < kNumProducerTasks; ++i) {
-		tasks[i] = {Producer, globalCounter};
-	}
-
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = taskScheduler->AddTasks(kNumProducerTasks, tasks);
-	taskScheduler->WaitForCounter(counter, 0);
-
-
-	// Test to see that all tasks finished
-	GTEST_ASSERT_EQ(kNumProducerTasks * kNumConsumerTasks, globalCounter->load());
-	taskScheduler->Quit();
-
-	// Cleanup
-	delete globalCounter;
-	allocator->destroy();
-	delete allocator;
-	delete taggedHeap;
-	delete taskScheduler;
+	FiberTaskingLib::TaskScheduler taskScheduler;
+	taskScheduler.Run(400, ProducerConsumerMainTask);
 }

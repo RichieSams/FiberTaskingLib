@@ -13,5 +13,3 @@ clang++-3.6) brew install homebrew/versions/llvm36;;
 clang++-3.7) brew install homebrew/versions/llvm37;;
 *) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac
-
-brew outdated homebrew/versions/boost160 || brew upgrade homebrew/versions/boost160

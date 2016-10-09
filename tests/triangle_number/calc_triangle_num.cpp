@@ -10,7 +10,6 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
-#include "fiber_tasking_lib/tagged_heap_backed_linear_allocator.h"
 
 #include <gtest/gtest.h>
 
@@ -24,7 +23,7 @@ struct NumberSubset {
 
 
 TASK_ENTRY_POINT(AddNumberSubset) {
-	NumberSubset *subset = (NumberSubset *)arg;
+	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->total = 0;
 
@@ -38,24 +37,17 @@ TASK_ENTRY_POINT(AddNumberSubset) {
 
 
 /**
- * Calculates the value of a triangle number by dividing the additions up into tasks
- *
- * A triangle number is defined as:
- *         Tn = 1 + 2 + 3 + ... + n
- *
- * The code is checked against the numerical solution which is:
- *         Tn = n * (n + 1) / 2
- *
- * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
- */
-TEST(FunctionalTests, CalcTriangleNum) {
-	FiberTaskingLib::TaskScheduler *taskScheduler = new FiberTaskingLib::TaskScheduler();
-	taskScheduler->Initialize(400);
-
-	FiberTaskingLib::TaggedHeap *taggedHeap = new FiberTaskingLib::TaggedHeap(2097152);
-	FiberTaskingLib::TaggedHeapBackedLinearAllocator *allocator = new FiberTaskingLib::TaggedHeapBackedLinearAllocator();
-	allocator->init(taggedHeap, 1234);
-
+* Calculates the value of a triangle number by dividing the additions up into tasks
+*
+* A triangle number is defined as:
+*         Tn = 1 + 2 + 3 + ... + n
+*
+* The code is checked against the numerical solution which is:
+*         Tn = n * (n + 1) / 2
+*
+* TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
+*/
+TASK_ENTRY_POINT(TriangleNumberMainTask) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
 	const uint64 numAdditionsPerTask = 10000ull;
@@ -76,16 +68,16 @@ TEST(FunctionalTests, CalcTriangleNum) {
 			subset->end = triangleNum;
 		}
 
-		tasks[i] = {AddNumberSubset, subset};
+		tasks[i] = { AddNumberSubset, subset };
 
 		nextNumber = subset->end + 1;
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::shared_ptr<FiberTaskingLib::AtomicCounter> counter = taskScheduler->AddTasks(numTasks, tasks);
+	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(numTasks, tasks);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(counter, 0);
+	g_taskScheduler->WaitForCounter(counter, 0);
 
 
 	// Add the results
@@ -97,11 +89,14 @@ TEST(FunctionalTests, CalcTriangleNum) {
 	// Test
 	GTEST_ASSERT_EQ(triangleNum * (triangleNum + 1ull) / 2ull, result);
 
-	taskScheduler->Quit();
-
 	// Cleanup
-	allocator->destroy();
-	delete allocator;
-	delete taggedHeap;
-	delete taskScheduler;
+	delete[] subsets;
+}
+
+
+
+
+TEST(FunctionalTests, CalcTriangleNum) {
+	FiberTaskingLib::TaskScheduler taskScheduler;
+	taskScheduler.Run(400, TriangleNumberMainTask);
 }

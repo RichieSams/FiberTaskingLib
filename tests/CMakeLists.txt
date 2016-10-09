@@ -10,50 +10,37 @@
  ##
 
 include(GTestAddTests)
-
-
 include(SetSourceGroup)
 
-SetSourceGroup(NAME "Root"
+
+SetSourceGroup(NAME Root
+	PREFIX FTL_TEST
 	SOURCE_FILES main.cpp
 )
 
-SetSourceGroup(NAME "Common"
-	SOURCE_FILES common/eastl_defaults.cpp
-)
-
 SetSourceGroup(NAME "Fiber Abstraction"
-	SOURCE_FILES fiber_abstraction/nested_fiber_switch.cpp
-	             fiber_abstraction/single_fiber_switch.cpp
-)
-
-SetSourceGroup(NAME "Maze"
-	SOURCE_FILES maze/maze.cpp
-	maze/maze10x10.h
+	PREFIX FTL_TEST
+	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
+	             fiber_abstraction/nested_fiber_switch.cpp
 )
 
 SetSourceGroup(NAME "Producer Consumer"
+	PREFIX FTL_TEST
 	SOURCE_FILES producer_consumer/producer_consumer.cpp
 )
 
-SetSourceGroup(NAME "TLS Abstraction"
-	SOURCE_FILES tls_abstraction/tls_abstraction.cpp
-)
-
 SetSourceGroup(NAME "Triangle Number"
+	PREFIX FTL_TEST
 	SOURCE_FILES triangle_number/calc_triangle_num.cpp
 )
 
 
 # Link all the sources into one
 set(FIBER_TASKING_LIB_TESTS_SRC
-	${SRC_ROOT}
-	${SRC_COMMON}
-	${SRC_FIBER_ABSTRACTION}
-	${SRC_MAZE}
-	${SRC_PRODUCER_CONSUMER}
-	${SRC_TLS_ABSTRACTION}
-	${SRC_TRIANGLE_NUMBER}
+	${FTL_TEST_ROOT}
+	${FTL_TEST_FIBER_ABSTRACTION}
+	${FTL_TEST_PRODUCER_CONSUMER}
+	${FTL_TEST_TRIANGLE_NUMBER}
 )
 
 

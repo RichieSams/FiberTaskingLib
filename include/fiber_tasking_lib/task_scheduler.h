@@ -13,28 +13,23 @@
 
 #include "fiber_tasking_lib/typedefs.h"
 #include "fiber_tasking_lib/thread_abstraction.h"
-#include "fiber_tasking_lib/fiber_abstraction.h"
+#include "fiber_tasking_lib/fiber.h"
 #include "fiber_tasking_lib/task.h"
 #include "fiber_tasking_lib/thread_safe_queue.h"
 
 #include <atomic>
 #include <vector>
-#include <mutex>
+#include <climits>
 #include <memory>
 
 
 namespace FiberTaskingLib {
-
-typedef std::atomic_long AtomicCounter;
-
 
 /**
  * A class that enables task-based multithreading.
  *
  * Underneath the covers, it uses fibers to allow cores to work on other tasks
  * when the current task is waiting on a synchronization atomic
- *
- * Note: Only one instance of this class should ever exist at a time.
  */
 class TaskScheduler {
 public:
@@ -42,8 +37,12 @@ public:
 	~TaskScheduler();
 
 private:
+	enum {
+		FTL_INVALID_INDEX = UINT_MAX
+	};
+
 	std::size_t m_numThreads;
-	ThreadType *m_threads;
+	std::vector<ThreadType> m_threads;
 
 	/**
 	 * Holds a task that is ready to to be executed by the worker threads
@@ -51,73 +50,95 @@ private:
 	 */
 	struct TaskBundle {
 		Task TaskToExecute;
-		std::shared_ptr<AtomicCounter> Counter;
+		std::shared_ptr<std::atomic_uint> Counter;
 	};
-
-	/**
-	 * Holds a fiber that is waiting on a counter to be a certain value
-	 */
-	struct WaitingTask {
-		WaitingTask()
-			: Fiber(nullptr),
-			  Counter(nullptr),
-			  Value(0) {
-		}
-		WaitingTask(FiberType fiber, AtomicCounter *counter, int value)
-			: Fiber(fiber),
-			  Counter(counter),
-			  Value(value) {
-		}
-
-		FiberType Fiber;
-		AtomicCounter *Counter;
-		int Value;
-	};
-
 	ThreadSafeQueue<TaskBundle> m_taskQueue;
-	std::vector<WaitingTask> m_waitingTasks;
-	std::mutex m_waitingTaskLock;
-
-	ThreadSafeQueue<FiberType> m_fiberPool;
+	
+	
+	std::size_t m_fiberPoolSize;
+	/* The backing storage for the fiber pool */
+	Fiber *m_fibers;
+	/**
+	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
+	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
+	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
+	 */
+	std::atomic<bool> *m_freeFibers;
+	/**
+	  * An array of atomic, which signify if a fiber is waiting for a counter. The indices of m_waitingFibers
+	  * correspond 1 to 1 with m_fibers. So, if m_waitingFibers[i] == true, then m_fibers[i] is waiting for a counter
+	  */
+	std::atomic<bool> *m_waitingFibers;
 
 	/**
-	 * In order to put the current fiber on the waitingTasks list or the fiber pool, we have to
-	 * switch to a different fiber. If we naively added ourselves to the list/fiber pool, then
-	 * switch to the new fiber, another thread could pop from the list/pool and
-	 * try to execute the current fiber before we have time to switch. This leads to stack corruption
-	 * and/or general undefined behavior.
-	 *
-	 * So we use helper fibers to do the store/switch for us. However, we have to have a helper
-	 * fiber for each thread. Otherwise, two threads could try to switch to the same helper fiber
-	 * at the same time. Again, this leads to stack corruption and/or general undefined behavior.
+	 * Holds a Counter that is being waited on. Specifically, until Counter == TargetValue
 	 */
-	std::vector<FiberType> m_fiberSwitchingFibers;
-	std::vector<FiberType> m_counterWaitingFibers;
-
+	struct WaitingBundle {
+		std::atomic_uint *Counter;
+		uint TargetValue;
+	};
 	/**
-	 * Boost fibers require that fibers created from threads finish on the same thread where they started
-	 *
-	 * To accommodate this, we have save the initial fibers created in each thread, and immediately switch 
-	 * out of them into the general fiber pool. Once we call Quit(), we need to return each thread to their
-	 * original starting fibers. This is tricky. For example, the "main" fiber could be running on thread 2.
-	 * Rather than switching each thread directly to their origin fiber, we use these helper fibers to do 
-	 * the switch for us.
-	 */
-	std::vector<FiberType> m_quitFibers;
-
+	  * An array of WaitingBundles, which correspond 1 to 1 with m_waitingFibers. If m_waitingFiber[i] == true,
+	  * m_waitingBundles[i] will contain the data for the waiting fiber in m_fibers[i].
+	  */
+	std::vector<WaitingBundle> m_waitingBundles;
+	
 	std::atomic_bool m_quit;
-	std::atomic_uint m_threadsRemainingToQuit;
-	std::atomic_uint m_threadsFinishedQuitting;
+	
+	enum class FiberDestination {
+		None = 0,
+		ToPool = 1,
+		ToWaiting = 2,
+	};
 
-	std::vector<std::vector<std::string> > m_log;
+	struct ThreadLocalStorage {
+		ThreadLocalStorage()
+			: ThreadFiber(),
+			  CurrentFiberIndex(FTL_INVALID_INDEX),
+			  OldFiberIndex(FTL_INVALID_INDEX),
+			  OldFiberDestination(FiberDestination::None) {
+		}
+
+		/**
+		* Boost fibers require that fibers created from threads finish on the same thread where they started
+		*
+		* To accommodate this, we have save the initial fibers created in each thread, and immediately switch
+		* out of them into the general fiber pool. Once the 'mainTask' has finished, we signal all the threads to
+		* start quitting. When the receive the signal, they switch back to the ThreadFiber, allowing it to 
+		* safely clean up.
+		*/
+		Fiber ThreadFiber;
+		/* The index of the current fiber in m_fibers */
+		std::size_t CurrentFiberIndex;
+		/* The index of the previously executed fiber in m_fibers */
+		std::size_t OldFiberIndex;
+		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
+		FiberDestination OldFiberDestination;
+	};
+	/**
+	 * c++ Thread Local Storage is by definition static/global. This poses some problems, such as multiple TaskScheduler
+	 * instances. In addition, with Boost::Context, we have no way of telling the compiler to disable TLS optimizations, so we
+	 * have to fake TLS anyhow. 
+	 *
+	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index into
+	 * their storage using m_tls[GetCurrentThreadIndex()]
+	 */
+	std::vector<ThreadLocalStorage> m_tls;
 
 
 public:
 	/**
-	 * Creates the fiber pool and spawns worker threads for each (logical) CPU core. Each worker
-	 * thread is affinity bound to a single core.
+	 * Initializes the TaskScheduler and then starts executing 'mainTask'
+	 *
+	 * NOTE: Run will "block" until 'mainTask' returns. However, it doesn't block in the traditional sense; 'mainTask' is created as a Fiber.
+	 * Therefore, the current thread will save it's current state, and then switch execution to the the 'mainTask' fiber. When 'mainTask'
+	 * finishes, the thread will switch back to the saved state, and Run() will return.
+	 *
+	 * @param fiberPoolSize    The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
+	 * @param mainTask         The main task to run
+	 * @param mainTaskArg      The argument to pass to 'mainTask'
 	 */
-	bool Initialize(uint fiberPoolSize);
+	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr);
 
 	/**
 	 * Adds a task to the internal queue.
@@ -125,7 +146,7 @@ public:
 	 * @param task    The task to queue
 	 * @return        An atomic counter corresponding to this task. Initially it will equal 1. When the task completes, it will be decremented.
 	 */
-	std::shared_ptr<AtomicCounter> AddTask(Task task);
+	std::shared_ptr<std::atomic_uint> AddTask(Task task);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
@@ -133,7 +154,7 @@ public:
 	 * @param tasks       The tasks to queue
 	 * @return            An atomic counter corresponding to the task group as a whole. Initially it will equal numTasks. When each task completes, it will be decremented.
 	 */
-	std::shared_ptr<AtomicCounter> AddTasks(uint numTasks, Task *tasks);
+	std::shared_ptr<std::atomic_uint> AddTasks(uint numTasks, Task *tasks);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -141,16 +162,16 @@ public:
 	 * @param counter    The counter to check
 	 * @param value      The value to wait for
 	 */
-	void WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int value);
-	/**
-	 * Tells all worker threads to quit, then waits for all threads to complete.
-	 * Any currently running task will finish before the worker thread returns.
-	 *
-	 * @return
-	 */
-	void Quit();
+	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value);
 
 private:
+	/**
+	 * Gets the 0-based index of the current thread
+	 * This is useful for m_tls[GetCurrentThreadIndex()]
+	 *
+	 * @return    The index of the current thread
+	 */
+	std::size_t GetCurrentThreadIndex();
 	/**
 	 * Pops the next task off the queue into nextTask. If there are no tasks in the
 	 * the queue, it will return false.
@@ -160,13 +181,11 @@ private:
 	 */
 	bool GetNextTask(TaskBundle *nextTask);
 	/**
-	 * Returns the current fiber back to the fiber pool and switches to fiberToSwitchTo
+	 * Gets the index of the next available fiber in the pool
 	 *
-	 * Note: As noted above, we use helper fibers to do this switch for us.
-	 *
-	 * @param fiberToSwitchTo    The fiber to switch to
+	 * @return    The index of the next available fiber in the pool
 	 */
-	void SwitchFibers(FiberType fiberToSwitchTo);
+	std::size_t GetNextFreeFiberIndex();
 
 	/**
 	 * The threadProc function for all worker threads
@@ -176,32 +195,17 @@ private:
 	 */
 	static THREAD_FUNC_DECL ThreadStart(void *arg);
 	/**
+	* The fiberProc function that wraps the main fiber procedure given by the user
+	*
+	* @param arg    An instance of TaskScheduler
+	*/
+	static void MainFiberStart(intptr_t arg);
+	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
 	 * @param arg    An instance of TaskScheduler
 	 */
-	static FIBER_START_FUNCTION(FiberStart);
-	/**
-	 * The fiberProc function for the fiber switching helper fiber
-	 *
-	 * @param arg    An instance of TaskScheduler
-	 */
-	static FIBER_START_FUNCTION(FiberSwitchStart);
-	/**
-	 * The fiberProc function for the counter wait helper fiber
-	 *
-	 * @param arg    An instance of TaskScheduler
-	 */
-	static FIBER_START_FUNCTION(CounterWaitStart);
-	/**
-	* The fiberProc function for the quit helper fiber
-	*
-	* @param arg    An instance of TaskScheduler
-	*/
-	static FIBER_START_FUNCTION(QuitStart);
-
-	void Log(const char *format, ...);
-	void DumpLogToFile();
+	static void FiberStart(intptr_t arg);
 };
 
 } // End of namespace FiberTaskingLib
