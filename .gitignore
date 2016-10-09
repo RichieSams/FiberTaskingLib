@@ -1,18 +1,5 @@
 # Build files
-build/
-obj/
-*.pdb
-
-# MSVC Project files
-.vs/
-*.sdf
-*.opensdf
-*.suo
-*.vcxproj.*.nvuser
-
+build*/
 
 # CLion Project files
 .idea/
-
-# Config.h
-include/fiber_tasking_lib/config.h
