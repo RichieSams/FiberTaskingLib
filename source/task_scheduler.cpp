@@ -23,6 +23,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->taskScheduler;
 	uint index = threadArgs->threadIndex;
+	taskScheduler->m_threads[index] = FTLGetCurrentThread();
 
 	// Clean up
 	delete threadArgs;
@@ -191,7 +192,6 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 			printf("Error: Failed to create all the worker threads");
 			return;
 		}
-		m_threads[i] = threadHandle;
 	}
 
 
