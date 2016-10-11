@@ -13,43 +13,162 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 
 <br />
 
-
 ##Supported Platforms
 <table>
+  <tr>
+    <th>Arch</th>
+    <th>Windows</th>
+    <th>Linux</th>
+    <th>OS X</th>
+    <th>iOS</th>
+    <th>Android</th>
+  </tr>
+  <tr>
+    <td>arm</td>
+    <td>Needs testing</td>
+    <td>Tested OK</td>
+    <td></td>
+    <td>In theory</td>
+    <td>In theory</td>
+  </tr>
+  <tr>
+    <td>arm_64</td>
+    <td>Needs testing</td>
+    <td>In theory</td>
+    <td></td>
+    <td>In theory</td>
+    <td>In theory</td>
+  </tr>
+  <tr>
+    <td>x86</td>
+    <td>Needs testing</td>
+    <td>Needs testing</td>
+    <td>Needs testing</td>
+    <td></td>
+    <td>In theory</td>
+  </tr>
+  <tr>
+    <td>x86_64</td>
+    <td>Tested OK</td>
+    <td>Tested OK</td>
+    <td>Tested OK</td>
+    <td></td>
+    <td>In theory</td>
+  </tr>
+  <tr>
+    <td>ppc</td>
+    <td></td>
+    <td></td>
+    <td>In theory</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>ppc_64</td>
+    <td></td>
+    <td></td>
+    <td>In theory</td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+<br />
+
+##Automatic Test Matrix
+<table>
 	<tr>
-		<th colspan="2">Native Fiber API</th>
-		<th colspan="4">Boost.Context</th>
-	<tr>
-	<tr>
-		<td colspan="2">Windows</td>
-		<td colspan="2">Linux</td>
-		<td colspan="2">OS X</td>
+		<th colspan="2">Windows</th>
+		<th colspan="2">Linux</th>
+		<th colspan="2">OS X</th>
 	</tr>
 	<tr>
-		<td>VC++</td><td>mingw-w64</td>
-		<td>gcc</td><td>clang</td>
-		<td>gcc</td><td>clang</td>
+		<td>VC++ 2015</td><td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?style=flat" alt="Windows VC++ build status" /></a></td>
+		<td>gcc-4.8</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=gcc-4.8" alt="Linux gcc-4.8 build status" /></a></td>
+		<td>gcc-4.8</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=gcc-4.8" alt="OSX gcc-4.8 build status" /></a></td>
 	</tr>
 	<tr>
-		<td><a href="https://ci.appveyor.com/project/RichieSams/fibertaskinglib"><img src="https://img.shields.io/appveyor/ci/RichieSams/FiberTaskingLib.svg?style=flat" alt="Windows build status"</img></a></td>
-		<td>Soon</td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=gcc" alt="Linux build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang" alt="Linux build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=gcc" alt="Linux build status"</img></a></td>
-		<td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang" alt="Linux build status"</img></a></td>
+		<td rowspan="5"/><td rowspan="5"/>
+		<td>gcc-4.9</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=gcc-4.9" alt="Linux gcc-4.9 build status" /></a></td>
+		<td>gcc-4.9</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=gcc-4.9" alt="OSX gcc-4.9 build status" /></a></td>
+	</tr>
+	<tr>
+		<td>gcc-5</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=gcc-5" alt="Linux gcc-5 build status" /></a></td>
+		<td>gcc-5</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=gcc-5" alt="OSX gcc-5 build status" /></a></td>
+	</tr>
+	<tr>
+		<td>clang-3.5</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang-3.5" alt="Linux clang-3.5 build status" /></a></td>
+		<td>clang-3.5</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang-3.5" alt="OSX clang-3.5 build status" /></a></td>
+	</tr>
+	<tr>
+		<td>clang-3.6</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang-3.6" alt="Linux clang-3.6 build status" /></a></td>
+		<td>clang-3.6</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang-3.6" alt="OSX clang-3.6 build status" /></a></td>
+	</tr>
+	<tr>
+		<td>clang-3.7</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang-3.7" alt="Linux clang-3.7 build status" /></a></td>
+		<td>clang-3.7</td><td><a href="https://travis-ci.org/RichieSams/FiberTaskingLib"><img src="https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang-3.7" alt="OSX clang-3.7 build status" /></a></td>
 	</tr>
 </table>
 
 <br />
 
+##Example
+```C++
+#include "fiber_tasking_lib/task_scheduler.h"
 
-<b>Comments:</b>
 
-Windows has native support for fibers through the Win32 API. So, Windows support is quite easy.
+struct NumberSubset {
+    uint64 start;
+    uint64 end;
 
-At the moment, *nix does not have an API for fibers. The only similar API is the [setcontext] (http://en.wikipedia.org/wiki/Setcontext). family of functions. However, as of POSIX 1-2004, the functions were depreciated, and of POSIX 1-2008, they were removed.  
+    std::atomic_uint64_t *total;
+};
 
-However, Boost.Context creates a fiber API for us (using low level assembly). So any system that can use Boost.Context can support fibers. That said, Boost.Context comes with a few limitations, namely, it does not support thread-local storage.
+TASK_ENTRY_POINT(AddNumberSubset) {
+    NumberSubset *subset = (NumberSubset *)arg;
+
+    uint64 localTotal = 0;
+    for (uint64 i = subset->start; i <= subset->end; ++i) {
+        localTotal += i;
+    }
+
+    subset->total += localTotal;
+}
+
+TASK_ENTRY_POINT(mainTask) {
+    const uint64 triangleNum = 10240ull;
+    const uint64 numAdditionsPerTask = 100ull;
+    const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
+
+    // Create the tasks
+    FiberTaskingLib::Task tasks[numTasks];
+    NumberSubset subsets[numTasks];
+    std::atomic_uint64_t total;
+
+    for (uint64 i = 0ull; i < numTasks; ++i) {
+        NumberSubset *subset = &subsets[i];
+
+        subset->start = i * numTasks + 1;
+        subset->end = i * numTasks + numTasks;
+        subset->total = &total;
+        tasks[i] = { AddNumberSubset, subset };
+    }
+
+    // Schedule the tasks and wait for them to complete
+    std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(numTasks, tasks);
+    g_taskScheduler->WaitForCounter(counter, 0);
+
+    // Verify the result
+    assert(triangleNum * (triangleNum + 1ull) / 2ull, result);
+}
+
+int main(int argc, char *argv) {
+    FiberTaskingLib::TaskScheduler taskScheduler;
+    taskScheduler.Run(25, mainTask);
+
+    return 0;
+}
+```
 
 <br />
 
@@ -97,7 +216,7 @@ for (uint i = 0; i < 10; ++i) {
     tasks[i] = {MyFunctionPointer, myFunctionArg};
 }
 
-std::shared_ptr<AtomicCounter> counter = taskScheduler.AddTasks(10, tasks);
+std::shared_ptr<std::atomic_uint> counter = taskScheduler.AddTasks(10, tasks);
 ```
 
 Tasks can be created on the stack. They're just a simple struct with a function pointer and an optional void \*arg to be passed to the function:
@@ -113,31 +232,21 @@ The tasks get added to the queue, and other threads (or the current one, when it
 
 <br />
 
-Every time you add a _group_ of tasks, the task scheduler returns a pointer to an AtomicCounter. The value of the atomic counter will be equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
+Every time you add a _group_ of tasks, the task scheduler returns a pointer to an atomic counter. The value of the atomic counter will be equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
 
 ```C++
-void TaskScheduler::WaitForCounter(std::shared_ptr<AtomicCounter> &counter, int value);
+void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, int value);
 ```
 
-This is where fibers come into play. If the counter == value, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** and grab a new fiber from the **Fiber Pool**. The new fiber pops a new task from the **Task Queue** and starts execution with that.
+This is where fibers come into play. If the counter == value, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** list and grab a new fiber from the **Fiber Pool**. The new fiber pops a new task from the **Task Queue** and starts execution with that.
 
 <br />
 
 But what about the task we stored in **Waiting Tasks**? When will it finish being executed? 
 
-Before a fiber tries to pop a task off the **Task Queue**, it iterates through the **Waiting Tasks** and checks if any dependencies have been met. If so, it will return itself<sup>[\[1\]](https://github.com/RichieSams/FiberTaskingLib/blob/master/source/fiber_tasking_lib/task_scheduler.h#L117)</sup> to the **Fiber Pool** and switch to the fiber that is ready. The fiber will continue execution right where it left off
-
-<br />
-
-##Memory
-Memory, or rather ownership of memory, becomes _hairy_ when multi-tasking comes into the picture. Christian presents a few ideas on how to elegantly handle memory within the task system. Namely, linear allocators backed by a tagged page-based allocator. I'm still in the process of implementing all the ideas presented, but I hope to update this once it is.
+Before a fiber tries to pop a task off the **Task Queue**, it iterates through the **Waiting Tasks** and checks if any dependencies have been met. If so, it will return itself to the **Fiber Pool** and switch to the fiber that is ready. The ready fiber will continue execution right where it left off
 
 <br />
 
 ##Request for Criticism
-This implementation was something I created because I thought Christian's presentation was really interesting and I wanted to explore it myself. I realize that the code is not the best (especially the scheduler, or lack thereof). That said, I would love to hear your critiques of how I could make it better. I will continue to work on this project and improve it as best as possible.
-
-
-
-
-
+This implementation was something I created because I thought Christian's presentation was really interesting and I wanted to explore it myself. The code is still a work in progress and I would love to hear your critiques of how I could make it better. I will continue to work on this project and improve it as best as possible.
