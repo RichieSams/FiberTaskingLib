@@ -1,6 +1,5 @@
-#!/bin/bash -x
-
-set -e
+#!/bin/bash
+set -x #echo on
 
 brew update
 
