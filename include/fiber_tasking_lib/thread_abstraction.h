@@ -86,10 +86,10 @@ inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, voi
 
 	DWORD_PTR mask = 1ull << coreAffinity;
 	SetThreadAffinityMask(handle, mask);
-	ResumeThread(handle);
 	
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
+	ResumeThread(handle);
 
 	return true;
 }
