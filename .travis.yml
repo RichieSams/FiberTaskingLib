@@ -100,7 +100,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
+            - llvm-toolchain-precise-3.7
             - george-edison55-precise-backports
           packages:
             - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
