@@ -186,6 +186,14 @@ private:
 	 * @return    The index of the next available fiber in the pool
 	 */
 	std::size_t GetNextFreeFiberIndex();
+	/**
+	 * If necessary, moves the old fiber to the fiber pool or the waiting list
+	 * The old fiber is the last fiber to run on the thread before the current fiber
+	 */
+	void CleanUpOldFiber();
+
+	void printfFreeFiberStatus();
+	void printfWaitingFiberStatus();
 
 	/**
 	 * The threadProc function for all worker threads

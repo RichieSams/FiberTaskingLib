@@ -74,68 +74,8 @@ void TaskScheduler::FiberStart(intptr_t arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
-		// Clean up from the last Fiber to run on this thread
-		//
-		// Explanation:
-		// When switching between fibers, there's the innate problem of tracking the fibers.
-		// For example, let's say we discover a waiting fiber that's ready. We need to put the currently 
-		// running fiber back into the fiber pool, and then switch to the waiting fiber. However, we can't 
-		// just do the equivalent of:
-		//     m_fibers.Push(currentFiber)
-		//     currentFiber.SwitchToFiber(waitingFiber)
-		// In the time between us adding the current fiber to the fiber pool and switching to the waiting fiber, another
-		// thread could come along and pop the current fiber from the fiber pool and try to run it.
-		// This leads to stack corruption and/or other undefined behavior. 
-		//
-		// In the previous implementation of TaskScheduler, we used helper fibers to do this work for us.
-		// AKA, we stored currentFiber and waitingFiber in TLS, and then switched to the helper fiber. The
-		// helper fiber then did:
-		//     m_fibers.Push(currentFiber)
-		//     helperFiber.SwitchToFiber(waitingFiber)
-		// If we have 1 helper fiber per thread, we can guarantee that currentFiber is free to be executed by any thread 
-		// once it is added back to the fiber pool
-		//
-		// This solution works well, however, we actually don't need the helper fibers
-		// The code structure guarantees that between any two fiber switches, the code will always end up here.
-		// Therefore, instead of using a helper fiber and immediately pushing the fiber to the fiber pool or waiting list,
-		// we defer the push until the next fiber gets here
-		// 
-		// Proof:
-		// There are only two places where we switch fibers:
-		// 1. When we're waiting for a counter, we pull a new fiber from the fiber pool and switch to it.
-		// 2. When we found a counter that's ready, we put the current fiber back in the fiber pool, and switch to the waiting fiber.
-		//
-		// Case 1:
-		// A fiber from the pool will always either be completely new or just come back from switching to a waiting fiber
-		// The while and the if/else below will guarantee the code will come here before executing any other fiber. 
-		// QED
-		// 
-		// Case 2:
-		// A waiting fiber can do two things:
-		//    a. Finish the task and return
-		//    b. Wait on another counter
-		// In case a, the while loop and if/else will again guarantee the code will come here before executing any other fiber.
-		// Case b is just a recursion that will eventually unroll to case a.
-		// QED
-
-		// In this specific implementation, the fiber pool and waiting list are flat arrays signaled by atomics
-		// So in order to "Push" the fiber to the fiber pool or waiting list, we just set their corresponding atomics to true
-		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
-		switch (tls.OldFiberDestination) {
-		case FiberDestination::ToPool:
-			taskScheduler->m_freeFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
-			tls.OldFiberDestination = FiberDestination::None;
-			tls.OldFiberIndex = FTL_INVALID_INDEX;
-			break;
-		case FiberDestination::ToWaiting:
-			taskScheduler->m_waitingFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
-			tls.OldFiberDestination = FiberDestination::None;
-			tls.OldFiberIndex = FTL_INVALID_INDEX;
-			break;
-		case FiberDestination::None:
-		default:
-			break;
-		}
+		// Clean up from the last fiber to run on this thread
+		taskScheduler->CleanUpOldFiber();
 
 		// Check if any of the waiting tasks are ready
 		std::size_t waitingFiberIndex = FTL_INVALID_INDEX;
@@ -166,6 +106,8 @@ void TaskScheduler::FiberStart(intptr_t arg) {
 
 		if (waitingFiberIndex != FTL_INVALID_INDEX) {
 			// Found a waiting task that is ready to continue
+			ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
+
 			tls.OldFiberIndex = tls.CurrentFiberIndex;
 			tls.CurrentFiberIndex = waitingFiberIndex;
 			tls.OldFiberDestination = FiberDestination::ToPool;
@@ -328,7 +270,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 }
 
 std::size_t TaskScheduler::GetNextFreeFiberIndex() {
-	while (true) {
+	for (uint j = 0; ; ++j) {
 		for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
 			// Double lock
 			if (!m_freeFibers[i].load(std::memory_order_relaxed)) {
@@ -344,6 +286,87 @@ std::size_t TaskScheduler::GetNextFreeFiberIndex() {
 				return i;
 			}
 		}
+
+		if (j > 10) {
+			printf("No free fibers in the pool. Possible deadlock");
+		}
+	}
+}
+
+void TaskScheduler::CleanUpOldFiber() {
+	// Clean up from the last Fiber to run on this thread
+	//
+	// Explanation:
+	// When switching between fibers, there's the innate problem of tracking the fibers.
+	// For example, let's say we discover a waiting fiber that's ready. We need to put the currently 
+	// running fiber back into the fiber pool, and then switch to the waiting fiber. However, we can't 
+	// just do the equivalent of:
+	//     m_fibers.Push(currentFiber)
+	//     currentFiber.SwitchToFiber(waitingFiber)
+	// In the time between us adding the current fiber to the fiber pool and switching to the waiting fiber, another
+	// thread could come along and pop the current fiber from the fiber pool and try to run it.
+	// This leads to stack corruption and/or other undefined behavior. 
+	//
+	// In the previous implementation of TaskScheduler, we used helper fibers to do this work for us.
+	// AKA, we stored currentFiber and waitingFiber in TLS, and then switched to the helper fiber. The
+	// helper fiber then did:
+	//     m_fibers.Push(currentFiber)
+	//     helperFiber.SwitchToFiber(waitingFiber)
+	// If we have 1 helper fiber per thread, we can guarantee that currentFiber is free to be executed by any thread 
+	// once it is added back to the fiber pool
+	//
+	// This solution works well, however, we actually don't need the helper fibers
+	// The code structure guarantees that between any two fiber switches, the code will always end up in WaitForCounter or FibeStart.
+	// Therefore, instead of using a helper fiber and immediately pushing the fiber to the fiber pool or waiting list,
+	// we defer the push until the next fiber gets to one of those two places
+	// 
+	// Proof:
+	// There are only two places where we switch fibers:
+	// 1. When we're waiting for a counter, we pull a new fiber from the fiber pool and switch to it.
+	// 2. When we found a counter that's ready, we put the current fiber back in the fiber pool, and switch to the waiting fiber.
+	//
+	// Case 1:
+	// A fiber from the pool will always either be completely new or just come back from switching to a waiting fiber
+	// The while and the if/else in FiberStart will guarantee the code will call CleanUpOldFiber() before executing any other fiber. 
+	// QED
+	// 
+	// Case 2:
+	// A waiting fiber can do two things:
+	//    a. Finish the task and return
+	//    b. Wait on another counter
+	// In case a, the while loop and if/else will again guarantee the code will call CleanUpOldFiber() before executing any other fiber.
+	// In case b, WaitOnCounter will directly call CleanUpOldFiber(). Any further code is just a recursion.
+	// QED
+
+	// In this specific implementation, the fiber pool and waiting list are flat arrays signaled by atomics
+	// So in order to "Push" the fiber to the fiber pool or waiting list, we just set their corresponding atomics to true
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	switch (tls.OldFiberDestination) {
+	case FiberDestination::ToPool:
+		m_freeFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
+		tls.OldFiberDestination = FiberDestination::None;
+		tls.OldFiberIndex = FTL_INVALID_INDEX;
+		break;
+	case FiberDestination::ToWaiting:
+		m_waitingFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
+		tls.OldFiberDestination = FiberDestination::None;
+		tls.OldFiberIndex = FTL_INVALID_INDEX;
+		break;
+	case FiberDestination::None:
+	default:
+		break;
+	}
+}
+
+void TaskScheduler::printfFreeFiberStatus() {
+	for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
+		printf("%llu: %d\n", i, m_freeFibers[i].load());
+	}
+}
+
+void TaskScheduler::printfWaitingFiberStatus() {
+	for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
+		printf("%llu: %d\n", i, m_waitingFibers[i].load());
 	}
 }
 
@@ -362,6 +385,9 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, u
 
 	// Get a free fiber
 	std::size_t freeFiberIndex = GetNextFreeFiberIndex();
+
+	// Clean up the old fiber
+	CleanUpOldFiber();
 
 	// Fill in tls
 	tls.OldFiberIndex = tls.CurrentFiberIndex;
