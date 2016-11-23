@@ -1,0 +1,141 @@
+= Build Guide
+
+
+FiberTaskingLib is built using CMake. As such, the build is pretty much standard CMake. That said, this page will give an overview of how to build the library and how to include it in your own projects.
+
+:blank: pass:[ +]
+{blank}
+
+== Building the Library and Tests
+
+=== Windows
+
+. Open a cmd window and cd to the project root
++
+[source,sh]
+----
+> cd C:/path/to/FiberTaskingLib
+----
++
+. Create the build files with cmake. The code snippet below assumes Visual Studio 2015, and building 64bit. Other Visual Studio versions should also work, as long as they are C++11 capable. 32 bit builds should work as well.
++
+[source,sh]
+----
+> mkdir build
+> cd build
+> cmake -G "Visual Studio 14 2015 Win64" ../
+----
++
+. Build
+ a. Open the .sln file in Visual Studio and build
+ b. Alternatively, you can build from command line
++
+[source,sh]
+----
+> msbuild FiberTaskingLib.sln /p:configuration=release /p:platform=x64
+----
++
+. Run the tests. The exe should be located at 'build/tests/Release/FiberTaskingLib-test.exe'
++
+[source,sh]
+----
+> build/tests/Release/FiberTaskingLib-test.exe
+----
+
+
+=== Unix systems
+
+. Open a terminal and cd to the project root
++
+[source,sh]
+----
+$ cd /path/to/FiberTaskingLib
+----
++
+. Create the build files with cmake. The code snippet below uses CMake's default generator, makefiles. However, you're free to use any of the other generators. For the makefile generator, the compiler/linker will use whatever CC/CXX are set to.
++
+[source,sh]
+----
+$ mkdir build
+$ cd build
+$ cmake ../
+----
++
+. Build
++
+[source,sh]
+----
+$ make
+----
++
+. Run the tests
++
+[source,sh]
+----
+$ make test
+----
+
+== Including FiberTaskingLib in your own project
+There are two ways to consume FiberTaskingLib: with Cmake or without CMake
+
+=== Your Project Uses CMake
+The simplest way to include FiberTaskingLib is to include the source directly in your project and use CMake's `add_subdirectory()`. Let's do a quick example:
+
+Let's assume your project's file structure is:
+..............................
+
+└── MyProject
+    ├── CMakeLists.txt
+    ├── include
+    │   └── MyProject
+    │       ├── header2.hpp
+    │       └── header.hpp
+    ├── source
+    │   └── main.cpp
+    └── third_party
+        └── FiberTaskingLib
+            ├── CMakeLists.txt
+            └── ...
+..............................
+
+Then, the project CMakeLists.txt could be as follows:
+
+[source,cmake]
+----
+cmake_minimum_required(VERSION 3.2)
+project(MyProject)
+
+# You can use the FTL_BUILD_TESTS variable to enable / disable test building
+set( FTL_BUILD_TESTS OFF CACHE BOOL  "Disable tests" )
+
+
+# Add FiberTaskingLib
+# You do not need to explicitly add the include directory, CMake with automagically do this for us.
+add_subdirectory(third_party/FiberTaskingLib)
+
+
+# Create the MyProject executable
+add_executable(MyProject source/main.cpp)
+
+# Add the MyProject include directory
+target_include_directories(MyProject PRIVATE include)
+
+# Link to FiberTaskingLib
+target_link_libraries(MyProject FiberTaskingLib)
+----
+
+===== Summary
+* FiberTaskingLib is a standard 'modern' CMake project
+* FiberTaskingLib defines the CMake option FTL_BUILD_TESTS
+** If set to ON (default), CMake will build the FTL tests
+** If set to OFF, CMake will skip the FTL tests
+* Internally, FiberTaskingLib uses target_* family of functions.
+** Thus, when you link to FiberTaskingLib, CMake with automagically resolve all dependencies and include directories. 
+
+{blank}
+
+=== Your Project Does Not Use CMake
+
+. Build FiberTaskingLib as per the instructions above
+. Add `{FTL_ROOT}/include` to your toolchain's include directories
+. Link to FiberTaskingLib
