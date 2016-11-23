@@ -42,6 +42,7 @@ FiberTaskingLib is built using CMake. As such, the build is pretty much standard
 > build/tests/Release/FiberTaskingLib-test.exe
 ----
 
+{blank}
 
 === Unix systems
 
@@ -74,6 +75,8 @@ $ make
 ----
 $ make test
 ----
+
+{blank}
 
 == Including FiberTaskingLib in your own project
 There are two ways to consume FiberTaskingLib: with Cmake or without CMake

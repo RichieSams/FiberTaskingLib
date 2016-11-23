@@ -11,6 +11,9 @@ Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Usi
 http://gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine[Free GDC Vault Recorded Presentation] +
 http://twvideo01.ubm-us.net/o1/vault/gdc2015/presentations/Gyrling_Christian_Parallelizing_The_Naughty.pdf[Slides]
 
+:blank: pass:[ +]
+{blank}
+
 ## Example
 [source,cc]
 ----
@@ -69,6 +72,8 @@ int main(int argc, char *argv) {
 }
 ----
 
+{blank}
+
 ## Automatic Test Matrix
 
 
@@ -82,6 +87,7 @@ int main(int argc, char *argv) {
 | | | clang-3.7 | image:https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=linux&compiler=clang-3.7[Linux clang-3.7 build status, link="https://travis-ci.org/RichieSams/FiberTaskingLib"] | clang-3.7 | image:https://glacial-river-6777.herokuapp.com/RichieSams/FiberTaskingLib?os=osx&compiler=clang-3.7[OSX clang-3.7 build status, link="https://travis-ci.org/RichieSams/FiberTaskingLib"]
 |====
 
+{blank}
 
 ## How it works
 Honestly, the best explanation is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here.
@@ -110,6 +116,8 @@ To answer this question, let's compare to another task-based multithreading libr
 . The only way we can resume A is to wait for the entire chain to unravel back to it, or suffer a context switch.
 
 Now, obviously, this is a contrived example. And as I said above, TBB has an awesome scheduler that works hard to alleviate this problem. That said, fibers can help to eliminate the problem altogether by allowing cheap switching between tasks. This allows us to isolate the execution of one task from another, preventing the 'chaining' effect described above.
+
+{blank}
 
 ## The Architecture from 10,000 ft
 (Christian has some great illustrations on pages 8 - 17 of his slides that help explain the flow of fibers and tasks. I suggest looking at those while you're reading)
@@ -159,9 +167,13 @@ But what about the task we stored in **Waiting Tasks**? When will it finish bein
 
 Before a fiber tries to pop a task off the **Task Queue**, it iterates through the **Waiting Tasks** and checks if any dependencies have been met. If so, it will return itself to the **Fiber Pool** and switch to the fiber that is ready. The ready fiber will continue execution right where it left off
 
+{blank}
+
 ## Dependencies
 * C++11 Compiler
 * CMake 3.2 or greater
+
+{blank}
 
 ## Supported Platforms
 
@@ -175,11 +187,17 @@ Before a fiber tries to pop a task off the **Task Queue**, it iterates through t
 | ppc_64 |  |  | In theory |  | 
 |====
 
+{blank}
+
 ## Building
 FiberTaskingLib is a standard CMake build. However, for detailed instructions on how to build and include the library in your own project, see the https://github.com/RichieSams/FiberTaskingLib/blob/master/documentation/build_guide.asciidoc[documentation page].
 
+{blank}
+
 ## License
 https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)[Apache 2.0]
+
+{blank}
 
 ## Request for Criticism
 This implementation was something I created because I thought Christian's presentation was really interesting and I wanted to explore it myself. The code is still a work in progress and I would love to hear your critiques of how I could make it better. I will continue to work on this project and improve it as best as possible.
