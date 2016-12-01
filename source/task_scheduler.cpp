@@ -175,6 +175,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_quit.store(false, std::memory_order_release);
 	m_threads.resize(m_numThreads);
 	m_tls.resize(m_numThreads);
+	m_taskQueue = ThreadSafeQueue<TaskBundle>(m_numThreads);
 
 	// Set the properties for the current thread
 	FTLSetCurrentThreadAffinity(1);
@@ -224,7 +225,7 @@ std::shared_ptr<std::atomic_uint> TaskScheduler::AddTask(Task task) {
 	counter->store(1);
 
 	TaskBundle bundle = {task, counter};
-	m_taskQueue.Push(bundle);
+	m_taskQueue.Push(GetCurrentThreadIndex(), bundle);
 
 	return counter;
 }
@@ -235,7 +236,7 @@ std::shared_ptr<std::atomic_uint> TaskScheduler::AddTasks(uint numTasks, Task *t
 
 	for (uint i = 0; i < numTasks; ++i) {
 		TaskBundle bundle = {tasks[i], counter};
-		m_taskQueue.Push(bundle);
+		m_taskQueue.Push(GetCurrentThreadIndex(), bundle);
 	}
 
 	return counter;
@@ -262,7 +263,7 @@ std::size_t TaskScheduler::GetCurrentThreadIndex() {
 }
 
 bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
-	bool success = m_taskQueue.Pop(nextTask);
+	bool success = m_taskQueue.Pop(GetCurrentThreadIndex(), nextTask);
 
 	return success;
 }
