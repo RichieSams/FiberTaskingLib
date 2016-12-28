@@ -374,18 +374,6 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::printfFreeFiberStatus() {
-	for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
-		printf("%llu: %d\n", i, m_freeFibers[i].load());
-	}
-}
-
-void TaskScheduler::printfWaitingFiberStatus() {
-	for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
-		printf("%llu: %d\n", i, m_waitingFibers[i].load());
-	}
-}
-
 void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value) {
 	// Fast out
 	if (counter->load(std::memory_order_relaxed) == value) {
