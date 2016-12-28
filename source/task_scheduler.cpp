@@ -145,13 +145,15 @@ TaskScheduler::TaskScheduler()
 	  m_fiberPoolSize(0), 
 	  m_fibers(nullptr), 
 	  m_freeFibers(nullptr), 
-	  m_waitingFibers(nullptr) {
+	  m_waitingFibers(nullptr),
+	  m_tls(nullptr) {
 }
 
 TaskScheduler::~TaskScheduler() {
 	delete[] m_fibers;
 	delete[] m_freeFibers;
 	delete[] m_waitingFibers;
+	delete[] m_tls;
 }
 
 void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg) {
@@ -174,8 +176,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	// Initialize all the things
 	m_quit.store(false, std::memory_order_release);
 	m_threads.resize(m_numThreads);
-	m_tls.resize(m_numThreads);
-	m_taskQueue = ThreadSafeQueue<TaskBundle>(m_numThreads);
+	m_tls = new ThreadLocalStorage[m_numThreads];
 
 	// Set the properties for the current thread
 	FTLSetCurrentThreadAffinity(1);
@@ -225,7 +226,8 @@ std::shared_ptr<std::atomic_uint> TaskScheduler::AddTask(Task task) {
 	counter->store(1);
 
 	TaskBundle bundle = {task, counter};
-	m_taskQueue.Push(GetCurrentThreadIndex(), bundle);
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	tls.TaskQueue.Push(bundle);
 
 	return counter;
 }
@@ -234,9 +236,10 @@ std::shared_ptr<std::atomic_uint> TaskScheduler::AddTasks(uint numTasks, Task *t
 	std::shared_ptr<std::atomic_uint> counter(new std::atomic_uint());
 	counter->store(numTasks);
 
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	for (uint i = 0; i < numTasks; ++i) {
 		TaskBundle bundle = {tasks[i], counter};
-		m_taskQueue.Push(GetCurrentThreadIndex(), bundle);
+		tls.TaskQueue.Push(bundle);
 	}
 
 	return counter;
@@ -263,9 +266,23 @@ std::size_t TaskScheduler::GetCurrentThreadIndex() {
 }
 
 bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
-	bool success = m_taskQueue.Pop(GetCurrentThreadIndex(), nextTask);
+	std::size_t currentThreadIndex = GetCurrentThreadIndex();
+	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
-	return success;
+	// Try to pop from our own queue
+	if (tls.TaskQueue.Pop(nextTask)) {
+		return true;
+	}
+
+	// Ours is empty, try to steal from the others'
+	for (std::size_t i = 1; i < m_numThreads; ++i) {
+		ThreadLocalStorage &otherTLS = m_tls[(currentThreadIndex + i) % m_numThreads];
+		if (otherTLS.TaskQueue.Steal(nextTask)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 std::size_t TaskScheduler::GetNextFreeFiberIndex() {

@@ -15,7 +15,7 @@
 #include "fiber_tasking_lib/thread_abstraction.h"
 #include "fiber_tasking_lib/fiber.h"
 #include "fiber_tasking_lib/task.h"
-#include "fiber_tasking_lib/thread_safe_queue.h"
+#include "fiber_tasking_lib/wait_free_queue.h"
 
 #include <atomic>
 #include <vector>
@@ -42,18 +42,7 @@ private:
 	};
 
 	std::size_t m_numThreads;
-	std::vector<ThreadType> m_threads;
-
-	/**
-	 * Holds a task that is ready to to be executed by the worker threads
-	 * Counter is the counter for the task(group). It will be decremented when the task completes
-	 */
-	struct TaskBundle {
-		Task TaskToExecute;
-		std::shared_ptr<std::atomic_uint> Counter;
-	};
-	ThreadSafeQueue<TaskBundle> m_taskQueue;
-	
+	std::vector<ThreadType> m_threads;	
 	
 	std::size_t m_fiberPoolSize;
 	/* The backing storage for the fiber pool */
@@ -91,12 +80,22 @@ private:
 		ToWaiting = 2,
 	};
 
+	/**
+	* Holds a task that is ready to to be executed by the worker threads
+	* Counter is the counter for the task(group). It will be decremented when the task completes
+	*/
+	struct TaskBundle {
+		Task TaskToExecute;
+		std::shared_ptr<std::atomic_uint> Counter;
+	};
+
 	struct ThreadLocalStorage {
 		ThreadLocalStorage()
 			: ThreadFiber(),
 			  CurrentFiberIndex(FTL_INVALID_INDEX),
 			  OldFiberIndex(FTL_INVALID_INDEX),
-			  OldFiberDestination(FiberDestination::None) {
+			  OldFiberDestination(FiberDestination::None),
+			  TaskQueue() {
 		}
 
 		/**
@@ -114,6 +113,8 @@ private:
 		std::size_t OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
 		FiberDestination OldFiberDestination;
+		/* The queue of waiting tasks */
+		WaitFreeQueue<TaskBundle> TaskQueue;
 	};
 	/**
 	 * c++ Thread Local Storage is by definition static/global. This poses some problems, such as multiple TaskScheduler
@@ -123,7 +124,7 @@ private:
 	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index into
 	 * their storage using m_tls[GetCurrentThreadIndex()]
 	 */
-	std::vector<ThreadLocalStorage> m_tls;
+	ThreadLocalStorage *m_tls;
 
 
 public:

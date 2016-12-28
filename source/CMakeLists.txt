@@ -30,7 +30,7 @@ SetSourceGroup(NAME Util
 	SOURCE_FILES ../include/fiber_tasking_lib/config.h
 	             ../include/fiber_tasking_lib/fiber.h
 	             ../include/fiber_tasking_lib/thread_abstraction.h
-	             ../include/fiber_tasking_lib/thread_safe_queue.h
+	             ../include/fiber_tasking_lib/wait_free_queue.h
 )
 
 # Link all the sources into one
