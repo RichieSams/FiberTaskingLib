@@ -13,7 +13,19 @@ cmake_minimum_required(VERSION 3.2)
 project(FiberTaskingLib)
 
 # Options
-OPTION(FTL_BUILD_TESTS    "Build FiberTaskingLib tests" ON)
+option(FTL_BUILD_TESTS "Build FiberTaskingLib tests" ON)
+option(FTL_VALGRIND "Link and test with Valgrind" OFF)
+option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
+
+# Include Valgrind
+if (FTL_VALGRIND)
+	add_definitions(-DFTL_VALGRIND=1)
+endif()
+
+# Define the guard page size
+if (FTL_FIBER_STACK_GUARD_PAGES)
+	add_definitions(-DFTL_FIBER_STACK_GUARD_PAGES=1)
+endif()
 
 # CTest needs to be included as soon as possible
 if (FTL_BUILD_TESTS)
