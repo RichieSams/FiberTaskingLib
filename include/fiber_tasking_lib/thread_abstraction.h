@@ -209,7 +209,7 @@ const uint32 EVENTWAIT_INFINITE = -1;
 
 typedef void *(*ThreadStartRoutine)(void *arg);
 #define FTL_THREAD_FUNC_RETURN_TYPE void *
-#define FTL_THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
+#define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE
 #define FTL_THREAD_FUNC_END return nullptr
 
 /**
