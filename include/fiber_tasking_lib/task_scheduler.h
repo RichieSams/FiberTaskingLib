@@ -135,11 +135,12 @@ public:
 	 * Therefore, the current thread will save it's current state, and then switch execution to the the 'mainTask' fiber. When 'mainTask'
 	 * finishes, the thread will switch back to the saved state, and Run() will return.
 	 *
-	 * @param fiberPoolSize    The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
-	 * @param mainTask         The main task to run
-	 * @param mainTaskArg      The argument to pass to 'mainTask'
+	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
+	 * @param mainTask          The main task to run
+	 * @param mainTaskArg       The argument to pass to 'mainTask'
+	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHarewareThreads()
 	 */
-	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr);
+	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0);
 
 	/**
 	 * Adds a task to the internal queue.

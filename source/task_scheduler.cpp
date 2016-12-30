@@ -156,7 +156,7 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg) {
+void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg, uint threadPoolSize) {
 	// Create and populate the fiber pool
 	m_fiberPoolSize = fiberPoolSize;
 	m_fibers = new Fiber[fiberPoolSize];
@@ -170,8 +170,12 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	}
 	m_waitingBundles.resize(fiberPoolSize);
 
-	// 1 thread for each logical processor
-	m_numThreads = GetNumHardwareThreads();
+	if (threadPoolSize == 0) {
+		// 1 thread for each logical processor
+		m_numThreads = GetNumHardwareThreads();
+	} else {
+		m_numThreads = threadPoolSize;
+	}
 
 	// Initialize all the things
 	m_quit.store(false, std::memory_order_release);
