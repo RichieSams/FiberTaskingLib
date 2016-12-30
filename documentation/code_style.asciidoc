@@ -1,0 +1,478 @@
+= Code Formatting Conventions
+
+=== Use common sense
+
+These are conventions which we try to follow when writing code for FiberTaskingLib. Sticking to a common set of formatting / indention rules makes it easier to read through the source base. If you want to submit patches, please try to adhere to these rules.
+
+We don't always follow these rules slavishly, in certain cases it is OK (and in fact might be favorable) to stray from them. Applying common sense, as usual, is a good idea. 
+
+In the following examples tabs are replaced by spaces for visual consistency with the Code Formatting Conventions. But in actual code, use tabs for indentations (our tabs are assumed to be 4 spaces wide).
+
+=== Hugging braces
+
+Braces in your code should look like the following example:
+
+[source,cc]
+----
+for (int i = 0; i < t; ++i) {
+    [...]
+}
+
+if (j < k) {
+    [...]
+} else if (j > k) {
+    [...]
+} else {
+    [...]
+}
+
+class Dummy {
+    [...]
+};
+----
+
+=== Tabs for indentation, spaces for alignment
+
+[source,cc]
+----
+for (int i = 0; i < 100; ++i) {
+→   if ((i % 4) == 0) {
+→   →   FunctionWithManyArgs(width, height,
+→   →   •••••••••••••••••••••nullptr, &windowHandle, &windowColor,
+→   →   •••••••••••••••••••••foo, bar);
+→   }
+}
+----
+
+=== Whitespaces
+
+====== Conventional operators surrounded by a space character
+
+[source,cc]
+----
+a = (b + c) * d;
+----
+
+====== C++ reserved words separated from opening parentheses by a white space
+
+[source,cc]
+----
+while (true) {
+----
+
+====== Commas followed by a white space
+
+[source,cc]
+----
+SomeFunction(a, b, c);
+----
+
+[source,cc]
+----
+int d, e;
+----
+
+====== Semicolons followed by a space character, if there is more on a line
+
+[source,cc]
+----
+for (int a = 0; b < c; d++)
+
+doSomething(e); doSomething(f);	// This is probably bad style anyway
+----
+
+====== When declaring class inheritance and in a ? construct, colons should be surrounded by white space
+
+[source,cc]
+----
+class BusWheel : public RubberInflatable {
+----
+
+[source,cc]
+----
+(isNight) ? ColorMeDark() : ColorMeBright();
+----
+
+====== Indentation level is not increased after namespace clause
+
+[source,cc]
+----
+namespace FiberTaskingLib {
+
+class MyClass {
+public:
+    void Bar(int arg);
+};
+
+void MyClass::Bar(int arg) {
+    printf("Arg is: %i", arg);
+}
+
+} // End of namespace FiberTaskingLib
+----
+
+* For namespace clauses that are longer than a few lines, it's suggested to add a "End of namespace XXX" comment, to aid readability.
+
+====== Indentation level is not increased for access level keywords in classes
+
+[source,cc]
+----
+class MyClass {
+public:
+    MyClass();
+    
+private:
+    int m_foo;
+    float m_bar;
+};
+----
+
+====== Preprocessor statements should be at the same indent level as the content around them
+
+In addition, the content of the preprocessor statements should be indented, including any nested preprocessor statements
+
+[source,cc]
+----
+void SwitchLevels(int nextLevel) {
+    int currentLevel = GetCurrentLevel();
+    
+    #if defined(FTL_SPECIAL_HEADER)
+        #if (FTL_HEADER_VERSION > 5)
+            m_saveFile.WriteByte(1);
+        #else
+            m_saveFile.WriteByte(19);
+        #enif
+    #endif
+    
+    m_saveFile.WriteFile();
+    // ....
+}
+----
+
+====== Array delete operator has no whitespace before []
+
+[source,cc]
+----
+delete[] foo;
+----
+
+====== Template definitions
+
+No whitespace between _template_ keyword and '<'. The template definition should be on the previous line to the class or function it applies to.
+
+[source,cc]
+----
+template<typename T>
+class Queue {
+public:
+    T Pop();
+};
+
+template<typename foo>
+void MyFunc(foo arg) {
+    // ...
+}
+----
+
+====== Operator overloading
+
+Operator keyword is NOT separated from the name, except for type conversion operators where it is required.
+
+[source,cc]
+----
+struct Foo {
+    void operator()() {
+        // ...
+    }
+    
+    Foo &operator+=(Foo &other) {
+        // ...
+    }
+
+    operator bool() {
+        return true;
+    }
+};
+----
+
+====== Pointers and casts
+
+No whitespace after a cast; and in a pointer, we use a whitespace before the star but not after it.
+
+[source,cc]
+----
+const char *ptr = (const char *)foobar;
+----
+
+====== References
+
+We use the same rule for references as we do for pointers: use a whitespace before the "&" but not after it.
+
+[source,cc]
+----
+int i = 0;
+int &ref = i;
+----
+
+====== Vertical alignment
+
+When it adds to readability, a vertical alignment by means of extra spaces is allowed
+
+[source,cc]
+----
+int foo     = 2;
+int morefoo = 3;
+
+Common::Rect *r = new Common::Rect(x,
+                                   y,
+                                   x + w,
+                                   y + h);
+----
+
+=== Switch/Case constructs
+
+_case_ keywords are aligned with the _switch_ keyword. _case_ contents are indented.
+
+[source,c]
+----
+switch (cmd) {
+case 'a':
+    SomeCmd();
+    // Fall Through intended
+case 'A':
+    SomeMoreCmd();
+    break;
+case 's':
+    Save();
+    break;
+case 'l':
+case 'p':
+    Close();
+    break;
+default:
+    Dialog::HandleCommand(sender, cmd, data);
+}
+----
+
+* Note comment on whether fall through is intentional.
+
+=== Naming
+
+====== Preprocessor defines and macros
+
+Prefixed with 'FTL_' and in all uppercase, underscore-separated.
+
+----
+FTL_ABC_YYY_ZZZ
+----
+
+====== Type names
+
+Camel case starting with uppercase.
+
+[source,cc]
+----
+class MyClass { /* ... */ };
+struct MyStruct { /* ... */ };
+typedef int MyInt;
+----
+
+====== Private class / struct member variables
+
+Prefixed with 'm_' and in camel case, starting with lowercase.
+
+[source,cc]
+----
+class Foo {
+public:
+    Foo() {}
+    
+private:
+    char *m_somePrivateVariableName;
+};
+----
+
+====== Public class / struct member variables
+
+No prefix, camel case, starting with uppercase.
+
+[source,cc]
+----
+struct Bar {
+    int Width;
+    int Height;
+};
+----
+
+
+====== Functions / Class Methods
+
+Camel case starting with uppercase.
+
+[source,cc]
+----
+void ThisIsMyFancyFunction();
+
+class MyClass {
+public:
+    MyClass() {}
+};
+----
+
+====== Local variables
+
+Camel case, starting with lowercase.
+
+[source,cc]
+----
+char *someVariableName;
+----
+
+====== Global variables
+
+In general you should avoid global variables, but if it can't be avoided, use 'g_' as prefix, camel case, and start with lowercase
+
+[source,cc]
+----
+int g_someGlobalVariable;
+----
+
+=== Miscellaneous code formatting
+
+====== Braceless if / for / etc. is highly discouraged
+
+if / for / while / etc. should always have braces, even if the content of the statement is only one line. This helps to prevent future bugs if/when the code is modified.
+
+[source,cc]
+----
+if (bar == 0) {
+    return true;
+}
+
+for (int i = 0; i < 20; ++i) {
+    printf("%i", i);
+}
+
+do {
+    foo = Update(foo);
+} while (foo < 20);
+----
+
+====== Class / Struct contructor initializer list
+
+Initializer lists should start on a new line from the constructor definition. In addition, each entry should be on its own line. Each entry should be aligned with the previous one, using spaces for alignment.
+
+[source,cc]
+----
+class Fiber {
+public:
+    Fiber()
+        : m_stack(nullptr),
+          m_systemPageSize(0),
+          m_stackSize(0),
+          m_context(nullptr),
+          m_arg(0) {
+	}
+	
+	// ...
+};
+----
+
+The initializer list as a whole should be indented once if the contructor has no content, and indented twice if it does.
+
+[source,cc]
+----
+class WaitFreeQueue {
+public:
+    WaitFreeQueue()
+            : m_top(1),
+              m_bottom(1),
+              m_array(new CircularArray(32)) {
+        m_array.Grow();
+        m_top += 1;
+	}
+	
+	// ...
+};
+----
+
+====== Class / Struct definition 
+
+Classes / Structs should be laid out as follows:
+
+[source,cc]
+----
+class ExampleClass {
+public:
+    // Constructors
+    ExampleClass();
+    ExampleClass(ExampleClass &&other);
+    
+public:
+    // Public member variables
+    int Width;
+    int Height;
+    
+private:
+    // Private member variables
+    float m_deltaTime;
+    
+public:
+    // Public methods
+    void Rotate();
+    
+private:
+    // Private methods
+    int DecrementHeight(float amount);
+};
+----
+
+=== Code documentation
+
+Classes, structs, functions are documented using the javadoc style
+
+[source,cc]
+----
+/**
+ * Adds a group of tasks to the internal queue
+ *
+ * @param numTasks    The number of tasks
+ * @param tasks       The tasks to queue
+ * @return            An atomic counter corresponding to the task group as a whole. Initially it will equal numTasks. When each task completes, it will be decremented.
+ */
+std::shared_ptr<std::atomic_uint> AddTasks(uint numTasks, Task *tasks);
+----
+
+=== Comments and naming
+
+These should mainly just follow commen sense. However, the main philosopy is that naming should be used to explain _What_ is going on, and comments should be used to explain _Why_.
+
+
+=== Special Keywords
+
+The following goes slightly beyond code formatting: We use certain keywords (together with an explanatory text) to mark certain sections of our code. In particular:
+
+* **FIXME:** marks code that contains hacks or bad/temporary workarounds, things that really should be revised at a later point.
+* **TODO:** marks incomplete code, or things that could be done better but are left for the future.
+ 
+
+=== AStyle Program
+
+http://astyle.sourceforge.net/[ArtisticStyle] is a program that will format code according to a set of rules. While it doesn't support all of the conventions mentioned above, it will get it pretty close. Below are the command line arguments that I use.
+
+[source,sh]
+----
+--style=java 
+--indent=tab=4 
+--align-pointer=name 
+--align-reference=name 
+--indent-preproc-block 
+--indent-preproc-define 
+--indent-preproc-cond 
+--pad-oper 
+--pad-header 
+--unpad-paren 
+--add-one-line-brackets 
+--convert-tabs 
+--mode=c
+----
