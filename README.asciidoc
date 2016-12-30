@@ -26,7 +26,7 @@ struct NumberSubset {
     std::atomic_uint64_t *total;
 };
 
-TASK_ENTRY_POINT(AddNumberSubset) {
+FTL_TASK_ENTRY_POINT(AddNumberSubset) {
     NumberSubset *subset = (NumberSubset *)arg;
 
     uint64 localTotal = 0;
@@ -37,7 +37,7 @@ TASK_ENTRY_POINT(AddNumberSubset) {
     subset->total += localTotal;
 }
 
-TASK_ENTRY_POINT(mainTask) {
+FTL_TASK_ENTRY_POINT(mainTask) {
     const uint64 triangleNum = 10240ull;
     const uint64 numAdditionsPerTask = 100ull;
     const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;

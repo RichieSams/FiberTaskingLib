@@ -42,9 +42,9 @@ struct EventType {
 const uint32 EVENTWAIT_INFINITE = INFINITE;
 
 typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
-#define THREAD_FUNC_RETURN_TYPE uint
-#define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE __stdcall
-#define THREAD_FUNC_END return 0
+#define FTL_THREAD_FUNC_RETURN_TYPE uint
+#define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE __stdcall
+#define FTL_THREAD_FUNC_END return 0
 
 
 /**
@@ -208,9 +208,9 @@ struct EventType {
 const uint32 EVENTWAIT_INFINITE = -1;
 
 typedef void *(*ThreadStartRoutine)(void *arg);
-#define THREAD_FUNC_RETURN_TYPE void *
-#define THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
-#define THREAD_FUNC_END return nullptr
+#define FTL_THREAD_FUNC_RETURN_TYPE void *
+#define FTL_THREAD_FUNC_DECL THREAD_FUNC_RETURN_TYPE
+#define FTL_THREAD_FUNC_END return nullptr
 
 /**
  * Create a native thread

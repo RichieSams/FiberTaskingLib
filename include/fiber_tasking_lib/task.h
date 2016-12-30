@@ -25,7 +25,7 @@ typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 *     void *arg
 * where arg == Task::ArgData
 */
-#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg)
+#define FTL_TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg)
 
 struct Task {
 	TaskFunction Function;

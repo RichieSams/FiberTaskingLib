@@ -19,7 +19,7 @@ struct ThreadStartArgs {
 	uint threadIndex;
 };
 
-THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
+FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->taskScheduler;
 	uint index = threadArgs->threadIndex;
@@ -41,7 +41,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 
 	// Cleanup and shutdown
 	EndCurrentThread();
-	THREAD_FUNC_END;
+	FTL_THREAD_FUNC_END;
 }
 
 struct MainFiberStartArgs {

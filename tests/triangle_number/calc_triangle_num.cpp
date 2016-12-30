@@ -22,7 +22,7 @@ struct NumberSubset {
 };
 
 
-TASK_ENTRY_POINT(AddNumberSubset) {
+FTL_TASK_ENTRY_POINT(AddNumberSubset) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->total = 0;
@@ -47,7 +47,7 @@ TASK_ENTRY_POINT(AddNumberSubset) {
 *
 * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
 */
-TASK_ENTRY_POINT(TriangleNumberMainTask) {
+FTL_TASK_ENTRY_POINT(TriangleNumberMainTask) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
 	const uint64 numAdditionsPerTask = 10000ull;

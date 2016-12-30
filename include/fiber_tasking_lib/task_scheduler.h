@@ -202,7 +202,7 @@ private:
 	 * @param arg    An instance of ThreadStartArgs
 	 * @return       The return status of the thread
 	 */
-	static THREAD_FUNC_DECL ThreadStart(void *arg);
+	static FTL_THREAD_FUNC_DECL ThreadStart(void *arg);
 	/**
 	* The fiberProc function that wraps the main fiber procedure given by the user
 	*
