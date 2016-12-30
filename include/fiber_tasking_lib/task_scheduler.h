@@ -193,9 +193,6 @@ private:
 	 */
 	void CleanUpOldFiber();
 
-	void printfFreeFiberStatus();
-	void printfWaitingFiberStatus();
-
 	/**
 	 * The threadProc function for all worker threads
 	 *
