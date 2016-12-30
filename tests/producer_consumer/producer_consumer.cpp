@@ -30,10 +30,10 @@ TASK_ENTRY_POINT(Producer) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(kNumConsumerTasks, tasks);
+	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(kNumConsumerTasks, tasks);
 	delete[] tasks;
 
-	g_taskScheduler->WaitForCounter(counter, 0);
+	taskScheduler->WaitForCounter(counter, 0);
 }
 
 
@@ -45,8 +45,8 @@ TASK_ENTRY_POINT(ProducerConsumerMainTask) {
 		tasks[i] = { Producer, &globalCounter };
 	}
 
-	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(kNumProducerTasks, tasks);
-	g_taskScheduler->WaitForCounter(counter, 0);
+	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(kNumProducerTasks, tasks);
+	taskScheduler->WaitForCounter(counter, 0);
 
 
 	// Test to see that all tasks finished

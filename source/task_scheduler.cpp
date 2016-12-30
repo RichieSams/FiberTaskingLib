@@ -40,7 +40,7 @@ THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	// And we've returned
 
 	// Cleanup and shutdown
-	FTLEndCurrentThread();
+	EndCurrentThread();
 	THREAD_FUNC_END;
 }
 
@@ -171,7 +171,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_waitingBundles.resize(fiberPoolSize);
 
 	// 1 thread for each logical processor
-	m_numThreads = FTLGetNumHardwareThreads();
+	m_numThreads = GetNumHardwareThreads();
 
 	// Initialize all the things
 	m_quit.store(false, std::memory_order_release);
@@ -179,8 +179,8 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_tls = new ThreadLocalStorage[m_numThreads];
 
 	// Set the properties for the current thread
-	FTLSetCurrentThreadAffinity(1);
-	m_threads[0] = FTLGetCurrentThread();
+	SetCurrentThreadAffinity(1);
+	m_threads[0] = GetCurrentThread();
 
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {
@@ -188,7 +188,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 		threadArgs->taskScheduler = this;
 		threadArgs->threadIndex = i;
 
-		if (!FTLCreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
+		if (!CreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
 			printf("Error: Failed to create all the worker threads");
 			return;
 		}
@@ -215,7 +215,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	// And we're back
 	// Wait for the worker threads to finish
 	for (std::size_t i = 1; i < m_numThreads; ++i) {
-		FTLJoinThread(m_threads[i]);
+		JoinThread(m_threads[i]);
 	}
 
 	return;

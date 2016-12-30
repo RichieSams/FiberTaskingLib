@@ -15,7 +15,7 @@ namespace FiberTaskingLib {
 
 class TaskScheduler;
 
-typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg);
+typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg);
 
 /**
 * Creates the correct function signature for a task entry point
@@ -25,7 +25,7 @@ typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *g_taskScheduler, voi
 *     void *arg
 * where arg == Task::ArgData
 */
-#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *g_taskScheduler, void *arg)
+#define TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg)
 
 struct Task {
 	TaskFunction Function;

@@ -74,10 +74,10 @@ TASK_ENTRY_POINT(TriangleNumberMainTask) {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::shared_ptr<std::atomic_uint> counter = g_taskScheduler->AddTasks(numTasks, tasks);
+	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(numTasks, tasks);
 	delete[] tasks;
 
-	g_taskScheduler->WaitForCounter(counter, 0);
+	taskScheduler->WaitForCounter(counter, 0);
 
 
 	// Add the results

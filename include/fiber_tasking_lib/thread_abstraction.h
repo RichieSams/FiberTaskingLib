@@ -58,7 +58,7 @@ typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 *
 * @return    True if thread creation succeeds, false if it fails
 */
-inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
 	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
@@ -77,7 +77,7 @@ inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, voi
 *
 * @return    True if thread creation succeeds, false if it fails
 */
-inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
 	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 
 	if (handle == nullptr) {
@@ -95,7 +95,7 @@ inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, voi
 }
 
 /** Terminate the current thread */
-inline void FTLEndCurrentThread() {
+inline void EndCurrentThread() {
 	_endthreadex(0);
 }
 
@@ -104,7 +104,7 @@ inline void FTLEndCurrentThread() {
 *
 * @param thread    The thread to join
 */
-inline void FTLJoinThread(ThreadType thread) {
+inline void JoinThread(ThreadType thread) {
 	WaitForSingleObject(thread.Handle, INFINITE);
 }
 
@@ -113,7 +113,7 @@ inline void FTLJoinThread(ThreadType thread) {
  *
  * @return    An number of hardware threads
  */
-inline uint FTLGetNumHardwareThreads() {
+inline uint GetNumHardwareThreads() {
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
 	return sysInfo.dwNumberOfProcessors;
@@ -124,10 +124,10 @@ inline uint FTLGetNumHardwareThreads() {
  *
  * @return    The current thread
  */
-inline ThreadType FTLGetCurrentThread() {
+inline ThreadType GetCurrentThread() {
 	Win32Thread result{
-		GetCurrentThread(),
-		GetCurrentThreadId()
+		::GetCurrentThread(),
+		::GetCurrentThreadId()
 	};
 
 	return result;
@@ -138,8 +138,8 @@ inline ThreadType FTLGetCurrentThread() {
  *
  * @param coreAffinity    The requested core affinity
  */
-inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
-	SetThreadAffinityMask(GetCurrentThread(), coreAffinity);
+inline void SetCurrentThreadAffinity(size_t coreAffinity) {
+	SetThreadAffinityMask(::GetCurrentThread(), coreAffinity);
 }
 
 /**
@@ -147,7 +147,7 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
  *
  * @param event    The handle for the newly created event
  */
-inline void FTLCreateEvent(EventType *event) {
+inline void CreateEvent(EventType *event) {
 	event->event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
 	event->countWaiters = 0;
 }
@@ -157,7 +157,7 @@ inline void FTLCreateEvent(EventType *event) {
  *
  * @param eventId    The event to close
  */
-inline void FTLCloseEvent(EventType eventId) {
+inline void CloseEvent(EventType eventId) {
 	CloseHandle(eventId.event);
 }
 
@@ -168,7 +168,7 @@ inline void FTLCloseEvent(EventType eventId) {
 * @param eventId         The event to wait on
 * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
 */
-inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
+inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	eventId.countWaiters.fetch_add(1u);
 	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
 	uint prev = eventId.countWaiters.fetch_sub(1u);
@@ -185,7 +185,7 @@ inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
 *
 * @param eventId    The even to signal
 */
-inline void FTLSignalEvent(EventType eventId) {
+inline void SignalEvent(EventType eventId) {
 	SetEvent(eventId.event);
 }
 
@@ -222,7 +222,7 @@ typedef void *(*ThreadStartRoutine)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -248,7 +248,7 @@ inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, voi
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -273,7 +273,7 @@ inline bool FTLCreateThread(uint stackSize, ThreadStartRoutine startRoutine, voi
 }
 
 /** Terminate the current thread */
-inline void FTLEndCurrentThread() {
+inline void EndCurrentThread() {
 	pthread_exit(NULL);
 }
 
@@ -282,7 +282,7 @@ inline void FTLEndCurrentThread() {
  *
  * @param thread    The thread to join
  */
-inline void FTLJoinThread(ThreadType thread) {
+inline void JoinThread(ThreadType thread) {
 	pthread_join(thread, nullptr);
 }
 
@@ -291,7 +291,7 @@ inline void FTLJoinThread(ThreadType thread) {
 *
 * @return    An number of hardware threads
 */
-inline uint FTLGetNumHardwareThreads() {
+inline uint GetNumHardwareThreads() {
 	return (uint)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
@@ -300,7 +300,7 @@ inline uint FTLGetNumHardwareThreads() {
 *
 * @return    The current thread
 */
-inline ThreadType FTLGetCurrentThread() {
+inline ThreadType GetCurrentThread() {
 	return pthread_self();
 }
 
@@ -309,7 +309,7 @@ inline ThreadType FTLGetCurrentThread() {
 *
 * @param coreAffinity    The requested core affinity
 */
-inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
+inline void SetCurrentThreadAffinity(size_t coreAffinity) {
 	// TODO: OSX Thread Affinity
 	#ifdef FTL_OS_LINUX
 		cpu_set_t cpuSet;
@@ -325,7 +325,7 @@ inline void FTLSetCurrentThreadAffinity(size_t coreAffinity) {
 *
 * @param event    The handle for the newly created event
 */
-inline void FTLCreateEvent(EventType *event) {
+inline void CreateEvent(EventType *event) {
 	*event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 }
 
@@ -334,7 +334,7 @@ inline void FTLCreateEvent(EventType *event) {
  *
  * @param eventId    The event to close
  */
-inline void FTLCloseEvent(EventType eventId) {
+inline void CloseEvent(EventType eventId) {
 	// No op
 }
 
@@ -345,7 +345,7 @@ inline void FTLCloseEvent(EventType eventId) {
  * @param eventId         The event to wait on
  * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
  */
-inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
+inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
 	if (milliseconds == EVENTWAIT_INFINITE) {
@@ -366,7 +366,7 @@ inline void FTLWaitForEvent(EventType &eventId, uint32 milliseconds) {
  *
  * @param eventId    The even to signal
  */
-inline void FTLSignalEvent(EventType eventId) {
+inline void SignalEvent(EventType eventId) {
 	pthread_mutex_lock(&eventId.mutex);
 	pthread_cond_broadcast(&eventId.cond);
 	pthread_mutex_unlock(&eventId.mutex);
