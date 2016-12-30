@@ -199,5 +199,10 @@ https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)[Apache 2.0]
 
 {blank}
 
+## Contributing
+Contributions are very welcome. See the https://github.com/RichieSams/FiberTaskingLib/blob/master/CONTRIBUTING.asciidoc[contributing page] for more details.
+
+{blank}
+
 ## Request for Criticism
 This implementation was something I created because I thought Christian's presentation was really interesting and I wanted to explore it myself. The code is still a work in progress and I would love to hear your critiques of how I could make it better. I will continue to work on this project and improve it as best as possible.
