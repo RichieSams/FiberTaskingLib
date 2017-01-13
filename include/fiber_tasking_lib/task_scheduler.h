@@ -95,7 +95,8 @@ private:
 			  CurrentFiberIndex(FTL_INVALID_INDEX),
 			  OldFiberIndex(FTL_INVALID_INDEX),
 			  OldFiberDestination(FiberDestination::None),
-			  TaskQueue() {
+			  TaskQueue(),
+			  LastSuccessfulSteal(1) {
 		}
 
 		/**
@@ -115,9 +116,11 @@ private:
 		FiberDestination OldFiberDestination;
 		/* The queue of waiting tasks */
 		WaitFreeQueue<TaskBundle> TaskQueue;
+		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
+		std::size_t LastSuccessfulSteal;
 	};
 	/**
-	 * c++ Thread Local Storage is by definition static/global. This poses some problems, such as multiple TaskScheduler
+	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple TaskScheduler
 	 * instances. In addition, with Boost::Context, we have no way of telling the compiler to disable TLS optimizations, so we
 	 * have to fake TLS anyhow. 
 	 *
