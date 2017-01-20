@@ -107,6 +107,22 @@ matrix:
             - clang-3.7
             - cmake
             - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-3.8
+        - MY_CXX=clang++-3.8
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-3.8
+            - cmake
+            - cmake-data
     - os: osx
       compiler: gcc
       env: 
@@ -125,15 +141,10 @@ matrix:
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-3.5
-        - MY_CXX=clang++-3.5
-    - os: osx
-      compiler: clang
-      env: 
-        - MY_CC=clang-3.6
-        - MY_CXX=clang++-3.6
-    - os: osx
-      compiler: clang
-      env: 
         - MY_CC=clang-3.7
         - MY_CXX=clang++-3.7
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-3.8
+        - MY_CXX=clang++-3.8
