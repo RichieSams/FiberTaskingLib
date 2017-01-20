@@ -16,6 +16,38 @@ if (UNIX)
 	find_package(Threads REQUIRED)
 endif()
 
+# Figure out the processor architecture
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+	set(FTL_ARCH "x86_64")
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
+	set(FTL_ARCH "x86_64")
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
+	set(FTL_ARCH "i386")
+endif()
+
+if (FTL_ARCH STREQUAL "x86_64")
+	if("${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
+		set(FTL_ARCH "i386")
+	endif()
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+	if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+		set(FTL_ARCH "arm64")
+	else()
+		set(FTL_ARCH "arm")
+	endif()
+endif()
+
+if ((FTL_ARCH STREQUAL "x86_64") OR (FTL_ARCH STREQUAL "i386"))
+	add_definitions(-DFTL_STRONG_MEMORY_MODEL=1)
+endif()
+
+
 SetSourceGroup(NAME Core
 	PREFIX FTL
 	SOURCE_FILES 
