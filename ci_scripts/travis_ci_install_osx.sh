@@ -27,7 +27,7 @@ clang++-3.7)
 	upgradeBrewFormula llvm37
 	;;
 clang++-3.8)
-	upgradeBrewFormula llvm37
+	upgradeBrewFormula llvm38
 	;;
 *) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac
