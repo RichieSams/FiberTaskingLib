@@ -451,8 +451,8 @@ Mostly, this is just common sense. However, the main philosopy is:
 
 The following goes slightly beyond code formatting: We use certain keywords (together with an explanatory text) to mark certain sections of our code. In particular:
 
-* **FIXME:** marks code that contains hacks or bad/temporary workarounds, things that really should be revised at a later point.
-* **TODO:** marks incomplete code, or things that could be done better but are left for the future.
+ * **FIXME:** marks code that contains hacks or bad/temporary workarounds, things that really should be revised at a later point.
+ * **TODO:** marks incomplete code, or things that could be done better but are left for the future.
  
 
 == AStyle Program
