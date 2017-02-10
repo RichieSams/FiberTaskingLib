@@ -279,9 +279,13 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 	}
 
 	// Ours is empty, try to steal from the others'
-	currentThreadIndex = tls.LastSuccessfulSteal;
+	std::size_t threadIndex = tls.LastSuccessfulSteal;
 	for (std::size_t i = 0; i < m_numThreads; ++i) {
-		ThreadLocalStorage &otherTLS = m_tls[(currentThreadIndex + i) % m_numThreads];
+		const std::size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
+		if (threadIndexToStealFrom == currentThreadIndex) {
+			continue;
+		}
+		ThreadLocalStorage &otherTLS = m_tls[threadIndexToStealFrom];
 		if (otherTLS.TaskQueue.Steal(nextTask)) {
 			tls.LastSuccessfulSteal = i;
 			return true;
