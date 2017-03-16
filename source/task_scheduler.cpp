@@ -50,7 +50,7 @@ struct MainFiberStartArgs {
 	TaskScheduler *taskScheduler;
 };
 
-void TaskScheduler::MainFiberStart(intptr_t arg) {
+void TaskScheduler::MainFiberStart(void *arg) {
 	MainFiberStartArgs *mainFiberArgs = reinterpret_cast<MainFiberStartArgs *>(arg);
 	TaskScheduler *taskScheduler = mainFiberArgs->taskScheduler;
 
@@ -70,7 +70,7 @@ void TaskScheduler::MainFiberStart(intptr_t arg) {
 	printf("Error: FiberStart should never return");
 }
 
-void TaskScheduler::FiberStart(intptr_t arg) {
+void TaskScheduler::FiberStart(void *arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
@@ -164,7 +164,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_waitingFibers = new std::atomic<bool>[fiberPoolSize];
 
 	for (uint i = 0; i < fiberPoolSize; ++i) {
-		m_fibers[i] = std::move(Fiber(512000, FiberStart, reinterpret_cast<std::intptr_t>(this)));
+		m_fibers[i] = std::move(Fiber(512000, FiberStart, this));
 		m_freeFibers[i].store(true, std::memory_order_release);
 		m_waitingFibers[i].store(false, std::memory_order_release);
 	}
@@ -211,7 +211,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	mainFiberArgs.MainTask = mainTask;
 	mainFiberArgs.Arg = mainTaskArg;
 
-	freeFiber->Reset(MainFiberStart, reinterpret_cast<std::intptr_t>(&mainFiberArgs));
+	freeFiber->Reset(MainFiberStart, &mainFiberArgs);
 	m_tls[0].CurrentFiberIndex = freeFiberIndex;
 	m_tls[0].ThreadFiber.SwitchToFiber(freeFiber);
 

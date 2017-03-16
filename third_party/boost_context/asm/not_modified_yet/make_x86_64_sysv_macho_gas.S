@@ -25,10 +25,9 @@
  ****************************************************************************************/
 
 .text
-.globl make_fcontext
-.type make_fcontext,@function
-.align 16
-make_fcontext:
+.globl _make_fcontext
+.align 8
+_make_fcontext:
     /* first arg of make_fcontext() == top of context-stack */
     movq  %rdi, %rax
 
@@ -73,9 +72,5 @@ finish:
     /* exit code is zero */
     xorq  %rdi, %rdi
     /* exit application */
-    call  _exit@PLT
+    call  __exit
     hlt
-.size make_fcontext,.-make_fcontext
-
-/* Mark that we don't need executable stack. */
-.section .note.GNU-stack,"",%progbits

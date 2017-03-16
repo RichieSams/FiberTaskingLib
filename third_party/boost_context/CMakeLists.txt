@@ -64,7 +64,7 @@ if (WIN32)
 	if (MSVC)
 		set(CONTEXT_ASM "masm.asm")
 	else()
-		set(CONTEXT_ASM "gas.asm")
+		set(CONTEXT_ASM "gas.S")
 	endif()
 elseif(APPLE)
 	set(CONTEXT_OS  "sysv")
@@ -89,6 +89,13 @@ SetSourceGroup(NAME Root
 	SOURCE_FILES asm/make_${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
 	             asm/jump_${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
 	             include/boost_context/fcontext.h)
+
+if (CONTEXT_ASM MATCHES "masm.asm" AND CONTEXT_PLATFORM MATCHES "i386")
+	set_source_files_properties(asm/make_${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
+	                            asm/jump_${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
+	                            PROPERTIES
+	                            COMPILE_FLAGS "/safeseh")
+endif()
 
 add_library(boost_context STATIC ${BOOST_CONTEXT_ROOT})
 target_include_directories(boost_context INTERFACE include)

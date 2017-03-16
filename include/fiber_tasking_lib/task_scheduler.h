@@ -209,13 +209,13 @@ private:
 	*
 	* @param arg    An instance of TaskScheduler
 	*/
-	static void MainFiberStart(intptr_t arg);
+	static void MainFiberStart(void *arg);
 	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
 	 * @param arg    An instance of TaskScheduler
 	 */
-	static void FiberStart(intptr_t arg);
+	static void FiberStart(void *arg);
 };
 
 } // End of namespace FiberTaskingLib

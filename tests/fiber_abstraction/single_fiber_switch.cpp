@@ -22,7 +22,7 @@ struct SingleFiberArg {
 	FiberTaskingLib::Fiber OtherFiber;
 };
 
-void SingleFiberStart(std::intptr_t arg) {
+void SingleFiberStart(void *arg) {
 	SingleFiberArg *singleFiberArg = reinterpret_cast<SingleFiberArg *>(arg);
 
 	singleFiberArg->Counter.fetch_add(1);
@@ -36,7 +36,7 @@ void SingleFiberStart(std::intptr_t arg) {
 TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
-	singleFiberArg.OtherFiber = std::move(FiberTaskingLib::Fiber(512000, SingleFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
+	singleFiberArg.OtherFiber = std::move(FiberTaskingLib::Fiber(512000, SingleFiberStart, &singleFiberArg));
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 

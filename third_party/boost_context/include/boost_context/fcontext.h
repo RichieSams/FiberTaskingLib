@@ -20,10 +20,10 @@
 
 namespace boost_context {
 
-typedef void*   fcontext_t;
+typedef void *fcontext_t;
 
-extern "C" intptr_t jump_fcontext(fcontext_t *ofc, fcontext_t nfc, std::intptr_t vp, int preserve_fpu);
-extern "C" fcontext_t make_fcontext(void *sp, std::size_t size, void(*func)(std::intptr_t));
+extern "C" void jump_fcontext(fcontext_t *from, fcontext_t to, void *arg);
+extern "C" fcontext_t make_fcontext(void * sp, std::size_t size, void(*func)(void *));
 // sp is the pointer to the _top_ of the stack (ie &stack_buffer[size]).
 
 }

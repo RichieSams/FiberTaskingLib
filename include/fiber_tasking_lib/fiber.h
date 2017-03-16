@@ -57,7 +57,7 @@ inline void *AlignedAlloc(std::size_t size, std::size_t alignment);
 inline void AlignedFree(void *block);
 inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple);
 
-typedef void (*FiberStartRoutine)(std::intptr_t arg);
+typedef void (*FiberStartRoutine)(void *arg);
 
 
 class Fiber {
@@ -80,7 +80,7 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, std::intptr_t arg)
+	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, void *arg)
 			: m_arg(arg) {
 		#if defined(FTL_FIBER_STACK_GUARD_PAGES)
 			m_systemPageSize = SystemPageSize();
@@ -146,7 +146,7 @@ private:
 	std::size_t m_systemPageSize;
 	std::size_t m_stackSize;
 	boost_context::fcontext_t m_context;
-	std::intptr_t m_arg;
+	void *m_arg;
 	FTL_VALGRIND_ID;
 
 public:
@@ -157,7 +157,7 @@ public:
 	 * @param fiber    The fiber to switch to
 	 */
 	void SwitchToFiber(Fiber *fiber) {
-		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg, 1);
+		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
 	}
 	/**
 	 * Re-initializes the stack with a new startRoutine and arg
@@ -170,7 +170,7 @@ public:
 	 *
 	 * @return
 	 */
-	void Reset(FiberStartRoutine startRoutine, std::intptr_t arg) {
+	void Reset(FiberStartRoutine startRoutine, void *arg) {
 		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
 		m_arg = arg;
 	}

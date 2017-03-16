@@ -28,7 +28,7 @@ struct MultipleFiberArg {
 	FiberTaskingLib::Fiber SixthFiber;
 };
 
-void FirstLevelFiberStart(intptr_t arg) {
+void FirstLevelFiberStart(void *arg) {
 	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 8;
@@ -53,8 +53,8 @@ void FirstLevelFiberStart(intptr_t arg) {
 	FAIL();
 }
 
-void SecondLevelFiberStart(intptr_t arg) {
-	MultipleFiberArg *singleFiberArg = (MultipleFiberArg *)arg;
+void SecondLevelFiberStart(void *arg) {
+	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 3;
 	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
@@ -72,8 +72,8 @@ void SecondLevelFiberStart(intptr_t arg) {
 	FAIL();
 }
 
-void ThirdLevelFiberStart(intptr_t arg) {
-	MultipleFiberArg *singleFiberArg = (MultipleFiberArg *)arg;
+void ThirdLevelFiberStart(void *arg) {
+	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 7;
 	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
@@ -91,8 +91,8 @@ void ThirdLevelFiberStart(intptr_t arg) {
 	FAIL();
 }
 
-void FourthLevelFiberStart(intptr_t arg) {
-	MultipleFiberArg *singleFiberArg = (MultipleFiberArg *)arg;
+void FourthLevelFiberStart(void *arg) {
+	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 6;
 	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
@@ -110,8 +110,8 @@ void FourthLevelFiberStart(intptr_t arg) {
 	FAIL();
 }
 
-void FifthLevelFiberStart(intptr_t arg) {
-	MultipleFiberArg *singleFiberArg = (MultipleFiberArg *)arg;
+void FifthLevelFiberStart(void *arg) {
+	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter -= 9;
 	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
@@ -129,8 +129,8 @@ void FifthLevelFiberStart(intptr_t arg) {
 	FAIL();
 }
 
-void SixthLevelFiberStart(intptr_t arg) {
-	MultipleFiberArg *singleFiberArg = (MultipleFiberArg *)arg;
+void SixthLevelFiberStart(void *arg) {
+	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 2;
 	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->FirstFiber);
@@ -151,12 +151,12 @@ void SixthLevelFiberStart(intptr_t arg) {
 TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0ull;
-	singleFiberArg.FirstFiber = std::move(FiberTaskingLib::Fiber(524288, FirstLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
-	singleFiberArg.SecondFiber = std::move(FiberTaskingLib::Fiber(524288, SecondLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
-	singleFiberArg.ThirdFiber = std::move(FiberTaskingLib::Fiber(524288, ThirdLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
-	singleFiberArg.FourthFiber = std::move(FiberTaskingLib::Fiber(524288, FourthLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
-	singleFiberArg.FifthFiber = std::move(FiberTaskingLib::Fiber(524288, FifthLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
-	singleFiberArg.SixthFiber = std::move(FiberTaskingLib::Fiber(524288, SixthLevelFiberStart, reinterpret_cast<std::intptr_t>(&singleFiberArg)));
+	singleFiberArg.FirstFiber = std::move(FiberTaskingLib::Fiber(524288, FirstLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SecondFiber = std::move(FiberTaskingLib::Fiber(524288, SecondLevelFiberStart, &singleFiberArg));
+	singleFiberArg.ThirdFiber = std::move(FiberTaskingLib::Fiber(524288, ThirdLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FourthFiber = std::move(FiberTaskingLib::Fiber(524288, FourthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FifthFiber = std::move(FiberTaskingLib::Fiber(524288, FifthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SixthFiber = std::move(FiberTaskingLib::Fiber(524288, SixthLevelFiberStart, &singleFiberArg));
 
 	// The order should be:
 	// 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1 -> 5 -> 1 -> 3 -> 2 -> 4 -> 6 -> 4 -> 2 -> 5 -> 3 -> 6 -> Main
