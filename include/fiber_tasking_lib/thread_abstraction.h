@@ -245,8 +245,8 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
 	// Set stack size
 	pthread_attr_setstacksize(&threadAttr, stackSize);
 
-	// TODO: OSX Thread Affinity
-	#if !defined(FTL_OS_MAC) && !defined(FTL_OS_iOS)
+	// TODO: OSX and MinGW Thread Affinity
+	#if defined(FTL_OS_LINUX)
 		// Set core affinity
 		cpu_set_t cpuSet;
 		CPU_ZERO(&cpuSet);
@@ -291,8 +291,8 @@ inline ThreadType GetCurrentThread() {
 * @param coreAffinity    The requested core affinity
 */
 inline void SetCurrentThreadAffinity(size_t coreAffinity) {
-	// TODO: OSX Thread Affinity
-	#ifdef FTL_OS_LINUX
+	// TODO: OSX and MinGW Thread Affinity
+	#if defined(FTL_OS_LINUX)
 		cpu_set_t cpuSet;
 		CPU_ZERO(&cpuSet);
 		CPU_SET(coreAffinity, &cpuSet);
