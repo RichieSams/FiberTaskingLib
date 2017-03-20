@@ -40,11 +40,11 @@ _jump_fcontext:
     movq  %rbx, 0x28(%rsp)  /* save RBX */
     movq  %rbp, 0x30(%rsp)  /* save RBP */
 
-    /* store RSP (pointing to context-data) in RAX */
-    movq  %rsp, %rax
+    /*  store RSP (pointing to context-data) in address given by RDI (first arg passed to jump_fcontext) */
+    movq  %rsp, (%rdi)
 
-    /* restore RSP (pointing to context-data) from RDI */
-    movq  %rdi, %rsp
+    /* restore RSP (pointing to context-data) from RSI */
+    movq  %rsi, %rsp
 
     movq  0x38(%rsp), %r8  /* restore return-address */
 
@@ -60,12 +60,8 @@ _jump_fcontext:
 
     leaq  0x40(%rsp), %rsp /* prepare stack */
 
-    /* return transfer_t from jump */
-    /* RAX == fctx, RDX == data */
-    movq  %rsi, %rdx
-    /* pass transfer_t as first arg in context function */
-    /* RDI == fctx, RSI == data */
-    movq  %rax, %rdi
+    /* pass data (third arg passed to jump_fcontext) as first arg passed to context function */
+    movq  %rdx, %rdi
 
     /* indirect jump to context */
     jmp  *%r8
