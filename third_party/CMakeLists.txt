@@ -16,7 +16,3 @@ if (FTL_BUILD_TESTS)
 	set_target_properties(gtest PROPERTIES FOLDER third_party)
 	set_target_properties(gtest_main PROPERTIES FOLDER third_party)
 endif()
-
-# Boost Context
-add_subdirectory(boost_context)
-set_target_properties(boost_context PROPERTIES FOLDER third_party)
