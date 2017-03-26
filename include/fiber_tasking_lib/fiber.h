@@ -203,18 +203,12 @@ private:
 	#if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
 		inline void MemoryGuard(void *memory, size_t bytes) {
 			int result = mprotect(memory, bytes, PROT_NONE);
-			if(result) {
-				perror("mprotect failed with error:");
-				assert(!result);
-			}
+			assert(!result);
 		}
 
 		inline void MemoryGuardRelease(void *memory, size_t bytes) {
 			int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
-			if(result) {
-				perror("mprotect failed with error:");
-				assert(!result);
-			}
+			assert(!result);
 		}
 
 		inline std::size_t SystemPageSize() {
