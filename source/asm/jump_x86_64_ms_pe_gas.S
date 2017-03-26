@@ -135,9 +135,7 @@ jump_fcontext:
     movq  %rbx, 0x100(%rsp)  /* save RBX */
     movq  %rbp, 0x108(%rsp)  /* save RBP */
 
-    /* movq  %rcx, 0x110(%rsp) */  /* save hidden address of transport_t */
-
-    /* ; preserve RSP (pointing to context-data) in RCX */
+    /* store RSP (pointing to context-data) in address given by RCX (first arg passed to jump_fcontext) */
     movq  %rsp, (%rcx)
 
     /* restore RSP (pointing to context-data) from RDX */
@@ -179,15 +177,13 @@ jump_fcontext:
     movq  0x100(%rsp), %rbx  /* restore RBX */
     movq  0x108(%rsp), %rbp  /* restore RBP */
 
-    /* movq  0x110(%rsp), %rax */  /* restore hidden address of transport_t */
-
     leaq  0x118(%rsp), %rsp /* prepare stack */
 
     /* restore return-address */
     popq  %r10
 
     /* Set the third arg (data) as the first arg of the context function */
-    movq  %r8, %rax
+    movq  %r8, %rcx
 
     /* indirect jump to context */
     jmp  *%r10
