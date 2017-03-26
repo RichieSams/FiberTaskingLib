@@ -11,7 +11,7 @@ script:
     - export CXX="${MY_CXX}"
     - mkdir build
     - cd build
-    - cmake ../
+    - cmake -DFTL_FIBER_STACK_GUARD_PAGES=1 ../
     - make
     - make test
 
