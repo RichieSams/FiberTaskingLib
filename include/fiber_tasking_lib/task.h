@@ -17,16 +17,6 @@ class TaskScheduler;
 
 typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg);
 
-/**
-* Creates the correct function signature for a task entry point
-*
-* The function will have the following args:
-*     TaskScheduler *g_taskScheduler,
-*     void *arg
-* where arg == Task::ArgData
-*/
-#define FTL_TASK_ENTRY_POINT(functionName) void functionName(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg)
-
 struct Task {
 	TaskFunction Function;
 	void *ArgData;

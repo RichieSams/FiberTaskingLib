@@ -22,7 +22,7 @@ struct NumberSubset {
 };
 
 
-FTL_TASK_ENTRY_POINT(AddNumberSubset) {
+void AddNumberSubset(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->total = 0;
@@ -47,7 +47,7 @@ FTL_TASK_ENTRY_POINT(AddNumberSubset) {
 *
 * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
 */
-FTL_TASK_ENTRY_POINT(TriangleNumberMainTask) {
+void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
 	const uint64 numAdditionsPerTask = 10000ull;

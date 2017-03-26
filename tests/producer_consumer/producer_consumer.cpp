@@ -18,13 +18,13 @@ const uint kNumProducerTasks = 100u;
 const uint kNumConsumerTasks = 10000u;
 
 
-FTL_TASK_ENTRY_POINT(Consumer) {
+void Consumer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
 
 	globalCounter->fetch_add(1);
 }
 
-FTL_TASK_ENTRY_POINT(Producer) {
+void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = { Consumer, arg };
@@ -37,7 +37,7 @@ FTL_TASK_ENTRY_POINT(Producer) {
 }
 
 
-FTL_TASK_ENTRY_POINT(ProducerConsumerMainTask) {
+void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint globalCounter(0u);
 
 	FiberTaskingLib::Task tasks[kNumProducerTasks];
