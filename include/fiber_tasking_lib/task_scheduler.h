@@ -111,6 +111,7 @@ private:
 			  LastSuccessfulSteal(1) {
 		}
 
+	public:
 		/**
 		* The current fiber implementation requires that fibers created from threads finish on the same thread where they started
 		*
@@ -130,6 +131,10 @@ private:
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
+
+	private:
+		/* Cache-line pad */
+		char pad[64];
 	};
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple TaskScheduler
