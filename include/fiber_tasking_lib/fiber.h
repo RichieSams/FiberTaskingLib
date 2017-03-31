@@ -13,6 +13,8 @@
 
 #include "fiber_tasking_lib/config.h"
 
+#include <boost_context/fcontext.h>
+
 #include <cassert>
 #include <cstdlib>
 #include <algorithm>
@@ -33,13 +35,6 @@
 
 
 namespace FiberTaskingLib {
-
-typedef void *fcontext_t;
-
-extern "C" void jump_fcontext(fcontext_t *from, fcontext_t to, void *arg);
-extern "C" fcontext_t make_fcontext(void * sp, std::size_t size, void(*func)(void *));
-// sp is the pointer to the _top_ of the stack (ie &stack_buffer[size]).
-
 
 #if defined(FTL_VALGRIND)
 	#define FTL_VALGRIND_ID uint m_stackId
@@ -96,7 +91,7 @@ public:
 		m_stackSize = RoundUp(stackSize, m_systemPageSize);
 		// We add a guard page both the top and the bottom of the stack
 		m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
-		m_context = make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
+		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
 		
 		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, static_cast<char *>(m_stack) + m_systemPageSize);
 		#if defined(FTL_FIBER_STACK_GUARD_PAGES)
@@ -150,7 +145,7 @@ private:
 	void *m_stack;
 	std::size_t m_systemPageSize;
 	std::size_t m_stackSize;
-	fcontext_t m_context;
+	boost_context::fcontext_t m_context;
 	void *m_arg;
 	FTL_VALGRIND_ID;
 
@@ -162,7 +157,7 @@ public:
 	 * @param fiber    The fiber to switch to
 	 */
 	void SwitchToFiber(Fiber *fiber) {
-		jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
+		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
 	}
 	/**
 	 * Re-initializes the stack with a new startRoutine and arg
@@ -176,7 +171,7 @@ public:
 	 * @return
 	 */
 	void Reset(FiberStartRoutine startRoutine, void *arg) {
-		m_context = make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
+		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
 		m_arg = arg;
 	}
 	

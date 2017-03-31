@@ -17,9 +17,9 @@
  *  ----------------------------------------------------------------------------------  *
  *  |    8    |    9    |    10   |    11   |    12    |    13   |    14   |    15   |  *
  *  ----------------------------------------------------------------------------------  *
- *  |   0x20  |   0x24  |                                                            |  *
+ *  |   0x20  |   0x24  |   0x28  |                                                  |  *
  *  ----------------------------------------------------------------------------------  *
- *  |    to   |   data  |                                                            |  *
+ *  |   from  |    to   |   data  |                                                  |  *
  *  ----------------------------------------------------------------------------------  *
  *                                                                                      *
  ****************************************************************************************/
@@ -39,29 +39,23 @@ jump_fcontext:
     movl  %ebx, 0x10(%esp)  /* save EBX */
     movl  %ebp, 0x14(%esp)  /* save EBP */
 
-    /* store ESP (pointing to context-data) in ECX */
-    movl  %esp, %ecx
+    /* store ESP (pointing to context-data) at address pointed by arg 1 */
+	movl 0x20(%esp), %eax
+	movl %esp, (%eax)
 
-    /* first arg of jump_fcontext() == fcontext to jump to */
-    movl  0x20(%esp), %eax
+    /* second arg of jump_fcontext() == fcontext to jump to */
+    movl  0x24(%esp), %ecx
 
-    /* second arg of jump_fcontext() == data to be transferred */
-    movl  0x24(%esp), %edx
+    /* third arg of jump_fcontext() == data to be transferred */
+    movl  0x28(%esp), %eax
 
-    /* restore ESP (pointing to context-data) from EAX */
-    movl  %eax, %esp
-
-    /* address of returned transport_t */
-    movl 0x1c(%esp), %eax
-    /* return parent fcontext_t */
-    movl  %ecx, (%eax)
-    /* return data */
-    movl %edx, 0x4(%eax)
-
-    movl  0x18(%esp), %ecx  /* restore EIP */
+    /* restore ESP (pointing to context-data) from ECX */
+    movl  %ecx, %esp
 
     ldmxcsr  (%esp)     /* restore MMX control- and status-word */
     fldcw    0x4(%esp)  /* restore x87 control-word */
+
+	movl  0x18(%esp), %ecx  /* restore EIP */
 
     movl  0x8(%esp), %edi  /* restore EDI */
     movl  0xc(%esp), %esi  /* restore ESI */
