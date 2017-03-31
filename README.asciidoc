@@ -196,10 +196,10 @@ FiberTaskingLib is a standard CMake build. However, for detailed instructions on
 {blank}
 
 ## License
-The library is licensed under the https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)[Apache 2.0] license. However, FiberTaskingLib distributes and uses code from other Open Source Projects that have their own licenses:
+The library is licensed under the https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)[Apache 2.0 license]. However, FiberTaskingLib distributes and uses code from other Open Source Projects that have their own licenses:
 
- - GTest: (https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/gtest)[New BSD License]
- - Boost Context Fork: (https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/boost_context)[Boost License v1.0]
+ - GTest: https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/gtest[New BSD License]
+ - Boost Context Fork: https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/boost_context[Boost License v1.0]
 
 {blank}
 
