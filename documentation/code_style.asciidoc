@@ -2,9 +2,9 @@
 
 == Use common sense
 
-I try to follow these conventions when writing code for FiberTaskingLib. Sticking to a common set of formatting / indention rules makes it easier to read through the source base. If you want to submit patches, please try to adhere to these rules.
+When writing code for FiberTaskingLib, I always try to follow these conventions. Sticking to a common set of formatting / indention rules makes it easier to read through the source base. Therefore, if you want to submit patches, please try to adhere to these rules.
 
-I don't always follow these rules slavishly; in certain cases it is OK (and in fact might be favorable) to stray from them. Applying common sense, as usual, is a good idea. 
+That said, I don't always follow these rules slavishly; in certain cases it is OK (and in fact might be favorable) to stray from them. Applying common sense, as usual, is a good idea. 
 
 In the following examples, tabs are replaced by spaces for visual consistency on the web. But in actual code, use tabs for indentations. See below for more details.
 
@@ -444,6 +444,7 @@ std::shared_ptr<std::atomic_uint> AddTasks(uint numTasks, Task *tasks);
 == Comments and naming
 
 Mostly, this is just common sense. However, the main philosopy is:
+
  * Naming should be used to explain _What_ is going on
  * Comments should be used to explain _Why_.
 

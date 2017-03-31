@@ -130,7 +130,7 @@ A https://msdn.microsoft.com/en-us/library/windows/desktop/ms682661%28v=vs.85%29
 
 ### Why go though the hassle though? What's the benefit?
 
-The beauty of fibers is that you can switch between them extremely quickly. Ultimately, a switch consists of saving out registers, then swapping the execution pointer and the stack pointer. This is much much faster than a full on thread context switch.
+The beauty of fibers is that you can switch between them extremely quickly. Ultimately, a switch consists of saving out registers, then swapping the execution pointer and the stack pointer. This is much much faster than a full-on thread context switch.
 
 ### How do fibers apply to task-based multithreading?
 To answer this question, let's compare to another task-based multithreading library: Intel's https://www.threadingbuildingblocks.org/[Threading Building Blocks]. TBB is an extremely well polished and successful tasking library. It can handle really complex task graphs and has an excellent scheduler. However, let's imagine a scenario:
@@ -185,7 +185,7 @@ struct Task {
 };
 ----
 
-The tasks get added to the queue, and other threads (or the current one, when it finished the current task) can start executing them when they get popped off the queue.
+The tasks get added to the queue, and other threads (or the current one, when it is finished with the current task) can start executing them when they get popped off the queue.
 
 Every time you add a _group_ of tasks, the task scheduler returns a pointer to an atomic counter. The value of the atomic counter will be equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
 

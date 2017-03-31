@@ -66,7 +66,7 @@ private:
 	 */
 	std::atomic<bool> *m_freeFibers;
 	/**
-	  * An array of atomic, which signify if a fiber is waiting for a counter. The indices of m_waitingFibers
+	  * An array of atomics, which signify if a fiber is waiting for a counter. The indices of m_waitingFibers
 	  * correspond 1 to 1 with m_fibers. So, if m_waitingFibers[i] == true, then m_fibers[i] is waiting for a counter
 	  */
 	std::atomic<bool> *m_waitingFibers;
@@ -112,11 +112,11 @@ private:
 		}
 
 		/**
-		* Boost fibers require that fibers created from threads finish on the same thread where they started
+		* The current fiber implementation requires that fibers created from threads finish on the same thread where they started
 		*
 		* To accommodate this, we have save the initial fibers created in each thread, and immediately switch
 		* out of them into the general fiber pool. Once the 'mainTask' has finished, we signal all the threads to
-		* start quitting. When the receive the signal, they switch back to the ThreadFiber, allowing it to 
+		* start quitting. When they receive the signal, they switch back to the ThreadFiber, allowing it to 
 		* safely clean up.
 		*/
 		Fiber ThreadFiber;
@@ -133,7 +133,7 @@ private:
 	};
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple TaskScheduler
-	 * instances. In addition, with Boost::Context, we have no way of telling the compiler to disable TLS optimizations, so we
+	 * instances. In addition, with the current fiber implementation, we have no way of telling the compiler to disable TLS optimizations, so we
 	 * have to fake TLS anyhow. 
 	 *
 	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index into
