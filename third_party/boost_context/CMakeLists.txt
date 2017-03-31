@@ -1,13 +1,7 @@
-## FiberTaskingLib - A tasking library that uses fibers for efficient task switching
- #
- # This library was created as a proof of concept of the ideas presented by
- # Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Using Fibers'
- #
- # http://gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine
- #
- # FiberTaskingLib is the legal property of Adrian Astley
- # Copyright Adrian Astley 2015 - 2016
- ##
+##          Copyright Adrian Astley 2016
+## Distributed under the Boost Software License, Version 1.0.
+##    (See accompanying file LICENSE_1_0.txt or copy at
+##          http://www.boost.org/LICENSE_1_0.txt)
 
 cmake_minimum_required(VERSION 3.2)
 project(boost_context)
@@ -18,6 +12,7 @@ include(SetSourceGroup)
 # Determine the target architecture
 #
 # Taken from Richard Maxwell's 'sewing' library: https://github.com/JodiTheTigger/sewing
+# (MIT license)
 #
 # Enable the assemblers
 if (WIN32 AND MSVC)
