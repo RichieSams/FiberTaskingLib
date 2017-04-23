@@ -26,54 +26,57 @@
  *  -------------------------------------------------  *
  *  | 0x40| 0x44| 0x48| 0x4c| 0x50| 0x54| 0x58| 0x5c|  *
  *  -------------------------------------------------  *
- *  |hiddn|  v1 |  v2 |  v3 |  v4 |  v5 |  v6 |  v7 |  *
+ *  |  v1 |  v2 |  v3 |  v4 |  v5 |  v6 |  v7 |  v8 |  *
  *  -------------------------------------------------  *
  *  -------------------------------------------------  *
  *  |  24 |  25 |  26 |  27 |  28 |  29 |  30 |  31 |  *
  *  -------------------------------------------------  *
  *  | 0x60| 0x64| 0x68| 0x6c| 0x70| 0x74| 0x78| 0x7c|  *
  *  -------------------------------------------------  *
- *  |  v8 |  lr |  pc | FCTX| DATA|                 |  *
+ *  |  lr |  pc |                                   |  *
  *  -------------------------------------------------  *
  *                                                     *
  *******************************************************/
 
 .text
-.globl make_fcontext
+.globl jump_fcontext
 .align 2
-.type make_fcontext,%function
-make_fcontext:
-    @ shift address in A1 to lower 16 byte boundary
-    bic  a1, a1, #15
+.type jump_fcontext,%function
+jump_fcontext:
+    @ save LR as PC
+    push {lr}
+    @ save V1-V8,LR
+    push {v1-v8,lr}
 
-    @ reserve space for context-data on context-stack
-    sub  a1, a1, #128
-
-    @ third arg of make_fcontext() == address of context-function
-    str  a3, [a1, #104]
-
-    @ compute address of returned transfer_t
-    add  a2, a1, #108
-    mov  a3, a2
-    str  a3, [a1, #64]
-
-    @ compute abs address of label finish
-    adr  a2, finish
-    @ save address of finish as return-address for context-function
-    @ will be entered after context-function returns
-    str  a2, [a1, #100]
-
+    @ prepare stack for storing FPU
+    sub  sp, sp, #64
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__))
+    @ save S16-S31
+    vstmia sp, {d8-d15}
 #endif
 
-    bx  lr @ return pointer to context-data
+    @ store RSP (pointing to context-data) at address pointed at by A1
+    str sp, [a1]
 
-finish:
-    @ exit code is zero
-    mov  a1, #0
-    @ exit application
-    bl  _exit@PLT
-.size make_fcontext,.-make_fcontext
+    @ restore RSP (pointing to context-data) from A2
+    mov  sp, a2
+
+#if (defined(__VFP_FP__) && !defined(__SOFTFP__))
+    @ restore S16-S31
+    vldmia  sp, {d8-d15}
+#endif
+    @ prepare stack for restoring other register
+    add  sp, sp, #64
+
+    @ restore V1-V8,LR
+    pop {v1-v8,lr}
+
+    @ pass data (third arg passed to jump_fcontext) as first arg passed to context function
+    mov  a1, a3
+
+    @ restore PC
+    pop {pc}
+.size jump_fcontext,.-jump_fcontext
 
 @ Mark that we don't need executable stack.
 .section .note.GNU-stack,"",%progbits
