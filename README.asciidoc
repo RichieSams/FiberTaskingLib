@@ -213,8 +213,8 @@ Before a fiber tries to pop a task off the **Task Queue**, it iterates through t
 |====
 | Arch | Windows | Linux | OS X | iOS | Android
 | arm | Needs testing | Tested OK |  | In theory | In theory
-| arm_64 | Needs testing | In theory |  | In theory | In theory
-| x86 | Needs testing | Needs testing | Needs testing |  | In theory
+| arm_64 | Needs testing | Tested OK |  | In theory | In theory
+| x86 | Tested OK | Needs testing | Needs testing |  | In theory
 | x86_64 | Tested OK | Tested OK | Tested OK |  | In theory
 | ppc |  |  | In theory |  | 
 | ppc_64 |  |  | In theory |  | 
