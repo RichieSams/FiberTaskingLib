@@ -55,6 +55,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
 	endif()
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+	set(FTL_ARCH "arm64")
+endif()
+
 if ((FTL_ARCH STREQUAL "x86_64") OR (FTL_ARCH STREQUAL "i386"))
 	add_definitions(-DFTL_STRONG_MEMORY_MODEL=1)
 endif()

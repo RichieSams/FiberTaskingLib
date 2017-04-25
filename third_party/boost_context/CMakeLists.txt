@@ -49,6 +49,12 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
 	set(CONTEXT_OS  "aapcs")
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+	set(CONTEXT_PLATFORM "arm64")
+
+	set(CONTEXT_OS  "aapcs")
+endif()
+
 if (WIN32)
 	# arm requires aapcs. So we have to check if arm already set the calling convention
 	if (NOT CONTEXT_OS)

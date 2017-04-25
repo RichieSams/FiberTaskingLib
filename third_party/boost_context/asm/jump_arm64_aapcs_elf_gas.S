@@ -76,11 +76,13 @@ jump_fcontext:
     # save LR as PC
     str  x30, [sp, #0xa0]
 
-    # store RSP (pointing to context-data) in X0
-    mov  x4, sp
+    # store RSP (pointing to context-data) at address pointed at by X0
+	# STR doesn't allow us to use sp as the base register, so we have to mov it to x4 first
+	mov x4, sp    
+	str x4, [x0, 0]
 
     # restore RSP (pointing to context-data) from X1
-    mov  sp, x0
+    mov  sp, x1
 
     # load d8 - d15
     ldp  d8,  d9,  [sp, #0x00]
@@ -96,15 +98,13 @@ jump_fcontext:
     ldp  x27, x28, [sp, #0x80]
     ldp  x29, x30, [sp, #0x90]
 
-    # return transfer_t from jump
-    # pass transfer_t as first arg in context function
-    # X0 == FCTX, X1 == DATA
-    mov x0, x4
+    # pass data (third arg passed to jump_fcontext) as first arg passed to context function
+    mov x0, x2
 
     # load pc
     ldr  x4, [sp, #0xa0]
 
-    # restore stack from GP + FPU
+    # restore stack from GP + FP
     add  sp, sp, #0xb0
 
     ret x4
