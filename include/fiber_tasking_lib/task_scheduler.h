@@ -158,7 +158,7 @@ public:
 	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
 	 * @param mainTask          The main task to run
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
-	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHarewareThreads()
+	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 */
 	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0);
 
