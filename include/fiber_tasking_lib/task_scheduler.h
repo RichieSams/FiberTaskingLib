@@ -131,6 +131,8 @@ private:
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
+		/* List of pinned tasks to this thread */
+		std::vector<std::pair<std::size_t, WaitingBundle>> PinnedTasks;
 
 	private:
 		/* Cache-line pad */
@@ -158,7 +160,7 @@ public:
 	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
 	 * @param mainTask          The main task to run
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
-	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHarewareThreads()
+	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 */
 	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0);
 
@@ -181,12 +183,12 @@ public:
 	/**
 	 * Yields execution to another task until counter == value
 	 *
-	 * @param counter    The counter to check
-	 * @param value      The value to wait for
+	 * @param counter             The counter to check
+	 * @param value               The value to wait for
+	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value);
+	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value, bool pinToCurrentThread = false);
 
-private:
 	/**
 	 * Gets the 0-based index of the current thread
 	 * This is useful for m_tls[GetCurrentThreadIndex()]
@@ -194,6 +196,8 @@ private:
 	 * @return    The index of the current thread
 	 */
 	std::size_t GetCurrentThreadIndex();
+
+private:
 	/**
 	 * Pops the next task off the queue into nextTask. If there are no tasks in the
 	 * the queue, it will return false.

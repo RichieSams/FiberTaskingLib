@@ -92,27 +92,50 @@ void TaskScheduler::FiberStart(void *arg) {
 		// Check if any of the waiting tasks are ready
 		std::size_t waitingFiberIndex = FTL_INVALID_INDEX;
 
-		for (std::size_t i = 0; i < taskScheduler->m_fiberPoolSize; ++i) {
-			// Double lock
-			if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_relaxed)) {
-				continue;
-			}
+		// Check if there are any pinned tasks that are ready
+		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
-			if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_acquire)) {
-				continue;
-			}
-
-			// Found a waiting fiber
-			// Test if it's ready
-			WaitingBundle *bundle = &taskScheduler->m_waitingBundles[i];
+		std::size_t pinnedTaskIndex = FTL_INVALID_INDEX;
+		for (std::size_t i = 0; i < tls.PinnedTasks.size(); i++) {
+			const std::pair<std::size_t, WaitingBundle>& entry = tls.PinnedTasks[i];
+			const WaitingBundle * bundle = &entry.second;
 			if (bundle->Counter->load(std::memory_order_relaxed) != bundle->TargetValue) {
 				continue;
+			} else {
+				pinnedTaskIndex = i;
+				waitingFiberIndex = entry.first;
 			}
-			
-			bool expected = true;
-			if (std::atomic_compare_exchange_weak_explicit(&taskScheduler->m_waitingFibers[i], &expected, false, std::memory_order_release, std::memory_order_relaxed)) {
-				waitingFiberIndex = i;
-				break;
+		}
+
+		// If we found a ready pinned task, remove from list
+		if (waitingFiberIndex != FTL_INVALID_INDEX) {
+			tls.PinnedTasks.erase(tls.PinnedTasks.begin() + pinnedTaskIndex);
+		}
+
+		// Check if there are any global tasks that are ready
+		if (waitingFiberIndex == FTL_INVALID_INDEX) {
+			for (std::size_t i = 0; i < taskScheduler->m_fiberPoolSize; ++i) {
+				// Double lock
+				if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_relaxed)) {
+					continue;
+				}
+
+				if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_acquire)) {
+					continue;
+				}
+
+				// Found a waiting fiber
+				// Test if it's ready
+				WaitingBundle *bundle = &taskScheduler->m_waitingBundles[i];
+				if (!bundle->Counter || bundle->Counter->load(std::memory_order_relaxed) != bundle->TargetValue) {
+					continue;
+				}
+
+				bool expected = true;
+				if (std::atomic_compare_exchange_weak_explicit(&taskScheduler->m_waitingFibers[i], &expected, false, std::memory_order_release, std::memory_order_relaxed)) {
+					waitingFiberIndex = i;
+					break;
+				}
 			}
 		}
 
@@ -396,7 +419,7 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value) {
+void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value, bool pinToCurrentThread) {
 	// Fast out
 	if (counter->load(std::memory_order_relaxed) == value) {
 		return;
@@ -405,9 +428,15 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, u
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 
 	// Fill in the WaitingBundle data
-	WaitingBundle &bundle = m_waitingBundles[tls.CurrentFiberIndex];
-	bundle.Counter = counter.get();
-	bundle.TargetValue = value;
+	WaitingBundle bundle{ counter.get(), value };
+
+	if (pinToCurrentThread) {
+		// If task is pinned, put WaitingBundle in local array
+		tls.PinnedTasks.push_back(std::make_pair(tls.CurrentFiberIndex, std::move(bundle)));
+	} else { 
+		// If not pinned, put WaitingBundle in global array
+		m_waitingBundles[tls.CurrentFiberIndex] = std::move(bundle);
+	}
 
 	// Get a free fiber
 	std::size_t freeFiberIndex = GetNextFreeFiberIndex();
