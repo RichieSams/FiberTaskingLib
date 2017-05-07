@@ -131,6 +131,8 @@ private:
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
+		/* List of pinned tasks to this thread */
+		std::vector<std::pair<std::size_t, WaitingBundle>> PinnedTasks;
 
 	private:
 		/* Cache-line pad */
@@ -181,10 +183,11 @@ public:
 	/**
 	 * Yields execution to another task until counter == value
 	 *
-	 * @param counter    The counter to check
-	 * @param value      The value to wait for
+	 * @param counter             The counter to check
+	 * @param value               The value to wait for
+	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value);
+	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value, bool pinToCurrentThread = false);
 
 	/**
 	 * Gets the 0-based index of the current thread
