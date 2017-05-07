@@ -186,7 +186,6 @@ public:
 	 */
 	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value);
 
-private:
 	/**
 	 * Gets the 0-based index of the current thread
 	 * This is useful for m_tls[GetCurrentThreadIndex()]
@@ -194,6 +193,8 @@ private:
 	 * @return    The index of the current thread
 	 */
 	std::size_t GetCurrentThreadIndex();
+
+private:
 	/**
 	 * Pops the next task off the queue into nextTask. If there are no tasks in the
 	 * the queue, it will return false.
