@@ -431,10 +431,10 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, u
 	WaitingBundle bundle{ counter.get(), value };
 
 	if (pinToCurrentThread) {
-		// If task is pinned, put WaitingBundle in local queue
+		// If task is pinned, put WaitingBundle in local array
 		tls.PinnedTasks.push_back(std::make_pair(tls.CurrentFiberIndex, std::move(bundle)));
 	} else { 
-		// If not pinned, put it WaitingBundle in global array
+		// If not pinned, put WaitingBundle in global array
 		m_waitingBundles[tls.CurrentFiberIndex] = std::move(bundle);
 	}
 
