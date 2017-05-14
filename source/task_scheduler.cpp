@@ -158,7 +158,9 @@ void TaskScheduler::FiberStart(void *arg) {
 				// Spin
 			} else {
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
-				nextTask.Counter->fetch_sub(1);
+				if (nextTask.Counter != nullptr) {
+					nextTask.Counter->fetch_sub(1);
+				}
 			}
 		}
 	}
@@ -260,28 +262,26 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	return;
 }
 
-std::shared_ptr<std::atomic_uint> TaskScheduler::AddTask(Task task) {
-	std::shared_ptr<std::atomic_uint> counter(new std::atomic_uint());
-	counter->store(1);
+void TaskScheduler::AddTask(Task task, std::atomic_uint *counter) {
+	if (counter != nullptr) {
+		counter->store(1);
+	}
 
 	TaskBundle bundle = {task, counter};
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	tls.TaskQueue.Push(bundle);
-
-	return counter;
 }
 
-std::shared_ptr<std::atomic_uint> TaskScheduler::AddTasks(uint numTasks, Task *tasks) {
-	std::shared_ptr<std::atomic_uint> counter(new std::atomic_uint());
-	counter->store(numTasks);
+void TaskScheduler::AddTasks(uint numTasks, Task *tasks, std::atomic_uint *counter) {
+	if (counter != nullptr) {
+		counter->store(numTasks);
+	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	for (uint i = 0; i < numTasks; ++i) {
 		TaskBundle bundle = {tasks[i], counter};
 		tls.TaskQueue.Push(bundle);
 	}
-
-	return counter;
 }
 
 std::size_t TaskScheduler::GetCurrentThreadIndex() {
@@ -419,7 +419,7 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value, bool pinToCurrentThread) {
+void TaskScheduler::WaitForCounter(std::atomic_uint *counter, uint value, bool pinToCurrentThread) {
 	// Fast out
 	if (counter->load(std::memory_order_relaxed) == value) {
 		return;
@@ -428,7 +428,7 @@ void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, u
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 
 	// Fill in the WaitingBundle data
-	WaitingBundle bundle{ counter.get(), value };
+	WaitingBundle bundle{ counter, value };
 
 	if (pinToCurrentThread) {
 		// If task is pinned, put WaitingBundle in local array

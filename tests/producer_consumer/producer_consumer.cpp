@@ -42,10 +42,11 @@ void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(kNumConsumerTasks, tasks);
+	std::atomic_uint counter;
+	taskScheduler->AddTasks(kNumConsumerTasks, tasks, &counter);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(counter, 0);
+	taskScheduler->WaitForCounter(&counter, 0);
 }
 
 
@@ -57,8 +58,9 @@ void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, voi
 		tasks[i] = { Producer, &globalCounter };
 	}
 
-	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(kNumProducerTasks, tasks);
-	taskScheduler->WaitForCounter(counter, 0);
+	std::atomic_uint counter;
+	taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
+	taskScheduler->WaitForCounter(&counter, 0);
 
 
 	// Test to see that all tasks finished

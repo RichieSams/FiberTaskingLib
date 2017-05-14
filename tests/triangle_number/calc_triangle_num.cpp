@@ -86,10 +86,11 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(numTasks, tasks);
+	std::atomic_uint counter;
+	taskScheduler->AddTasks(numTasks, tasks, &counter);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(counter, 0);
+	taskScheduler->WaitForCounter(&counter, 0);
 
 
 	// Add the results

@@ -98,7 +98,7 @@ private:
 	*/
 	struct TaskBundle {
 		Task TaskToExecute;
-		std::shared_ptr<std::atomic_uint> Counter;
+		std::atomic_uint *Counter;
 	};
 
 	struct ThreadLocalStorage {
@@ -167,18 +167,18 @@ public:
 	/**
 	 * Adds a task to the internal queue.
 	 *
-	 * @param task    The task to queue
-	 * @return        An atomic counter corresponding to this task. Initially it will equal 1. When the task completes, it will be decremented.
+	 * @param task       The task to queue
+	 * @param counter    An atomic counter corresponding to this task. Initially it will be set to 1. When the task completes, it will be decremented.
 	 */
-	std::shared_ptr<std::atomic_uint> AddTask(Task task);
+	void AddTask(Task task, std::atomic_uint *counter = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
 	 * @param numTasks    The number of tasks
 	 * @param tasks       The tasks to queue
-	 * @return            An atomic counter corresponding to the task group as a whole. Initially it will equal numTasks. When each task completes, it will be decremented.
+	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to numTasks. When each task completes, it will be decremented.
 	 */
-	std::shared_ptr<std::atomic_uint> AddTasks(uint numTasks, Task *tasks);
+	void AddTasks(uint numTasks, Task *tasks, std::atomic_uint *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -187,7 +187,7 @@ public:
 	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, uint value, bool pinToCurrentThread = false);
+	void WaitForCounter(std::atomic_uint *counter, uint value, bool pinToCurrentThread = false);
 
 	/**
 	 * Gets the 0-based index of the current thread
