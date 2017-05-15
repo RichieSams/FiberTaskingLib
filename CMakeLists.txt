@@ -50,3 +50,6 @@ add_subdirectory(source)
 if (FTL_BUILD_TESTS)
 	add_subdirectory(tests)
 endif()
+
+# Build benchmakrs
+add_subdirectory(benchmarks)
