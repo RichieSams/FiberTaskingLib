@@ -22,6 +22,7 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
+#include "fiber_tasking_lib/atomic_counter.h"
 
 
  // Constants
@@ -39,7 +40,7 @@ void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	std::atomic_uint counter;
+	FiberTaskingLib::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumConsumerTasks, tasks, &counter);
 	delete[] tasks;
 
@@ -55,7 +56,7 @@ void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, voi
 
 	auto start = std::chrono::high_resolution_clock::now();
 	for (uint i = 0; i < kNumIterations; ++i) {
-		std::atomic_uint counter;
+		FiberTaskingLib::AtomicCounter counter(taskScheduler);
 		taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
 
 		taskScheduler->WaitForCounter(&counter, 0);

@@ -22,6 +22,7 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
+#include "fiber_tasking_lib/atomic_counter.h"
 
 #include <gtest/gtest.h>
 
@@ -86,7 +87,7 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 	}
 
 	// Schedule the tasks and wait for them to complete
-	std::atomic_uint counter;
+	FiberTaskingLib::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(numTasks, tasks, &counter);
 	delete[] tasks;
 

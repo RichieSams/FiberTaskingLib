@@ -31,11 +31,14 @@
 
 #include <atomic>
 #include <vector>
+#include <queue>
 #include <climits>
 #include <memory>
 
 
 namespace FiberTaskingLib {
+
+class AtomicCounter;
 
 /**
  * A class that enables task-based multithreading.
@@ -65,24 +68,6 @@ private:
 	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
 	 */
 	std::atomic<bool> *m_freeFibers;
-	/**
-	  * An array of atomics, which signify if a fiber is waiting for a counter. The indices of m_waitingFibers
-	  * correspond 1 to 1 with m_fibers. So, if m_waitingFibers[i] == true, then m_fibers[i] is waiting for a counter
-	  */
-	std::atomic<bool> *m_waitingFibers;
-
-	/**
-	 * Holds a Counter that is being waited on. Specifically, until Counter == TargetValue
-	 */
-	struct WaitingBundle {
-		std::atomic_uint *Counter;
-		uint TargetValue;
-	};
-	/**
-	  * An array of WaitingBundles, which correspond 1 to 1 with m_waitingFibers. If m_waitingFiber[i] == true,
-	  * m_waitingBundles[i] will contain the data for the waiting fiber in m_fibers[i].
-	  */
-	std::vector<WaitingBundle> m_waitingBundles;
 	
 	std::atomic_bool m_quit;
 	
@@ -98,7 +83,19 @@ private:
 	*/
 	struct TaskBundle {
 		Task TaskToExecute;
-		std::atomic_uint *Counter;
+		AtomicCounter *Counter;
+	};
+
+	struct PinnedWaitingFiberBundle {
+		PinnedWaitingFiberBundle(std::size_t fiberIndex, AtomicCounter *counter, uint targetValue)
+			: FiberIndex(fiberIndex), 
+			  Counter(counter), 
+			  TargetValue(targetValue) {
+		}
+
+		std::size_t FiberIndex;
+		AtomicCounter *Counter;
+		uint TargetValue;
 	};
 
 	struct ThreadLocalStorage {
@@ -108,8 +105,8 @@ private:
 			  OldFiberIndex(FTL_INVALID_INDEX),
 			  OldFiberDestination(FiberDestination::None),
 			  TaskQueue(),
-			  LastSuccessfulSteal(1) {
-		}
+			  LastSuccessfulSteal(1), 
+			  OldFiberStoredFlag(nullptr) { }
 
 	public:
 		/**
@@ -132,7 +129,9 @@ private:
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
 		/* List of pinned tasks to this thread */
-		std::vector<std::pair<std::size_t, WaitingBundle>> PinnedTasks;
+		std::vector<PinnedWaitingFiberBundle> PinnedTasks;
+		std::atomic_bool *OldFiberStoredFlag;
+		std::queue<std::size_t> ReadyFibers;
 
 	private:
 		/* Cache-line pad */
@@ -147,6 +146,8 @@ private:
 	 * their storage using m_tls[GetCurrentThreadIndex()]
 	 */
 	ThreadLocalStorage *m_tls;
+
+	friend class AtomicCounter;
 
 
 public:
@@ -170,7 +171,7 @@ public:
 	 * @param task       The task to queue
 	 * @param counter    An atomic counter corresponding to this task. Initially it will be set to 1. When the task completes, it will be decremented.
 	 */
-	void AddTask(Task task, std::atomic_uint *counter = nullptr);
+	void AddTask(Task task, AtomicCounter *counter = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
@@ -178,7 +179,7 @@ public:
 	 * @param tasks       The tasks to queue
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(uint numTasks, Task *tasks, std::atomic_uint *counter = nullptr);
+	void AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -187,7 +188,7 @@ public:
 	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(std::atomic_uint *counter, uint value, bool pinToCurrentThread = false);
+	void WaitForCounter(AtomicCounter *counter, uint value, bool pinToCurrentThread = false);
 
 	/**
 	 * Gets the 0-based index of the current thread
@@ -217,6 +218,11 @@ private:
 	 * The old fiber is the last fiber to run on the thread before the current fiber
 	 */
 	void CleanUpOldFiber();
+
+	/**
+	 * 
+	 */
+	void AddReadyFiber(std::size_t fiberIndex);
 
 	/**
 	 * The threadProc function for all worker threads

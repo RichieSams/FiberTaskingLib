@@ -22,6 +22,7 @@
  */
 
 #include "fiber_tasking_lib/task_scheduler.h"
+#include "fiber_tasking_lib/atomic_counter.h"
 
 
 void EmptyBenchmarkTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
@@ -41,7 +42,7 @@ void EmptyBenchmarkMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 
 	auto start = std::chrono::high_resolution_clock::now();
 	for (uint i = 0; i < kNumIterations; ++i) {
-		std::atomic_uint counter;
+		FiberTaskingLib::AtomicCounter counter(taskScheduler);
 		taskScheduler->AddTasks(kNumTasks, tasks, &counter);
 
 		taskScheduler->WaitForCounter(&counter, 0);

@@ -23,6 +23,8 @@
 
 #include "fiber_tasking_lib/task_scheduler.h"
 
+#include "fiber_tasking_lib/atomic_counter.h"
+
 
 namespace FiberTaskingLib {
 
@@ -89,59 +91,30 @@ void TaskScheduler::FiberStart(void *arg) {
 		// Clean up from the last fiber to run on this thread
 		taskScheduler->CleanUpOldFiber();
 
-		// Check if any of the waiting tasks are ready
+		// Check if there are any pinned fibers that are ready
 		std::size_t waitingFiberIndex = FTL_INVALID_INDEX;
-
-		// Check if there are any pinned tasks that are ready
 		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
-		std::size_t pinnedTaskIndex = FTL_INVALID_INDEX;
 		for (std::size_t i = 0; i < tls.PinnedTasks.size(); i++) {
-			const std::pair<std::size_t, WaitingBundle>& entry = tls.PinnedTasks[i];
-			const WaitingBundle * bundle = &entry.second;
-			if (bundle->Counter->load(std::memory_order_relaxed) != bundle->TargetValue) {
-				continue;
-			} else {
-				pinnedTaskIndex = i;
-				waitingFiberIndex = entry.first;
+			const PinnedWaitingFiberBundle *bundle = &tls.PinnedTasks[i];
+			if (bundle->Counter->Load() == bundle->TargetValue) {
+				waitingFiberIndex = bundle->FiberIndex;
+				tls.PinnedTasks.erase(tls.PinnedTasks.begin() + i);
+				
+				break;
 			}
 		}
 
-		// If we found a ready pinned task, remove from list
-		if (waitingFiberIndex != FTL_INVALID_INDEX) {
-			tls.PinnedTasks.erase(tls.PinnedTasks.begin() + pinnedTaskIndex);
-		}
-
-		// Check if there are any global tasks that are ready
+		// If there aren't any pinned fibers, check if there are any ready fibers
 		if (waitingFiberIndex == FTL_INVALID_INDEX) {
-			for (std::size_t i = 0; i < taskScheduler->m_fiberPoolSize; ++i) {
-				// Double lock
-				if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_relaxed)) {
-					continue;
-				}
-
-				if (!taskScheduler->m_waitingFibers[i].load(std::memory_order_acquire)) {
-					continue;
-				}
-
-				// Found a waiting fiber
-				// Test if it's ready
-				WaitingBundle *bundle = &taskScheduler->m_waitingBundles[i];
-				if (!bundle->Counter || bundle->Counter->load(std::memory_order_relaxed) != bundle->TargetValue) {
-					continue;
-				}
-
-				bool expected = true;
-				if (std::atomic_compare_exchange_weak_explicit(&taskScheduler->m_waitingFibers[i], &expected, false, std::memory_order_release, std::memory_order_relaxed)) {
-					waitingFiberIndex = i;
-					break;
-				}
+			if (!tls.ReadyFibers.empty()) {
+				waitingFiberIndex = tls.ReadyFibers.front();
+				tls.ReadyFibers.pop();
 			}
 		}
 
 		if (waitingFiberIndex != FTL_INVALID_INDEX) {
 			// Found a waiting task that is ready to continue
-			ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
 			tls.OldFiberIndex = tls.CurrentFiberIndex;
 			tls.CurrentFiberIndex = waitingFiberIndex;
@@ -159,7 +132,7 @@ void TaskScheduler::FiberStart(void *arg) {
 			} else {
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
 				if (nextTask.Counter != nullptr) {
-					nextTask.Counter->fetch_sub(1);
+					nextTask.Counter->FetchSub(1);
 				}
 			}
 		}
@@ -182,14 +155,12 @@ TaskScheduler::TaskScheduler()
 	  m_fiberPoolSize(0), 
 	  m_fibers(nullptr), 
 	  m_freeFibers(nullptr), 
-	  m_waitingFibers(nullptr),
 	  m_tls(nullptr) {
 }
 
 TaskScheduler::~TaskScheduler() {
 	delete[] m_fibers;
 	delete[] m_freeFibers;
-	delete[] m_waitingFibers;
 	delete[] m_tls;
 }
 
@@ -198,14 +169,11 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_fiberPoolSize = fiberPoolSize;
 	m_fibers = new Fiber[fiberPoolSize];
 	m_freeFibers = new std::atomic<bool>[fiberPoolSize];
-	m_waitingFibers = new std::atomic<bool>[fiberPoolSize];
 
 	for (uint i = 0; i < fiberPoolSize; ++i) {
 		m_fibers[i] = std::move(Fiber(512000, FiberStart, this));
 		m_freeFibers[i].store(true, std::memory_order_release);
-		m_waitingFibers[i].store(false, std::memory_order_release);
 	}
-	m_waitingBundles.resize(fiberPoolSize);
 
 	if (threadPoolSize == 0) {
 		// 1 thread for each logical processor
@@ -262,9 +230,9 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	return;
 }
 
-void TaskScheduler::AddTask(Task task, std::atomic_uint *counter) {
+void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
 	if (counter != nullptr) {
-		counter->store(1);
+		counter->Store(1);
 	}
 
 	TaskBundle bundle = {task, counter};
@@ -272,9 +240,9 @@ void TaskScheduler::AddTask(Task task, std::atomic_uint *counter) {
 	tls.TaskQueue.Push(bundle);
 }
 
-void TaskScheduler::AddTasks(uint numTasks, Task *tasks, std::atomic_uint *counter) {
+void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter) {
 	if (counter != nullptr) {
-		counter->store(numTasks);
+		counter->Store(numTasks);
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
@@ -409,7 +377,7 @@ void TaskScheduler::CleanUpOldFiber() {
 		tls.OldFiberIndex = FTL_INVALID_INDEX;
 		break;
 	case FiberDestination::ToWaiting:
-		m_waitingFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
+		tls.OldFiberStoredFlag->store(true, std::memory_order_release);
 		tls.OldFiberDestination = FiberDestination::None;
 		tls.OldFiberIndex = FTL_INVALID_INDEX;
 		break;
@@ -419,24 +387,19 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::WaitForCounter(std::atomic_uint *counter, uint value, bool pinToCurrentThread) {
+void TaskScheduler::AddReadyFiber(std::size_t fiberIndex) {
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	tls.ReadyFibers.push(fiberIndex);
+}
+
+void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinToCurrentThread) {
 	// Fast out
-	if (counter->load(std::memory_order_relaxed) == value) {
+	if (counter->Load() == value) {
 		return;
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-
-	// Fill in the WaitingBundle data
-	WaitingBundle bundle{ counter, value };
-
-	if (pinToCurrentThread) {
-		// If task is pinned, put WaitingBundle in local array
-		tls.PinnedTasks.push_back(std::make_pair(tls.CurrentFiberIndex, std::move(bundle)));
-	} else { 
-		// If not pinned, put WaitingBundle in global array
-		m_waitingBundles[tls.CurrentFiberIndex] = std::move(bundle);
-	}
+	std::size_t currentFiberIndex = tls.CurrentFiberIndex;
 
 	// Get a free fiber
 	std::size_t freeFiberIndex = GetNextFreeFiberIndex();
@@ -444,13 +407,24 @@ void TaskScheduler::WaitForCounter(std::atomic_uint *counter, uint value, bool p
 	// Clean up the old fiber
 	CleanUpOldFiber();
 
-	// Fill in tls
-	tls.OldFiberIndex = tls.CurrentFiberIndex;
-	tls.CurrentFiberIndex = freeFiberIndex;
-	tls.OldFiberDestination = FiberDestination::ToWaiting;
+	if (pinToCurrentThread) {
+		// If task is pinned, put WaitingBundle in local array
+		tls.PinnedTasks.emplace_back(currentFiberIndex, counter, value);
+	} else {
+		// If not pinned, ask the counter to track it
+		std::atomic_bool *storedFlag = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value);
+		// Early out if counter was satisfied
+		if (!storedFlag) return;
+
+		// Fill in tls
+		tls.OldFiberIndex = currentFiberIndex;
+		tls.CurrentFiberIndex = freeFiberIndex;
+		tls.OldFiberDestination = FiberDestination::ToWaiting;
+		tls.OldFiberStoredFlag = storedFlag;
+	}
 
 	// Switch
-	m_fibers[tls.OldFiberIndex].SwitchToFiber(&m_fibers[freeFiberIndex]);
+	m_fibers[currentFiberIndex].SwitchToFiber(&m_fibers[freeFiberIndex]);
 
 	// And we're back
 }

@@ -68,6 +68,8 @@ SetSourceGroup(NAME Core
 	PREFIX FTL
 	SOURCE_FILES 
 				 ../include/fiber_tasking_lib/task.h
+	             ../include/fiber_tasking_lib/atomic_counter.h
+	             atomic_counter.cpp
 	             ../include/fiber_tasking_lib/task_scheduler.h
 				 ../include/fiber_tasking_lib/typedefs.h
 	             task_scheduler.cpp
