@@ -42,6 +42,24 @@ void AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
 		m_waitingFibers[i].InUse.store(false, std::memory_order_release);
 		
+		// Events are now being tracked
+
+
+		// Now we do a check of the waiting fiber, to see if we reached the target value while we were storing everything
+		if (m_waitingFibers[i].InUse.load(std::memory_order_relaxed)) {
+			return;
+		}
+
+		if (m_waitingFibers[i].TargetValue == m_value.load(std::memory_order_relaxed)) {
+			expected = false;
+			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+				// Failed the race
+				continue;
+			}
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			m_freeSlots[i].store(true, std::memory_order_release);
+		}
+
 		return;
 	}
 
