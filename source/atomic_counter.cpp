@@ -28,25 +28,45 @@
 
 namespace FiberTaskingLib {
 
-std::atomic_bool *AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue) {
-	std::lock_guard<std::mutex> lockGuard(m_lock);
-	
-	if (m_value == targetValue) return nullptr; // if the counter is ready, do not enqueue fiber, early out
+void AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag) {
+	for (uint i = 0; i < 4; ++i) {
+		bool expected = true;
+		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+			// Failed the race
+			continue;
+		}
 
-	m_waitingFibers.emplace_back(fiberIndex, targetValue, false);
-	return m_waitingFibers.back().StoredFlag.get();
+		// We found a free slot
+		m_waitingFibers[i].FiberIndex = fiberIndex;
+		m_waitingFibers[i].TargetValue = targetValue;
+		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
+		m_waitingFibers[i].InUse.store(false, std::memory_order_release);
+		
+		return;
+	}
+
+
+	// BARF. We ran out of slots
+	assert(false);
 }
 
-void AtomicCounter::CheckWaitingFibers() {
-	for (auto iter = m_waitingFibers.begin(); iter != m_waitingFibers.end(); ) {
-		if (m_value == iter->TargetValue) {
-			while (!iter->StoredFlag->load(std::memory_order_acquire)) {
-				// spin wait for fiber to be ready
+void AtomicCounter::CheckWaitingFibers(int value) {
+	for (uint i = 0; i < 4; ++i) {
+		if (m_freeSlots[i].load(std::memory_order_acquire)) {
+			continue;
+		}
+		if (m_waitingFibers[i].InUse.load(std::memory_order_relaxed)) {
+			continue;
+		}
+
+		if (m_waitingFibers[i].TargetValue == value) {
+			bool expected = false;
+			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+				// Failed the race
+				continue;
 			}
-			m_taskScheduler->AddReadyFiber(iter->FiberIndex);
-			iter = m_waitingFibers.erase(iter);
-		} else {
-			++iter;
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			m_freeSlots[i].store(true, std::memory_order_release);
 		}
 	}
 }

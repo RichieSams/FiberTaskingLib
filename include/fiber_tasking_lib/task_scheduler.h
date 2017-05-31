@@ -31,7 +31,6 @@
 
 #include <atomic>
 #include <vector>
-#include <queue>
 #include <climits>
 #include <memory>
 
@@ -131,7 +130,7 @@ private:
 		/* List of pinned tasks to this thread */
 		std::vector<PinnedWaitingFiberBundle> PinnedTasks;
 		std::atomic_bool *OldFiberStoredFlag;
-		std::queue<std::size_t> ReadyFibers;
+		std::vector<std::pair<std::size_t, std::atomic_bool *> > ReadyFibers;
 
 	private:
 		/* Cache-line pad */
@@ -222,7 +221,7 @@ private:
 	/**
 	 * 
 	 */
-	void AddReadyFiber(std::size_t fiberIndex);
+	void AddReadyFiber(std::size_t fiberIndex, std::atomic_bool *fiberStoredFlag);
 
 	/**
 	 * The threadProc function for all worker threads

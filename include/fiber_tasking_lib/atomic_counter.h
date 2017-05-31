@@ -38,78 +38,58 @@ class TaskScheduler;
 class AtomicCounter {
 public:
 	AtomicCounter(TaskScheduler *taskScheduler, uint value = 0) 
-		: m_taskScheduler(taskScheduler),
-		  m_value(value) {
-	}
-	~AtomicCounter() {
-		uint *foo = new uint(5);
-		delete foo;
+			: m_taskScheduler(taskScheduler),
+			  m_value(value) {
+		for (uint i = 0; i < 4; ++i) {
+			m_freeSlots[i].store(true);
+		}
 	}
 
 private:
 	TaskScheduler *m_taskScheduler;
-	uint m_value;
+	std::atomic_uint m_value;
+
+	std::atomic_bool m_freeSlots[4];
 
 	struct WaitingFiberBundle {
-		WaitingFiberBundle(std::size_t fiberIndex, uint targetValue, bool storedFlag) 
-			: FiberIndex(fiberIndex),
-			  TargetValue(targetValue),
-			  StoredFlag(std::make_unique<std::atomic_bool>(storedFlag)) {
-		}
-		WaitingFiberBundle(WaitingFiberBundle &&other) noexcept {
-			std::swap(FiberIndex, other.FiberIndex);
-			std::swap(TargetValue, other.TargetValue);
-			StoredFlag = std::make_unique<std::atomic_bool>(other.StoredFlag->load(std::memory_order_relaxed));
-		}
-		WaitingFiberBundle &operator=(WaitingFiberBundle &&other) noexcept {
-			std::swap(FiberIndex, other.FiberIndex);
-			std::swap(TargetValue, other.TargetValue);
-			StoredFlag = std::make_unique<std::atomic_bool>(other.StoredFlag->load(std::memory_order_relaxed));
-
-			return *this;
+		WaitingFiberBundle()
+			: InUse(true),
+			  FiberIndex(0),
+			  TargetValue(0), 
+			  FiberStoredFlag(nullptr) {
 		}
 
+		std::atomic_bool InUse;
 		std::size_t FiberIndex;
 		uint TargetValue;
-		std::unique_ptr<std::atomic_bool> StoredFlag;
+		std::atomic_bool *FiberStoredFlag;
 	};
-	std::vector <WaitingFiberBundle> m_waitingFibers;
-	std::mutex m_lock;
+	WaitingFiberBundle m_waitingFibers[4];
 
 public:
-	uint Load() {
-		std::lock_guard<std::mutex> guard(m_lock);
-
-		return m_value;
+	uint Load(std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		return m_value.load(memoryOrder);
 	}
-	void Store(uint x) {
-		std::lock_guard<std::mutex> guard(m_lock);
-
-		m_value = x;
-		CheckWaitingFibers();
+	void Store(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		m_value.store(x, memoryOrder);
+		CheckWaitingFibers(x);
 	}
-	uint FetchAdd(uint x) {
-		std::lock_guard<std::mutex> guard(m_lock);
-
-		uint prev = m_value;
-		m_value += x;
-		CheckWaitingFibers();
+	uint FetchAdd(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		uint prev = m_value.fetch_add(x, memoryOrder);
+		CheckWaitingFibers(prev + x);
 
 		return prev;
 	}
-	uint FetchSub(uint x) {
-		std::lock_guard<std::mutex> guard(m_lock);
-
-		uint prev = m_value;
-		m_value -= x;
-		CheckWaitingFibers();
+	uint FetchSub(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		uint prev = m_value.fetch_sub(x, memoryOrder);
+		CheckWaitingFibers(prev - x);
 
 		return prev;
 	}
-	std::atomic_bool *AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue);
+	void AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag);
 
 private:
-	void CheckWaitingFibers();
+	void CheckWaitingFibers(int value);
 };
 
 } // End of namespace FiberTaskingLib
