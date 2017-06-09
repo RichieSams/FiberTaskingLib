@@ -14,6 +14,7 @@ project(FiberTaskingLib)
 
 # Options
 option(FTL_BUILD_TESTS "Build FiberTaskingLib tests" ON)
+option(FTL_BUILD_BENCHMARKS "Build FiberTaskingLib benchmarks" ON)
 option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
 
@@ -51,5 +52,7 @@ if (FTL_BUILD_TESTS)
 	add_subdirectory(tests)
 endif()
 
-# Build benchmakrs
-add_subdirectory(benchmarks)
+# Build benchmarks
+if (FTL_BUILD_BENCHMARKS)
+	add_subdirectory(benchmarks)
+endif()

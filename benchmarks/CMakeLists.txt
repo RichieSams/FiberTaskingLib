@@ -29,7 +29,7 @@ SetSourceGroup(NAME Root
 )
 
 add_executable(FiberTaskingLib-benchmark-empty ${FTL_BENCHMARK_EMPTY_ROOT})
-target_link_libraries(FiberTaskingLib-benchmark-empty FiberTaskingLib)
+target_link_libraries(FiberTaskingLib-benchmark-empty FiberTaskingLib nonius)
 
 
 SetSourceGroup(NAME Root
@@ -38,4 +38,4 @@ SetSourceGroup(NAME Root
 )
 
 add_executable(FiberTaskingLib-benchmark-producer_consumer ${FTL_BENCHMARK_PRODUCER_CONSUMER_ROOT})
-target_link_libraries(FiberTaskingLib-benchmark-producer_consumer FiberTaskingLib)
+target_link_libraries(FiberTaskingLib-benchmark-producer_consumer FiberTaskingLib nonius)
