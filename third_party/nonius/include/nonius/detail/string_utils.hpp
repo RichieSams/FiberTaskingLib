@@ -50,8 +50,8 @@ namespace nonius {
     template <typename PredicateT>
     std::string trim_copy_if(std::string const& input, PredicateT predicate) {
         const auto begin = std::find_if_not(input.begin(), input.end(), predicate);
-        const auto end = std::find_if(begin, input.end(), predicate);
-        return std::string(begin, end);
+        const auto end = std::find_if_not(input.crbegin(), input.crend(), predicate);
+        return std::string(begin, end.base());
     }
 
     std::string trim_copy(std::string const& input) {
