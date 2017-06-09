@@ -24,36 +24,40 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 #include "fiber_tasking_lib/atomic_counter.h"
 
+#include <nonius/nonius.hpp>
+
+
+ // Constants
+const uint kNumTasks = 65000;
+const uint kNumIterations = 1;
 
 void EmptyBenchmarkTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	// No-Op
 }
 
 void EmptyBenchmarkMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
-	// Constants
-	const uint kNumTasks = 65000;
-	const uint kNumIterations = 50;
-	
-	// Create the tasks
+	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
+
 	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumTasks];
 	for (uint i = 0; i < kNumTasks; ++i) {
 		tasks[i] = {EmptyBenchmarkTask, nullptr};
 	}
 
-	auto start = std::chrono::high_resolution_clock::now();
-	for (uint i = 0; i < kNumIterations; ++i) {
-		FiberTaskingLib::AtomicCounter counter(taskScheduler);
-		taskScheduler->AddTasks(kNumTasks, tasks, &counter);
+	meter.measure([=] {
+		for (uint i = 0; i < kNumIterations; ++i) {
+			FiberTaskingLib::AtomicCounter counter(taskScheduler);
+			taskScheduler->AddTasks(kNumTasks, tasks, &counter);
 
-		taskScheduler->WaitForCounter(&counter, 0);
-	}
-	std::chrono::duration<float, std::milli> total = std::chrono::high_resolution_clock::now() - start;
-	float average = total.count() / kNumIterations;
-
-	printf("Total time: %.4fms\nNumber of iterations: %d\nAverage time: %.4fms\n", total.count(), kNumIterations, average);
+			taskScheduler->WaitForCounter(&counter, 0);
+		}
+	});
+	
+	// Cleanup
+	delete[] tasks;
 }
 
-int main(int argc, char **argv) {
-	FiberTaskingLib::TaskScheduler taskScheduler;
-	taskScheduler.Run(20, EmptyBenchmarkMainTask);
-}
+NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
+	FiberTaskingLib::TaskScheduler* taskScheduler = new FiberTaskingLib::TaskScheduler();
+	taskScheduler->Run(20, EmptyBenchmarkMainTask, &meter);
+	delete taskScheduler;
+});

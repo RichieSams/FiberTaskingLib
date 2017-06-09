@@ -24,18 +24,27 @@
 include(SetSourceGroup)
  
 SetSourceGroup(NAME Root
-	PREFIX FTL_BENCHMARK_EMPTY
-	SOURCE_FILES empty/main.cpp
+	PREFIX FTL_BENCHMARK
+	SOURCE_FILES main.cpp
 )
 
-add_executable(FiberTaskingLib-benchmark-empty ${FTL_BENCHMARK_EMPTY_ROOT})
-target_link_libraries(FiberTaskingLib-benchmark-empty FiberTaskingLib nonius)
-
-
-SetSourceGroup(NAME Root
-	PREFIX FTL_BENCHMARK_PRODUCER_CONSUMER
-	SOURCE_FILES producer_consumer/main.cpp
+SetSourceGroup(NAME Empty
+	PREFIX FTL_BENCHMARK
+	SOURCE_FILES empty/empty.cpp
 )
 
-add_executable(FiberTaskingLib-benchmark-producer_consumer ${FTL_BENCHMARK_PRODUCER_CONSUMER_ROOT})
-target_link_libraries(FiberTaskingLib-benchmark-producer_consumer FiberTaskingLib nonius)
+SetSourceGroup(NAME "Producer Consumer"
+	PREFIX FTL_BENCHMARK
+	SOURCE_FILES producer_consumer/producer_consumer.cpp
+)
+
+
+set(FTL_BENCHMARK_SRC
+	${FTL_BENCHMARK_ROOT}
+	${FTL_BENCHMARK_EMPTY}
+	${FTL_BENCHMARK_PRODUCER_CONSUMER}
+)
+
+
+add_executable(FiberTaskingLib-benchmark ${FTL_BENCHMARK_SRC})
+target_link_libraries(FiberTaskingLib-benchmark FiberTaskingLib nonius)

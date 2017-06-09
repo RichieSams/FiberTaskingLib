@@ -24,11 +24,13 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 #include "fiber_tasking_lib/atomic_counter.h"
 
+#include <nonius/nonius.hpp>
+
 
  // Constants
 const uint kNumProducerTasks = 100u;
 const uint kNumConsumerTasks = 1000u;
-const uint kNumIterations = 50;
+const uint kNumIterations = 1;
 
 void Consumer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 	// No-Op
@@ -49,25 +51,28 @@ void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 
 
 void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
-	FiberTaskingLib::Task tasks[kNumProducerTasks];
+	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
+
+	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumProducerTasks];
 	for (uint i = 0; i < kNumProducerTasks; ++i) {
-		tasks[i] = { Producer, nullptr };
+		tasks[i] = {Producer, nullptr};
 	}
+	
+	meter.measure([=] {
+		for (uint i = 0; i < kNumIterations; ++i) {
+			FiberTaskingLib::AtomicCounter counter(taskScheduler);
+			taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
 
-	auto start = std::chrono::high_resolution_clock::now();
-	for (uint i = 0; i < kNumIterations; ++i) {
-		FiberTaskingLib::AtomicCounter counter(taskScheduler);
-		taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
+			taskScheduler->WaitForCounter(&counter, 0);
+		}
+	});
 
-		taskScheduler->WaitForCounter(&counter, 0);
-	}
-	std::chrono::duration<float, std::milli> total = std::chrono::high_resolution_clock::now() - start;
-	float average = total.count() / kNumIterations;
-
-	printf("Total time: %.4fms\nNumber of iterations: %d\nAverage time: %.4fms\n", total.count(), kNumIterations, average);
+	// Cleanup
+	delete[] tasks;
 }
 
-int main(int argc, char **argv) {
-	FiberTaskingLib::TaskScheduler taskScheduler;
-	taskScheduler.Run(kNumProducerTasks + 20, ProducerConsumerMainTask);
-}
+NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
+	FiberTaskingLib::TaskScheduler* taskScheduler = new FiberTaskingLib::TaskScheduler();
+	taskScheduler->Run(kNumProducerTasks + 20, ProducerConsumerMainTask, &meter);
+	delete taskScheduler;
+});
