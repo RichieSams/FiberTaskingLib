@@ -1,0 +1,116 @@
+body {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+}
+
+.plotly .modebar {
+    margin-top: 2em !important;
+}
+
+#header {
+    background-color: black;
+    z-index: 2;
+    position: absolute;
+    left: 0;
+    right: 0;
+    color: white;
+    font-family: monospace;
+    padding-left: 0;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 2em;
+}
+
+.select {
+    position: relative;
+    display: inline-block;
+    font-size: 1em;
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.select .arr {
+    background: #000;
+    bottom: 5px;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 0px;
+    pointer-events: none;
+}
+
+.select .arr:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    margin-top: -5px;
+    pointer-events: none;
+    border-top: 10px solid white;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.select .arr:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    margin-top: -5px;
+    pointer-events: none;
+    border-top: 6px solid black;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+}
+
+.select select {
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: block;
+    padding: 0 3em 0 1.5em;
+    margin: 0.3em;
+
+    transition: border-color 0.2s;
+    border: 2px solid #aaa;
+    border-radius: 0px;
+
+    background: black;
+    color: white;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: inherit;
+}
+
+.select select:focus {
+    border: 2px solid white;
+    color: white;
+}
+
+#plot {
+    position: absolute;
+    min-width: 300px;
+    min-height: 200px;
+    left: 0;
+    right: 0;
+    top: 2em;
+    bottom: 1em;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-family: monospace;
+    font-size: 0.9em;
+    text-align: center;
+    text-transform: lowercase;
+    background-color: #bbb;
+    line-height: 2em;
+}
