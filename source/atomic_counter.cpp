@@ -69,7 +69,7 @@ void AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 	assert(false);
 }
 
-void AtomicCounter::CheckWaitingFibers(int value) {
+void AtomicCounter::CheckWaitingFibers(uint value) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;

@@ -93,7 +93,7 @@ public:
 	void AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag);
 
 private:
-	void CheckWaitingFibers(int value);
+	void CheckWaitingFibers(uint value);
 };
 
 } // End of namespace FiberTaskingLib
