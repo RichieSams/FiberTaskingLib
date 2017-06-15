@@ -36,11 +36,14 @@ namespace FiberTaskingLib {
 class TaskScheduler;
 
 class AtomicCounter {
+
+#define NUM_WAITING_FIBER_SLOTS 4
+
 public:
 	AtomicCounter(TaskScheduler *taskScheduler, uint value = 0) 
 			: m_taskScheduler(taskScheduler),
 			  m_value(value) {
-		for (uint i = 0; i < 4; ++i) {
+		for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 			m_freeSlots[i].store(true);
 		}
 	}
@@ -49,7 +52,8 @@ private:
 	TaskScheduler *m_taskScheduler;
 	std::atomic_uint m_value;
 
-	std::atomic_bool m_freeSlots[4];
+	
+	std::atomic_bool m_freeSlots[NUM_WAITING_FIBER_SLOTS];
 
 	struct WaitingFiberBundle {
 		WaitingFiberBundle()
@@ -64,7 +68,7 @@ private:
 		uint TargetValue;
 		std::atomic_bool *FiberStoredFlag;
 	};
-	WaitingFiberBundle m_waitingFibers[4];
+	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
 
 public:
 	uint Load(std::memory_order memoryOrder = std::memory_order_seq_cst) {
