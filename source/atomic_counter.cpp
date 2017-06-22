@@ -40,7 +40,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 		m_waitingFibers[i].FiberIndex = fiberIndex;
 		m_waitingFibers[i].TargetValue = targetValue;
 		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
-		m_waitingFibers[i].InUse.store(false, std::memory_order_release);
+		m_waitingFibers[i].InUse.store(false, std::memory_order_seq_cst);
 		
 		// Events are now being tracked
 
