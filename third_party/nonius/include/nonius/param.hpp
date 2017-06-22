@@ -100,7 +100,8 @@ public:
     friend bool operator==(const param& x, const param& y) { return x.impl_->eq(y); }
 
     param parse(std::string const& s) const {
-        auto ss = std::stringstream{s};
+		std::stringstream ss;
+		ss << s;
         auto cpy = *this;
         ss.exceptions(std::ios::failbit);
         ss >> cpy;
