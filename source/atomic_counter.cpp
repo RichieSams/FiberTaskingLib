@@ -28,7 +28,7 @@
 
 namespace FiberTaskingLib {
 
-bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag) {
+bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		bool expected = true;
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst, std::memory_order_relaxed)) {

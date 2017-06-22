@@ -54,7 +54,7 @@ private:
 	std::atomic_uint m_value;
 
 	
-	std::atomic_bool m_freeSlots[NUM_WAITING_FIBER_SLOTS];
+	std::atomic<bool> m_freeSlots[NUM_WAITING_FIBER_SLOTS];
 
 	struct WaitingFiberBundle {
 		WaitingFiberBundle()
@@ -64,10 +64,10 @@ private:
 			  FiberStoredFlag(nullptr) {
 		}
 
-		std::atomic_bool InUse;
+		std::atomic<bool> InUse;
 		std::size_t FiberIndex;
 		uint TargetValue;
-		std::atomic_bool *FiberStoredFlag;
+		std::atomic<bool> *FiberStoredFlag;
 	};
 	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
 
@@ -92,7 +92,7 @@ public:
 		return prev;
 	}
 
-	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag);
+	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag);
 
 private:
 	void CheckWaitingFibers(uint value);

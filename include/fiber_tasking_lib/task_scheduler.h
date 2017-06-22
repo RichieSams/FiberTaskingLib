@@ -68,7 +68,7 @@ private:
 	 */
 	std::atomic<bool> *m_freeFibers;
 	
-	std::atomic_bool m_quit;
+	std::atomic<bool> m_quit;
 	
 	enum class FiberDestination {
 		None = 0,
@@ -129,8 +129,8 @@ private:
 		std::size_t LastSuccessfulSteal;
 		/* List of pinned tasks to this thread */
 		std::vector<PinnedWaitingFiberBundle> PinnedTasks;
-		std::atomic_bool *OldFiberStoredFlag;
-		std::vector<std::pair<std::size_t, std::atomic_bool *> > ReadyFibers;
+		std::atomic<bool> *OldFiberStoredFlag;
+		std::vector<std::pair<std::size_t, std::atomic<bool> *> > ReadyFibers;
 
 	private:
 		/* Cache-line pad */
@@ -221,7 +221,7 @@ private:
 	/**
 	 * 
 	 */
-	void AddReadyFiber(std::size_t fiberIndex, std::atomic_bool *fiberStoredFlag);
+	void AddReadyFiber(std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
 
 	/**
 	 * The threadProc function for all worker threads

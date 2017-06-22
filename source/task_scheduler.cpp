@@ -383,7 +383,7 @@ void TaskScheduler::CleanUpOldFiber() {
 		break;
 	case FiberDestination::ToWaiting:
 		// The waiting fibers are stored directly in their counters
-		// They have an atomic_bool that signals whether the waiting fiber can be consumed if it's ready
+		// They have an atomic<bool> that signals whether the waiting fiber can be consumed if it's ready
 		// We just have to set it to true
 		tls.OldFiberStoredFlag->store(true, std::memory_order_relaxed);
 		tls.OldFiberDestination = FiberDestination::None;
@@ -395,7 +395,7 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(std::size_t fiberIndex, std::atomic_bool *fiberStoredFlag) {
+void TaskScheduler::AddReadyFiber(std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag) {
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	tls.ReadyFibers.emplace_back(fiberIndex, fiberStoredFlag);
 }
@@ -417,7 +417,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 		tls.PinnedTasks.emplace_back(currentFiberIndex, counter, value);
 	} else {
 		// If not pinned, ask the counter to track it
-		std::atomic_bool *fiberStoredFlag = new std::atomic_bool(false);
+		std::atomic<bool> *fiberStoredFlag = new std::atomic<bool>(false);
 		bool alreadyDone = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag);
 
 		// The counter finished while we were trying to put it in the waiting list
