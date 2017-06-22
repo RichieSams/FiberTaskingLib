@@ -45,6 +45,7 @@ public:
 			  m_value(value) {
 		for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 			m_freeSlots[i].store(true);
+			m_waitingFibers[i].InUse.store(true);
 		}
 	}
 
