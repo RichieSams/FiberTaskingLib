@@ -84,7 +84,7 @@ namespace nonius {
             int nsamples = static_cast<int>(std::ceil(time_limit / r.elapsed));
             times.reserve(nsamples);
             std::generate_n(std::back_inserter(times), nsamples, [time_clock, &r]{
-                        return (time_clock(r.iterations) / r.iterations).count();
+                        return static_cast<double>((time_clock(r.iterations) / r.iterations).count());
                     });
             return {
                 FloatDuration<Clock>(mean(times.begin(), times.end())),
