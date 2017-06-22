@@ -36,11 +36,11 @@ namespace nonius {
     };
     } // namespace detail
 
-    detail::is_spaceF is_space() { return detail::is_spaceF {}; }
+    inline detail::is_spaceF is_space() { return detail::is_spaceF {}; }
 
-    detail::is_any_ofF is_any_of(const char* chars) { return detail::is_any_ofF{chars}; }
+    inline detail::is_any_ofF is_any_of(const char* chars) { return detail::is_any_ofF{chars}; }
 
-    bool starts_with(std::string const& input, std::string const& test) {
+    inline bool starts_with(std::string const& input, std::string const& test) {
         if (test.size() <= input.size()) {
             return std::equal(test.begin(), test.end(), input.begin());
         }
@@ -54,7 +54,7 @@ namespace nonius {
         return std::string(begin, end.base());
     }
 
-    std::string trim_copy(std::string const& input) {
+    inline std::string trim_copy(std::string const& input) {
         return trim_copy_if(input, is_space());
     }
 
