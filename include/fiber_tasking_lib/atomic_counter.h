@@ -91,7 +91,8 @@ public:
 
 		return prev;
 	}
-	void AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag);
+
+	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag);
 
 private:
 	void CheckWaitingFibers(uint value);

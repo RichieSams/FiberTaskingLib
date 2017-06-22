@@ -418,7 +418,15 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 	} else {
 		// If not pinned, ask the counter to track it
 		std::atomic_bool *fiberStoredFlag = new std::atomic_bool(false);
-		counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag);
+		bool alreadyDone = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag);
+
+		// The counter finished while we were trying to put it in the waiting list
+		// Just clean up and trivially return
+		if (alreadyDone) {
+			delete fiberStoredFlag;
+			m_freeFibers[freeFiberIndex].store(true, std::memory_order_release);
+			return;
+		}
 
 		// Fill in tls
 		tls.OldFiberIndex = currentFiberIndex;

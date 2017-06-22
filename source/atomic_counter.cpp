@@ -28,7 +28,7 @@
 
 namespace FiberTaskingLib {
 
-void AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag) {
+bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic_bool *fiberStoredFlag) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		bool expected = true;
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst, std::memory_order_relaxed)) {
@@ -46,27 +46,30 @@ void AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 
 
 		// Now we do a check of the waiting fiber, to see if we reached the target value while we were storing everything
-		if (m_waitingFibers[i].InUse.load(std::memory_order_relaxed)) {
-			return;
+		uint value = m_value.load(std::memory_order_relaxed);
+		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
+			return false;
 		}
 
-		if (m_waitingFibers[i].TargetValue == m_value.load(std::memory_order_relaxed)) {
+		if (m_waitingFibers[i].TargetValue == value) {
 			expected = false;
 			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst, std::memory_order_relaxed)) {
 				// Failed the race
-				continue;
+				return false;
 			}
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
 			m_freeSlots[i].store(true, std::memory_order_release);
+
+			return true;
 		}
 
-		return;
+		return false;
 	}
 
 
 	// BARF. We ran out of slots
 	printf("All the waiting fiber slots are full. Not able to add another wait.\nIncrease the value of NUM_WAITING_FIBER_SLOTS or modify your algorithm to use less waits on the same counter");
 	assert(false);
+	return false;
 }
 
 void AtomicCounter::CheckWaitingFibers(uint value) {
@@ -74,7 +77,7 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;
 		}
-		if (m_waitingFibers[i].InUse.load(std::memory_order_relaxed)) {
+		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
 			continue;
 		}
 
