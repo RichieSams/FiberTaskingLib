@@ -15,25 +15,28 @@ upgradeBrewFormula () {
 
 case "${CXX}" in
 g++-4.8)
-	upgradeBrewFormula gcc48
+	upgradeBrewFormula gcc@4.8
 	;;
 g++-4.9)
-	upgradeBrewFormula gcc49
+	upgradeBrewFormula gcc@4.9
 	;;
 g++-5)
-	upgradeBrewFormula gcc5
+	upgradeBrewFormula gcc@5
 	;;
 g++-6)
-	upgradeBrewFormula gcc6
+	upgradeBrewFormula gcc@6
 	;;
 clang++-3.7)
-	upgradeBrewFormula llvm37
+	upgradeBrewFormula llvm@3.7
 	;;
 clang++-3.8)
-	upgradeBrewFormula llvm38
+	upgradeBrewFormula llvm@3.8
 	;;
 clang++-3.9)
-	upgradeBrewFormula llvm39
+	upgradeBrewFormula llvm@3.9
+	# 3.9 is keg-only, so we have to set the full file path
+	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
+	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
 *) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac

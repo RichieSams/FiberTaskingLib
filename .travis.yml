@@ -4,7 +4,7 @@ language: cpp
 install:
     - export CC="${MY_CC}"
     - export CXX="${MY_CXX}"
-    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then ./ci_scripts/travis_ci_install_osx.sh; fi"
+    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then source ci_scripts/travis_ci_install_osx.sh; fi"
 
 script: 
     - export CC="${MY_CC}"
