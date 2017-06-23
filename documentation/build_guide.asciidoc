@@ -35,11 +35,11 @@ FiberTaskingLib is built using CMake. As such, the build is pretty much standard
 > msbuild FiberTaskingLib.sln /p:configuration=release /p:platform=x64
 ----
 +
-. Run the tests. The exe should be located at 'build/tests/Release/FiberTaskingLib-test.exe'
+. Run the tests. The exe should be located at 'build/tests/Release/ftl-test.exe'
 +
 [source,sh]
 ----
-> build/tests/Release/FiberTaskingLib-test.exe
+> build/tests/Release/ftl-test.exe
 ----
 
 {blank}
@@ -111,6 +111,8 @@ project(MyProject)
 # You can use the FTL_BUILD_TESTS variable to enable / disable test building
 set( FTL_BUILD_TESTS OFF CACHE BOOL  "Disable tests" )
 
+# You can use the FTL_BUILD_BENCHMARKS variable to enable / disable benchamark building
+set( FTL_BUILD_TESTS OFF CACHE BOOL  "Disable benchmarks" )
 
 # Add FiberTaskingLib
 # You do not need to explicitly add the include directory, CMake with automagically do this for us.
@@ -124,14 +126,14 @@ add_executable(MyProject source/main.cpp)
 target_include_directories(MyProject PRIVATE include)
 
 # Link to FiberTaskingLib
-target_link_libraries(MyProject FiberTaskingLib)
+target_link_libraries(MyProject ftl)
 ----
 
 ===== Summary
 * FiberTaskingLib is a standard 'modern' CMake project
-* FiberTaskingLib defines the CMake option FTL_BUILD_TESTS
-** If set to ON (default), CMake will build the FTL tests
-** If set to OFF, CMake will skip the FTL tests
+* FiberTaskingLib defines the CMake options FTL_BUILD_TESTS and FTL_BUILD_BENCHMARKS
+** If set to ON (default), CMake will build the FTL tests / benchmarks
+** If set to OFF, CMake will skip the FTL tests / benchmarks
 * Internally, FiberTaskingLib uses target_* family of functions.
 ** Thus, when you link to FiberTaskingLib, CMake with automagically resolve all dependencies and include directories. 
 
@@ -141,4 +143,4 @@ target_link_libraries(MyProject FiberTaskingLib)
 
 . Build FiberTaskingLib as per the instructions above
 . Add `{FTL_ROOT}/include` to your toolchain's include directories
-. Link to FiberTaskingLib
+. Link to ftl.lib
