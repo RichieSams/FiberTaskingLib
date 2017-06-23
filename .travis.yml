@@ -60,6 +60,20 @@ matrix:
             - cmake
             - cmake-data
     - os: linux
+      compiler: gcc
+      env: 
+        - MY_CC=gcc-6
+        - MY_CXX=g++-6
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - g++-6
+            - cmake
+            - cmake-data
+    - os: linux
       compiler: clang
       env: 
         - MY_CC=clang-3.5
@@ -123,6 +137,22 @@ matrix:
             - clang-3.8
             - cmake
             - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-3.9
+        - MY_CXX=clang++-3.9
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-3.9
+            - cmake
+            - cmake-data
     - os: osx
       compiler: gcc
       env: 
@@ -139,6 +169,11 @@ matrix:
         - MY_CC=gcc-5
         - MY_CXX=g++-5
     - os: osx
+      compiler: gcc
+      env: 
+        - MY_CC=gcc-5
+        - MY_CXX=g++-6
+    - os: osx
       compiler: clang
       env: 
         - MY_CC=clang-3.7
@@ -148,3 +183,8 @@ matrix:
       env: 
         - MY_CC=clang-3.8
         - MY_CXX=clang++-3.8
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-3.9
+        - MY_CXX=clang++-3.9
