@@ -100,6 +100,12 @@ private:
 	};
 	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
 
+	/**
+	* We friend TaskScheduler so we can keep AddFiberToWaitingList() private
+	* This makes the public API cleaner
+	*/
+	friend class TaskScheduler;
+
 public:
 	/**
 	 * A wrapper over std::atomic_uint::load()
@@ -155,6 +161,7 @@ public:
 		return prev;
 	}
 
+private:
 	/**
 	 * Add a fiber to the list of waiting fibers
 	 * 
@@ -172,7 +179,6 @@ public:
 	 */
 	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag);
 
-private:
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue
 	 * If it finds one, it removes it from the list, and signals the 
