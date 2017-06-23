@@ -17,7 +17,8 @@ http://twvideo01.ubm-us.net/o1/vault/gdc2015/presentations/Gyrling_Christian_Par
 ## Example
 [source,cc]
 ----
-#include "fiber_tasking_lib/task_scheduler.h"
+#include <fiber_tasking_lib/task_scheduler.h>
+#include <fiber_tasking_lib/atomic_counter.h>
 
 
 struct NumberSubset {
@@ -28,7 +29,7 @@ struct NumberSubset {
 };
 
 
-void AddNumberSubset(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
     NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
     subset->total = 0;
@@ -43,22 +44,24 @@ void AddNumberSubset(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 
 
 /**
- * Calculates the value of a triangle number by dividing the additions up into tasks
- *
- * A triangle number is defined as:
- *         Tn = 1 + 2 + 3 + ... + n
- *
- * The code is checked against the numerical solution which is:
- *         Tn = n * (n + 1) / 2
- */
-void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+* Calculates the value of a triangle number by dividing the additions up into tasks
+*
+* A triangle number is defined as:
+*         Tn = 1 + 2 + 3 + ... + n
+*
+* The code is checked against the numerical solution which is:
+*         Tn = n * (n + 1) / 2
+*/
+void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
     // Define the constants to test
     const uint64 triangleNum = 47593243ull;
     const uint64 numAdditionsPerTask = 10000ull;
     const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
 
     // Create the tasks
-    FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[numTasks];
+    // FTL allows you to create Tasks on the stack. 
+    // However, in this case, that would cause a stack overflow
+    ftl::Task *tasks = new ftl::Task[numTasks];
     NumberSubset *subsets = new NumberSubset[numTasks];
     uint64 nextNumber = 1ull;
 
@@ -76,11 +79,15 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
         nextNumber = subset->end + 1;
     }
 
-    // Schedule the tasks and wait for them to complete
-    std::shared_ptr<std::atomic_uint> counter = taskScheduler->AddTasks(numTasks, tasks);
+    // Schedule the tasks
+    ftl::AtomicCounter counter(taskScheduler);
+    taskScheduler->AddTasks(numTasks, tasks, &counter);
+
+    // FTL creates its own copies of the tasks, so we can safely delete the memory
     delete[] tasks;
 
-    taskScheduler->WaitForCounter(counter, 0);
+    // Wait for the tasks to complete
+    taskScheduler->WaitForCounter(&counter, 0);
 
 
     // Add the results
@@ -97,8 +104,8 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 }
 
 int main(int argc, char *argv) {
-    FiberTaskingLib::TaskScheduler taskScheduler;
-    taskScheduler.Run(25, MainTask);
+    ftl::TaskScheduler taskScheduler;
+    taskScheduler.Run(25, TriangleNumberMainTask);
 
     return 0;
 }
@@ -163,17 +170,6 @@ Now, obviously, this is a contrived example. And as I said above, TBB has an awe
 
 **Waiting Tasks** - A list of the tasks that are waiting for a dependency to be fufilled. Dependencies are represented with atomic counters
 
-You create a task by calling TaskScheduler::AddTasks()
-
-[source,cc]
-----
-Task tasks[10];
-for (uint i = 0; i < 10; ++i) {
-    tasks[i] = {MyFunctionPointer, myFunctionArg};
-}
-
-std::shared_ptr<std::atomic_uint> counter = taskScheduler.AddTasks(10, tasks);
-----
 
 Tasks can be created on the stack. They're just a simple struct with a function pointer and an optional void *arg to be passed to the function:
 
@@ -185,20 +181,37 @@ struct Task {
 };
 ----
 
-The tasks get added to the queue, and other threads (or the current one, when it is finished with the current task) can start executing them when they get popped off the queue.
+[source,cc]
+----
+Task tasks[10];
+for (uint i = 0; i < 10; ++i) {
+    tasks[i] = {MyFunctionPointer, myFunctionArg};
+}
+----
 
-Every time you add a _group_ of tasks, the task scheduler returns a pointer to an atomic counter. The value of the atomic counter will be equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
+You schedule a task for execution by calling TaskScheduler::AddTasks()
 
 [source,cc]
 ----
-void TaskScheduler::WaitForCounter(std::shared_ptr<std::atomic_uint> &counter, int value);
+ftl::AtomicCounter counter(taskScheduler);
+taskScheduler->AddTasks(10, tasks, &counter);
 ----
 
-This is where fibers come into play. If the counter == value, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** list and grab a new fiber from the **Fiber Pool**. The new fiber pops a new task from the **Task Queue** and starts execution with that.
+The tasks get added to the queue, and other threads (or the current one, when it is finished with the current task) can start executing them when they get popped off the queue.
+
+AddTasks can optionally take a pointer to an AtomicCounter. If you do, the value of the counter will be set equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
+
+[source,cc]
+----
+void TaskScheduler::WaitForCounter(AtomicCounter *counter, int targetValue);
+----
+
+This is where fibers come into play. If the counter == value, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** list and grab a new fiber from the **Fiber Pool**. The new fiber pops a task from the **Task Queue** and starts execution with that.
 
 But what about the task we stored in **Waiting Tasks**? When will it finish being executed? 
 
-Before a fiber tries to pop a task off the **Task Queue**, it iterates through the **Waiting Tasks** and checks if any dependencies have been met. If so, it will return itself to the **Fiber Pool** and switch to the fiber that is ready. The ready fiber will continue execution right where it left off
+Every time an AtomicCounter is modified ( Store() / FetchAdd() / FetchSub() ), we check the new value against the targetValue of any fibers that are waiting on the counter. If we find one, we remove it from the list, and add it to a **Ready Fibers** list in the TaskScheduler.
+Before a fiber tries to pop a task off the **Task Queue**, it checks if there are any **Ready Fibers**. If so, it will return itself to the **Fiber Pool** and switch to the fiber that is ready. The ready fiber will continue execution right where it left off
 
 {blank}
 
