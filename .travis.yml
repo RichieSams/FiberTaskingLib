@@ -171,7 +171,7 @@ matrix:
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-5
+        - MY_CC=gcc-6
         - MY_CXX=g++-6
     - os: osx
       compiler: clang
