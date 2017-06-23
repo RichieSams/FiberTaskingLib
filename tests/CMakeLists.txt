@@ -56,7 +56,7 @@ set(FIBER_TASKING_LIB_TESTS_SRC
 )
 
 
-add_executable(FiberTaskingLib-test ${FIBER_TASKING_LIB_TESTS_SRC})
-target_link_libraries(FiberTaskingLib-test gtest gtest_main FiberTaskingLib)
+add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
+target_link_libraries(ftl-test gtest gtest_main ftl)
 
-GTEST_ADD_TESTS(FiberTaskingLib-test "" ${FIBER_TASKING_LIB_TESTS_SRC})
+GTEST_ADD_TESTS(ftl-test "" ${FIBER_TASKING_LIB_TESTS_SRC})

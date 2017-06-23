@@ -67,20 +67,20 @@ endif()
 SetSourceGroup(NAME Core
 	PREFIX FTL
 	SOURCE_FILES 
-				 ../include/fiber_tasking_lib/task.h
-	             ../include/fiber_tasking_lib/atomic_counter.h
+				 ../include/ftl/task.h
+	             ../include/ftl/atomic_counter.h
 	             atomic_counter.cpp
-	             ../include/fiber_tasking_lib/task_scheduler.h
-				 ../include/fiber_tasking_lib/typedefs.h
+	             ../include/ftl/task_scheduler.h
+				 ../include/ftl/typedefs.h
 	             task_scheduler.cpp
 )
 
 SetSourceGroup(NAME Util
 	PREFIX FTL
-	SOURCE_FILES ../include/fiber_tasking_lib/config.h
-	             ../include/fiber_tasking_lib/fiber.h
-	             ../include/fiber_tasking_lib/thread_abstraction.h
-	             ../include/fiber_tasking_lib/wait_free_queue.h
+	SOURCE_FILES ../include/ftl/config.h
+	             ../include/ftl/fiber.h
+	             ../include/ftl/thread_abstraction.h
+	             ../include/ftl/wait_free_queue.h
 )
 
 # Link all the sources into one
@@ -89,9 +89,9 @@ set(FIBER_TASKING_LIB_SRC
 	${FTL_UTIL}
 )
 
-add_library(FiberTaskingLib STATIC ${FIBER_TASKING_LIB_SRC})
-target_link_libraries(FiberTaskingLib boost_context ${CMAKE_THREAD_LIBS_INIT})
-target_include_directories(FiberTaskingLib PUBLIC ../include)
+add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
+target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(ftl PUBLIC ../include)
 
 # Remove the prefix
-set_target_properties(FiberTaskingLib PROPERTIES PREFIX "")
+set_target_properties(ftl PROPERTIES PREFIX "")

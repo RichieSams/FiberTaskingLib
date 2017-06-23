@@ -21,9 +21,9 @@
  * limitations under the License.
  */
 
-#include "fiber_tasking_lib/task_scheduler.h"
+#include "ftl/task_scheduler.h"
 
-#include "fiber_tasking_lib/atomic_counter.h"
+#include "ftl/atomic_counter.h"
 
 
 namespace ftl {

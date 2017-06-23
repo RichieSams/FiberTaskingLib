@@ -21,7 +21,7 @@
  * limitations under the License.
  */
 
-#include "fiber_tasking_lib/fiber.h"
+#include "ftl/fiber.h"
 
 #include <atomic>
 

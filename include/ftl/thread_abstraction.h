@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "fiber_tasking_lib/typedefs.h"
-#include "fiber_tasking_lib/config.h"
+#include "ftl/typedefs.h"
+#include "ftl/config.h"
 
 #include <cassert>
 #include <thread>

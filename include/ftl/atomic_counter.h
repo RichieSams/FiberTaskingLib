@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "fiber_tasking_lib/typedefs.h"
+#include "ftl/typedefs.h"
 
 #include <atomic>
 #include <vector>

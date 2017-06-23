@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include "fiber_tasking_lib/typedefs.h"
-#include "fiber_tasking_lib/thread_abstraction.h"
-#include "fiber_tasking_lib/fiber.h"
-#include "fiber_tasking_lib/task.h"
-#include "fiber_tasking_lib/wait_free_queue.h"
+#include "ftl/typedefs.h"
+#include "ftl/thread_abstraction.h"
+#include "ftl/fiber.h"
+#include "ftl/task.h"
+#include "ftl/wait_free_queue.h"
 
 #include <atomic>
 #include <vector>

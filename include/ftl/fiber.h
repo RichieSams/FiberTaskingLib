@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "fiber_tasking_lib/config.h"
+#include "ftl/config.h"
 
 #include <boost_context/fcontext.h>
 

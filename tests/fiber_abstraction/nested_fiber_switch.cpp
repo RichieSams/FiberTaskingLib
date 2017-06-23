@@ -21,8 +21,8 @@
  * limitations under the License.
  */
 
-#include "fiber_tasking_lib/typedefs.h"
-#include "fiber_tasking_lib/fiber.h"
+#include "ftl/typedefs.h"
+#include "ftl/fiber.h"
 
 #include <atomic>
 

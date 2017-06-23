@@ -46,5 +46,5 @@ set(FTL_BENCHMARK_SRC
 )
 
 
-add_executable(FiberTaskingLib-benchmark ${FTL_BENCHMARK_SRC})
-target_link_libraries(FiberTaskingLib-benchmark FiberTaskingLib nonius)
+add_executable(ftl-benchmark ${FTL_BENCHMARK_SRC})
+target_link_libraries(ftl-benchmark ftl nonius)
