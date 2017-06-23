@@ -55,7 +55,7 @@ namespace ftl {
 	#define FTL_VALGRIND_REGISTER(s, e) \
 		m_stackId = VALGRIND_STACK_REGISTER(s, e)
 
-	#define SEW_VALGRIND_DEREGISTER() VALGRIND_STACK_DEREGISTER(m_stackId)
+	#define FTL_VALGRIND_DEREGISTER() VALGRIND_STACK_DEREGISTER(m_stackId)
 #else
 	#define FTL_VALGRIND_ID
 	#define FTL_VALGRIND_REGISTER(s, e)
