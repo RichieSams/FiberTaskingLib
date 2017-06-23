@@ -31,8 +31,9 @@ namespace FiberTaskingLib {
 bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		bool expected = true;
+		// Try to acquire the slot
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst, std::memory_order_relaxed)) {
-			// Failed the race
+			// Failed the race or the slot was already full
 			continue;
 		}
 
@@ -40,6 +41,8 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 		m_waitingFibers[i].FiberIndex = fiberIndex;
 		m_waitingFibers[i].TargetValue = targetValue;
 		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
+		// We have to use memory_order_seq_cst here instead of memory_order_acquire to prevent
+		// later loads from being re-ordered before this store
 		m_waitingFibers[i].InUse.store(false, std::memory_order_seq_cst);
 		
 		// Events are now being tracked
@@ -53,10 +56,13 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 
 		if (m_waitingFibers[i].TargetValue == value) {
 			expected = false;
+			// Try to acquire InUse
 			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst, std::memory_order_relaxed)) {
-				// Failed the race
+				// Failed the race. Another thread got to it first.
 				return false;
 			}
+			// Signal that the slot is now free
+			// Leave IneUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
 
 			return true;
@@ -74,20 +80,27 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 
 void AtomicCounter::CheckWaitingFibers(uint value) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
+		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;
 		}
+		// Check if the slot is being modified by another thread
 		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
 			continue;
 		}
 
+		// Do the actual value check
 		if (m_waitingFibers[i].TargetValue == value) {
 			bool expected = false;
+			// Try to acquire InUse
 			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst, std::memory_order_relaxed)) {
-				// Failed the race
+				// Failed the race. Another thread got to it first
 				continue;
 			}
+			// Add the fiber to the TaskScheduler's ready list
 			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			// Signal that the slot is free
+			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
 		}
 	}

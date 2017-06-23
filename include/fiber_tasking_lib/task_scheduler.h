@@ -146,6 +146,10 @@ private:
 	 */
 	ThreadLocalStorage *m_tls;
 
+	/** 
+	 * We friend AtomicCounter so we can keep AddReadyFiber() private
+	 * This makes the public API cleaner
+	 */
 	friend class AtomicCounter;
 
 
@@ -219,7 +223,10 @@ private:
 	void CleanUpOldFiber();
 
 	/**
-	 * 
+	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching for a new task
+	 *
+	 * @param fiberIndex         The index of the fiber to add
+	 * @param fiberStoredFlag    A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
 	 */
 	void AddReadyFiber(std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
 
