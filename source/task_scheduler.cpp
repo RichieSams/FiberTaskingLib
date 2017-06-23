@@ -26,7 +26,7 @@
 #include "fiber_tasking_lib/atomic_counter.h"
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 struct ThreadStartArgs {
 	TaskScheduler *taskScheduler;
@@ -442,4 +442,4 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 	CleanUpOldFiber();
 }
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

@@ -31,21 +31,21 @@
 const uint kNumTasks = 65000;
 const uint kNumIterations = 1;
 
-void EmptyBenchmarkTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void EmptyBenchmarkTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// No-Op
 }
 
-void EmptyBenchmarkMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void EmptyBenchmarkMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
 
-	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumTasks];
+	ftl::Task *tasks = new ftl::Task[kNumTasks];
 	for (uint i = 0; i < kNumTasks; ++i) {
 		tasks[i] = {EmptyBenchmarkTask, nullptr};
 	}
 
 	meter.measure([=] {
 		for (uint i = 0; i < kNumIterations; ++i) {
-			FiberTaskingLib::AtomicCounter counter(taskScheduler);
+			ftl::AtomicCounter counter(taskScheduler);
 			taskScheduler->AddTasks(kNumTasks, tasks, &counter);
 
 			taskScheduler->WaitForCounter(&counter, 0);
@@ -57,7 +57,7 @@ void EmptyBenchmarkMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 }
 
 NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
-	FiberTaskingLib::TaskScheduler* taskScheduler = new FiberTaskingLib::TaskScheduler();
+	ftl::TaskScheduler* taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(20, EmptyBenchmarkMainTask, &meter);
 	delete taskScheduler;
 });

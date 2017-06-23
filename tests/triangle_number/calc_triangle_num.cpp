@@ -35,7 +35,7 @@ struct NumberSubset {
 };
 
 
-void AddNumberSubset(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->total = 0;
@@ -60,14 +60,14 @@ void AddNumberSubset(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 *
 * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
 */
-void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
 	const uint64 numAdditionsPerTask = 10000ull;
 	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
 
 	// Create the tasks
-	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[numTasks];
+	ftl::Task *tasks = new ftl::Task[numTasks];
 	// We have to declare this on the heap so other threads can access it
 	NumberSubset *subsets = new NumberSubset[numTasks];
 	uint64 nextNumber = 1ull;
@@ -87,7 +87,7 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 	}
 
 	// Schedule the tasks and wait for them to complete
-	FiberTaskingLib::AtomicCounter counter(taskScheduler);
+	ftl::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(numTasks, tasks, &counter);
 	delete[] tasks;
 
@@ -111,6 +111,6 @@ void TriangleNumberMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void 
 
 
 TEST(FunctionalTests, CalcTriangleNum) {
-	FiberTaskingLib::TaskScheduler taskScheduler;
+	ftl::TaskScheduler taskScheduler;
 	taskScheduler.Run(400, TriangleNumberMainTask);
 }

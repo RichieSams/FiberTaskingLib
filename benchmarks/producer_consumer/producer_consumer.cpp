@@ -32,17 +32,17 @@ const uint kNumProducerTasks = 100u;
 const uint kNumConsumerTasks = 1000u;
 const uint kNumIterations = 1;
 
-void Consumer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// No-Op
 }
 
-void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
-	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumConsumerTasks];
+void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
+	ftl::Task *tasks = new ftl::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	FiberTaskingLib::AtomicCounter counter(taskScheduler);
+	ftl::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumConsumerTasks, tasks, &counter);
 	delete[] tasks;
 
@@ -50,17 +50,17 @@ void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 }
 
 
-void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
 
-	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumProducerTasks];
+	ftl::Task *tasks = new ftl::Task[kNumProducerTasks];
 	for (uint i = 0; i < kNumProducerTasks; ++i) {
 		tasks[i] = {Producer, nullptr};
 	}
 	
 	meter.measure([=] {
 		for (uint i = 0; i < kNumIterations; ++i) {
-			FiberTaskingLib::AtomicCounter counter(taskScheduler);
+			ftl::AtomicCounter counter(taskScheduler);
 			taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
 
 			taskScheduler->WaitForCounter(&counter, 0);
@@ -72,7 +72,7 @@ void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, voi
 }
 
 NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
-	FiberTaskingLib::TaskScheduler* taskScheduler = new FiberTaskingLib::TaskScheduler();
+	ftl::TaskScheduler* taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(kNumProducerTasks + 20, ProducerConsumerMainTask, &meter);
 	delete taskScheduler;
 });

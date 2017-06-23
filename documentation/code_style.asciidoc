@@ -335,6 +335,25 @@ In general you should avoid global variables, but if it can't be avoided, use 'g
 int g_someGlobalVariable;
 ----
 
+==== Namespaces
+
+Namespaces should strive to be descriptive. If you choose to use multiple words, they should be camelcase, starting with an uppercase.
+However, public namespaces will be used and typed A LOT, so they should be as easy to type as possible, without sacrificing readability.
+
+[source,cc]
+----
+namespace FiberTaskingLib {
+
+}
+
+or
+
+namespace ftl {
+
+}
+----
+
+
 == Miscellaneous code formatting
 
 ==== Braceless if / for / etc. is highly discouraged

@@ -31,7 +31,7 @@
 #include <memory>
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 class TaskScheduler;
 
@@ -189,4 +189,4 @@ private:
 	void CheckWaitingFibers(uint value);
 };
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

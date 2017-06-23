@@ -35,7 +35,7 @@
 #include <memory>
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 class AtomicCounter;
 
@@ -251,4 +251,4 @@ private:
 	static void FiberStart(void *arg);
 };
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

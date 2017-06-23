@@ -40,7 +40,7 @@
 #include <atomic>
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 struct Win32Thread {
 	HANDLE Handle;
@@ -192,7 +192,7 @@ inline void SignalEvent(EventType eventId) {
 	SetEvent(eventId.event);
 }
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl
 
 
 #elif defined(FTL_POSIX_THREADS)
@@ -201,7 +201,7 @@ inline void SignalEvent(EventType eventId) {
 #include <unistd.h>
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 typedef pthread_t ThreadType;
 struct EventType {
@@ -366,14 +366,14 @@ inline void SignalEvent(EventType eventId) {
 	pthread_mutex_unlock(&eventId.mutex);
 }
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl
 
 #else
 	#error No Thread library found
 #endif
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 	
 /**
 * Get the number of hardware threads. This should take Hyperthreading, etc. into account
@@ -384,4 +384,4 @@ inline uint GetNumHardwareThreads() {
 	return std::thread::hardware_concurrency();
 }
 	
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

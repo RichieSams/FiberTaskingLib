@@ -47,7 +47,7 @@
 #endif
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 #if defined(FTL_VALGRIND)
 	#define FTL_VALGRIND_ID uint m_stackId
@@ -301,4 +301,4 @@ inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple) {
 	return numToRound + multiple - remainder;
 }
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

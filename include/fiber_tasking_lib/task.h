@@ -23,15 +23,15 @@
 
 #pragma once
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 class TaskScheduler;
 
-typedef void(*TaskFunction)(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg);
+typedef void(*TaskFunction)(ftl::TaskScheduler *taskScheduler, void *arg);
 
 struct Task {
 	TaskFunction Function;
 	void *ArgData;
 };
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

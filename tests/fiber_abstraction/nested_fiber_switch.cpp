@@ -31,13 +31,13 @@
 
 struct MultipleFiberArg {
 	uint64 Counter;
-	FiberTaskingLib::Fiber MainFiber;
-	FiberTaskingLib::Fiber FirstFiber;
-	FiberTaskingLib::Fiber SecondFiber;
-	FiberTaskingLib::Fiber ThirdFiber;
-	FiberTaskingLib::Fiber FourthFiber;
-	FiberTaskingLib::Fiber FifthFiber;
-	FiberTaskingLib::Fiber SixthFiber;
+	ftl::Fiber MainFiber;
+	ftl::Fiber FirstFiber;
+	ftl::Fiber SecondFiber;
+	ftl::Fiber ThirdFiber;
+	ftl::Fiber FourthFiber;
+	ftl::Fiber FifthFiber;
+	ftl::Fiber SixthFiber;
 };
 
 void FirstLevelFiberStart(void *arg) {
@@ -163,12 +163,12 @@ void SixthLevelFiberStart(void *arg) {
 TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0ull;
-	singleFiberArg.FirstFiber = std::move(FiberTaskingLib::Fiber(524288, FirstLevelFiberStart, &singleFiberArg));
-	singleFiberArg.SecondFiber = std::move(FiberTaskingLib::Fiber(524288, SecondLevelFiberStart, &singleFiberArg));
-	singleFiberArg.ThirdFiber = std::move(FiberTaskingLib::Fiber(524288, ThirdLevelFiberStart, &singleFiberArg));
-	singleFiberArg.FourthFiber = std::move(FiberTaskingLib::Fiber(524288, FourthLevelFiberStart, &singleFiberArg));
-	singleFiberArg.FifthFiber = std::move(FiberTaskingLib::Fiber(524288, FifthLevelFiberStart, &singleFiberArg));
-	singleFiberArg.SixthFiber = std::move(FiberTaskingLib::Fiber(524288, SixthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FirstFiber = std::move(ftl::Fiber(524288, FirstLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SecondFiber = std::move(ftl::Fiber(524288, SecondLevelFiberStart, &singleFiberArg));
+	singleFiberArg.ThirdFiber = std::move(ftl::Fiber(524288, ThirdLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FourthFiber = std::move(ftl::Fiber(524288, FourthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FifthFiber = std::move(ftl::Fiber(524288, FifthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SixthFiber = std::move(ftl::Fiber(524288, SixthLevelFiberStart, &singleFiberArg));
 
 	// The order should be:
 	// 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1 -> 5 -> 1 -> 3 -> 2 -> 4 -> 6 -> 4 -> 2 -> 5 -> 3 -> 6 -> Main

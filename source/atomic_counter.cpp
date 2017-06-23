@@ -26,7 +26,7 @@
 #include "fiber_tasking_lib/task_scheduler.h"
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
@@ -107,4 +107,4 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 }
 
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

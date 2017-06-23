@@ -30,8 +30,8 @@
 
 struct SingleFiberArg {
 	std::atomic_long Counter;
-	FiberTaskingLib::Fiber MainFiber;
-	FiberTaskingLib::Fiber OtherFiber;
+	ftl::Fiber MainFiber;
+	ftl::Fiber OtherFiber;
 };
 
 void SingleFiberStart(void *arg) {
@@ -48,7 +48,7 @@ void SingleFiberStart(void *arg) {
 TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
-	singleFiberArg.OtherFiber = std::move(FiberTaskingLib::Fiber(512000, SingleFiberStart, &singleFiberArg));
+	singleFiberArg.OtherFiber = std::move(ftl::Fiber(512000, SingleFiberStart, &singleFiberArg));
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 

@@ -37,7 +37,7 @@
 #include <cassert>
 
 
-namespace FiberTaskingLib {
+namespace ftl {
 
 template<typename T>
 class WaitFreeQueue {
@@ -175,4 +175,4 @@ public:
 	}
 };
 
-} // End of namespace FiberTaskingLib
+} // End of namespace ftl

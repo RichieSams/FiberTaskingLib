@@ -31,19 +31,19 @@ const uint kNumProducerTasks = 100u;
 const uint kNumConsumerTasks = 10000u;
 
 
-void Consumer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
 
 	globalCounter->fetch_add(1);
 }
 
-void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
-	FiberTaskingLib::Task *tasks = new FiberTaskingLib::Task[kNumConsumerTasks];
+void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
+	ftl::Task *tasks = new ftl::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	FiberTaskingLib::AtomicCounter counter(taskScheduler);
+	ftl::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumConsumerTasks, tasks, &counter);
 	delete[] tasks;
 
@@ -51,15 +51,15 @@ void Producer(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
 }
 
 
-void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, void *arg) {
+void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint globalCounter(0u);
 
-	FiberTaskingLib::Task tasks[kNumProducerTasks];
+	ftl::Task tasks[kNumProducerTasks];
 	for (uint i = 0; i < kNumProducerTasks; ++i) {
 		tasks[i] = { Producer, &globalCounter };
 	}
 
-	FiberTaskingLib::AtomicCounter counter(taskScheduler);
+	ftl::AtomicCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
 	taskScheduler->WaitForCounter(&counter, 0);
 
@@ -75,6 +75,6 @@ void ProducerConsumerMainTask(FiberTaskingLib::TaskScheduler *taskScheduler, voi
  * Tests that all scheduled tasks finish properly
  */
 TEST(FunctionalTests, ProducerConsumer) {
-	FiberTaskingLib::TaskScheduler taskScheduler;
+	ftl::TaskScheduler taskScheduler;
 	taskScheduler.Run(400, ProducerConsumerMainTask);
 }
