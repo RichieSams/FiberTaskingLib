@@ -245,6 +245,16 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 		JoinThread(m_threads[i]);
 	}
 
+	// Cleanup
+	delete[] m_fibers;
+	m_fibers = nullptr;
+	delete[] m_freeFibers;
+	m_freeFibers = nullptr;
+	delete[] m_tls;
+	m_tls = nullptr;
+
+	m_threads.clear();
+
 	return;
 }
 
