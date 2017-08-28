@@ -68,6 +68,7 @@ private:
 	 */
 	std::atomic<bool> *m_freeFibers;
 	
+	std::atomic<bool> m_initialized;
 	std::atomic<bool> m_quit;
 	
 	enum class FiberDestination {

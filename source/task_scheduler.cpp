@@ -41,6 +41,11 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	// Clean up
 	delete threadArgs;
 
+	// Spin wait until everything is initialized
+	while (!taskScheduler->m_initialized.load(std::memory_order_acquire)) {
+		// Spin
+	}
+
 
 	// Get a free fiber to switch to
 	std::size_t freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
@@ -172,6 +177,10 @@ TaskScheduler::~TaskScheduler() {
 }
 
 void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg, uint threadPoolSize) {
+	// Initialize the flags
+	m_initialized.store(false, std::memory_order::memory_order_release);
+	m_quit.store(false, std::memory_order_release);
+
 	// Create and populate the fiber pool
 	m_fiberPoolSize = fiberPoolSize;
 	m_fibers = new Fiber[fiberPoolSize];
@@ -189,8 +198,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 		m_numThreads = threadPoolSize;
 	}
 
-	// Initialize all the things
-	m_quit.store(false, std::memory_order_release);
+	// Initialize threads and TLS
 	m_threads.resize(m_numThreads);
 	m_tls = new ThreadLocalStorage[m_numThreads];
 
@@ -209,6 +217,9 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 			return;
 		}
 	}
+
+	// Signal the worker threads that we're fully initialized
+	m_initialized.store(true, std::memory_order_release);
 
 
 	// Start the main task
