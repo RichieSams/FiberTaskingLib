@@ -383,5 +383,9 @@ namespace ftl {
 inline uint GetNumHardwareThreads() {
 	return std::thread::hardware_concurrency();
 }
+
+inline void YieldThread() {
+	std::this_thread::yield();
+}
 	
 } // End of namespace ftl

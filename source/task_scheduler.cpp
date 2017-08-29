@@ -135,7 +135,22 @@ void TaskScheduler::FiberStart(void *arg) {
 			// Get a new task from the queue, and execute it
 			TaskBundle nextTask;
 			if (!taskScheduler->GetNextTask(&nextTask)) {
-				// Spin
+				EmptyQueueBehavior behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+				
+				switch (behavior) {
+				case EmptyQueueBehavior::Yield:
+					YieldThread();
+					break;
+
+				case EmptyQueueBehavior::Sleep:
+					// Fall through to Spin for now...
+					//break;
+
+				case EmptyQueueBehavior::Spin:
+				default:
+					// Just fall through and continue the next loop
+					break;
+				}
 			} else {
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
 				if (nextTask.Counter != nullptr) {
@@ -171,10 +186,11 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg, uint threadPoolSize) {
+void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg, uint threadPoolSize, EmptyQueueBehavior behavior) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
 	m_quit.store(false, std::memory_order_release);
+	m_emptyQueueBehavior = behavior;
 
 	// Create and populate the fiber pool
 	m_fiberPoolSize = fiberPoolSize;

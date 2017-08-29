@@ -39,6 +39,15 @@ namespace ftl {
 
 class AtomicCounter;
 
+enum class EmptyQueueBehavior {
+	// Spin in a loop, actively searching for tasks
+	Spin,
+	// Same as spin, except yields to the OS after each round of searching
+	Yield,
+	// Puts the thread to sleep. Will be woken when more tasks are added to the remaining awake threads.
+	Sleep
+};
+
 /**
  * A class that enables task-based multithreading.
  *
@@ -70,6 +79,7 @@ private:
 	
 	std::atomic<bool> m_initialized;
 	std::atomic<bool> m_quit;
+	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior;
 	
 	enum class FiberDestination {
 		None = 0,
@@ -166,7 +176,7 @@ public:
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 */
-	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0);
+	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0, EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
 
 	/**
 	 * Adds a task to the internal queue.
@@ -200,6 +210,16 @@ public:
 	 * @return    The index of the current thread
 	 */
 	std::size_t GetCurrentThreadIndex();
+
+	/**
+	 * Set the behavior for how worker threads handle an empty queue
+	 *
+	 * @param behavior    
+	 * @return     
+	 */
+	void SetEmptyQueueBehavior(EmptyQueueBehavior behavior) {
+		m_emptyQueueBehavior.store(behavior, std::memory_order_relaxed);
+	}
 
 private:
 	/**
