@@ -28,7 +28,7 @@
 
 namespace ftl {
 
-bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag) {
+bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag, std::size_t pinnedThreadIndex) {
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
@@ -41,6 +41,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 		m_waitingFibers[i].FiberIndex = fiberIndex;
 		m_waitingFibers[i].TargetValue = targetValue;
 		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
+		m_waitingFibers[i].PinnedThreadIndex = pinnedThreadIndex;
 		// We have to use memory_order_seq_cst here instead of memory_order_acquire to prevent
 		// later loads from being re-ordered before this store
 		m_waitingFibers[i].InUse.store(false, std::memory_order_seq_cst);
@@ -98,7 +99,7 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 				continue;
 			}
 			// Add the fiber to the TaskScheduler's ready list
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
 			// Signal that the slot is free
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);

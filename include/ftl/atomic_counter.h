@@ -80,7 +80,8 @@ private:
 				: InUse(true),
 				  FiberIndex(0),
 				  TargetValue(0), 
-				  FiberStoredFlag(nullptr) {
+				  FiberStoredFlag(nullptr),
+				  PinnedThreadIndex(0) {
 		}
 
 		/** 
@@ -97,6 +98,11 @@ private:
 		 * See TaskScheduler::CleanUpOldFiber()
 		 */
 		std::atomic<bool> *FiberStoredFlag;
+		/**
+		 * The index of the thread this fiber is pinned to
+		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<std::size_t>::max()
+		 */
+		std::size_t PinnedThreadIndex;
 	};
 	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
 
@@ -177,7 +183,7 @@ private:
 	 * @param fiberStoredFlag    A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
 	 * @return                   True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag);
+	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag, std::size_t pinnedThreadIndex = std::numeric_limits<std::size_t>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue

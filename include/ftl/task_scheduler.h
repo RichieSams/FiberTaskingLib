@@ -128,10 +128,9 @@ private:
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
-		/* List of pinned tasks to this thread */
-		std::vector<PinnedWaitingFiberBundle> PinnedTasks;
 		std::atomic<bool> *OldFiberStoredFlag;
 		std::vector<std::pair<std::size_t, std::atomic<bool> *> > ReadyFibers;
+		std::atomic_flag ReadFibersLock;
 
 	private:
 		/* Cache-line pad */
@@ -226,10 +225,11 @@ private:
 	/**
 	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching for a new task
 	 *
-	 * @param fiberIndex         The index of the fiber to add
-	 * @param fiberStoredFlag    A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal std::numeric_limits<std::size_t>::max()
+	 * @param fiberIndex           The index of the fiber to add
+	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
 	 */
-	void AddReadyFiber(std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
+	void AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
 
 	/**
 	 * The threadProc function for all worker threads
