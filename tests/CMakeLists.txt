@@ -29,6 +29,7 @@ SetSourceGroup(NAME "Fiber Abstraction"
 	PREFIX FTL_TEST
 	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
 	             fiber_abstraction/nested_fiber_switch.cpp
+	             fiber_abstraction/floating_point_fiber_switch.cpp
 )
 
 SetSourceGroup(NAME "Producer Consumer"
