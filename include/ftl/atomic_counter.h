@@ -68,7 +68,8 @@ private:
 	TaskScheduler *m_taskScheduler;
 	/* The atomic counter holding our data */
 	std::atomic_uint m_value;
-
+	/* An atomic counter to ensure threads don't race in readying the fibers */
+	std::atomic_uint m_lock = 0;
 	/* An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
 	 * False: Full
@@ -133,6 +134,8 @@ public:
 	 * @param memoryOrder    The memory order to use for the store
 	 */
 	void Store(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		// Enter shared section
+		m_lock++;
 		m_value.store(x, memoryOrder);
 		CheckWaitingFibers(x);
 	}
@@ -146,6 +149,8 @@ public:
 	 * @return               The value of the counter before the addition
 	 */
 	uint FetchAdd(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		// Enter shared section
+		m_lock++;
 		uint prev = m_value.fetch_add(x, memoryOrder);
 		CheckWaitingFibers(prev + x);
 
@@ -161,6 +166,8 @@ public:
 	 * @return               The value of the counter before the subtraction
 	 */
 	uint FetchSub(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		// Enter shared section
+		m_lock++;
 		uint prev = m_value.fetch_sub(x, memoryOrder);
 		CheckWaitingFibers(prev - x);
 
