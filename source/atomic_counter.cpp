@@ -80,6 +80,9 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 }
 
 void AtomicCounter::CheckWaitingFibers(uint value) {
+	// Enter the shared section
+	++m_lock;
+
 	std::vector<std::size_t> wfbIndices;
 
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
@@ -104,7 +107,7 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 		}
 	}
 	// Exit shared section
-	m_lock--;
+	--m_lock;
 	// Wait for all threads to exit the shared section if there are fibers to ready
 	if (wfbIndices.size() > 0) {
 		while (m_lock.load() > 0);
