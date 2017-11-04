@@ -61,6 +61,8 @@ public:
 			// keep InUse == true
 			m_waitingFibers[i].InUse.store(true);
 		}
+
+		m_lock.store(0);
 	}
 
 private:
@@ -69,7 +71,7 @@ private:
 	/* The atomic counter holding our data */
 	std::atomic_uint m_value;
 	/* An atomic counter to ensure threads don't race in readying the fibers */
-	std::atomic_uint m_lock = 0;
+	std::atomic_uint m_lock;
 	/* An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
 	 * False: Full
