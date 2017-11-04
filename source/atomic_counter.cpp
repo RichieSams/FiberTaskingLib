@@ -111,7 +111,9 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 	--m_lock;
 	// Wait for all threads to exit the shared section if there are fibers to ready
 	if (nextIndex > 0) {
-		while (m_lock.load() > 0);
+		while (m_lock.load() > 0) {
+			// Spin
+		}
 
 		for (uint i = 0; i < nextIndex; ++i) {
 			// Add the fiber to the TaskScheduler's ready list
