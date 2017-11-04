@@ -25,11 +25,6 @@ include(GTestAddTests)
 include(SetSourceGroup)
 
 
-SetSourceGroup(NAME Root
-	PREFIX FTL_TEST
-	SOURCE_FILES main.cpp
-)
-
 SetSourceGroup(NAME "Fiber Abstraction"
 	PREFIX FTL_TEST
 	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
@@ -49,7 +44,6 @@ SetSourceGroup(NAME "Triangle Number"
 
 # Link all the sources into one
 set(FIBER_TASKING_LIB_TESTS_SRC
-	${FTL_TEST_ROOT}
 	${FTL_TEST_FIBER_ABSTRACTION}
 	${FTL_TEST_PRODUCER_CONSUMER}
 	${FTL_TEST_TRIANGLE_NUMBER}
