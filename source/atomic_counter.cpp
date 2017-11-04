@@ -83,7 +83,8 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 	// Enter the shared section
 	++m_lock;
 
-	std::vector<std::size_t> wfbIndices;
+	uint readyFiberIndices[NUM_WAITING_FIBER_SLOTS];
+	uint nextIndex = 0;
 
 	for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 		// Check if the slot is full
@@ -103,21 +104,21 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 				// Failed the race. Another thread got to it first
 				continue;
 			}
-			wfbIndices.emplace_back(i);	
+			readyFiberIndices[nextIndex++] = i;
 		}
 	}
 	// Exit shared section
 	--m_lock;
 	// Wait for all threads to exit the shared section if there are fibers to ready
-	if (wfbIndices.size() > 0) {
+	if (nextIndex > 0) {
 		while (m_lock.load() > 0);
 
-		for (const auto& wfbIndex : wfbIndices) {
+		for (uint i = 0; i < nextIndex; ++i) {
 			// Add the fiber to the TaskScheduler's ready list
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[wfbIndex].PinnedThreadIndex, m_waitingFibers[wfbIndex].FiberIndex, m_waitingFibers[wfbIndex].FiberStoredFlag);
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
 			// Signal that the slot is free
 			// Leave InUse == true
-			m_freeSlots[wfbIndex].store(true, std::memory_order_release);
+			m_freeSlots[i].store(true, std::memory_order_release);
 		}
 	}	
 }
