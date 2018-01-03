@@ -31,8 +31,10 @@
 
 #include <atomic>
 #include <vector>
+#include <condition_variable>
 #include <climits>
 #include <memory>
+#include <mutex>
 
 
 namespace ftl {
@@ -79,6 +81,7 @@ private:
 	
 	std::atomic<bool> m_initialized;
 	std::atomic<bool> m_quit;
+
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior;
 	
 	enum class FiberDestination {
@@ -115,8 +118,10 @@ private:
 			  OldFiberIndex(FTL_INVALID_INDEX),
 			  OldFiberDestination(FiberDestination::None),
 			  TaskQueue(),
-			  LastSuccessfulSteal(1), 
-			  OldFiberStoredFlag(nullptr) { }
+			  LastSuccessfulSteal(1),
+			  OldFiberStoredFlag(nullptr), 
+			  FailedQueuePopAttempts(0) {
+		}
 
 	public:
 		/**
@@ -141,6 +146,18 @@ private:
 		std::atomic<bool> *OldFiberStoredFlag;
 		std::vector<std::pair<std::size_t, std::atomic<bool> *> > ReadyFibers;
 		std::atomic_flag ReadFibersLock;
+		uint32 FailedQueuePopAttempts;
+		/**
+		* This lock is used with the CV below to put threads to sleep when there
+		* is no work to do. It also protects accesses to FailedQueuePopAttempts.
+		*
+		* We *could* use an atomic for FailedQueuePopAttempts, however, we still need
+		* to lock when changing the value, because spurious wakes of the CV could
+		* cause a thread to fail to wake up. See https://stackoverflow.com/a/36130475
+		* So, if we need to lock, there is no reason to have the overhead of an atomic as well.
+		*/
+		std::mutex FailedQueuePopLock;
+		std::condition_variable FailedQueuePopCV;
 
 	private:
 		/* Cache-line pad */

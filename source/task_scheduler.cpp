@@ -28,6 +28,11 @@
 
 namespace ftl {
 
+enum {
+	kFailedPopAttemptsHeuristic = 5
+};
+
+
 struct ThreadStartArgs {
 	TaskScheduler *taskScheduler;
 	uint threadIndex;
@@ -79,6 +84,17 @@ void TaskScheduler::MainFiberStart(void *arg) {
 
 	// Request that all the threads quit
 	taskScheduler->m_quit.store(true, std::memory_order_release);
+
+	// Signal any waiting threads so they can finish
+	if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
+		for (uint i = 0; i < taskScheduler->m_numThreads; ++i) {
+			{
+				std::unique_lock<std::mutex> lock(taskScheduler->m_tls[i].FailedQueuePopLock);
+				taskScheduler->m_tls[i].FailedQueuePopAttempts = 0;
+			}
+			taskScheduler->m_tls[i].FailedQueuePopCV.notify_all();
+		}
+	}
 
 	// Switch to the thread fibers
 	ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
@@ -134,27 +150,42 @@ void TaskScheduler::FiberStart(void *arg) {
 		} else {
 			// Get a new task from the queue, and execute it
 			TaskBundle nextTask;
-			if (!taskScheduler->GetNextTask(&nextTask)) {
-				EmptyQueueBehavior behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
-				
+			bool success = taskScheduler->GetNextTask(&nextTask);
+			EmptyQueueBehavior behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+
+			if (success) {
+				if (behavior == EmptyQueueBehavior::Sleep) {
+					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
+					tls.FailedQueuePopAttempts = 0;
+				}
+
+				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
+				if (nextTask.Counter != nullptr) {
+					nextTask.Counter->FetchSub(1);
+				}
+			} else {
+				// We failed to find a Task from any of the queues
+				// What we do now depends on m_emptyQueueBehavior, which we loaded above
 				switch (behavior) {
 				case EmptyQueueBehavior::Yield:
 					YieldThread();
 					break;
 
 				case EmptyQueueBehavior::Sleep:
-					// Fall through to Spin for now...
-					//break;
+				{
+					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
+					++tls.FailedQueuePopAttempts;
 
+					while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+						tls.FailedQueuePopCV.wait(lock);
+					}
+
+					break;
+				}
 				case EmptyQueueBehavior::Spin:
 				default:
 					// Just fall through and continue the next loop
 					break;
-				}
-			} else {
-				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
-				if (nextTask.Counter != nullptr) {
-					nextTask.Counter->FetchSub(1);
 				}
 			}
 		}
@@ -278,9 +309,22 @@ void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
 		counter->Store(1);
 	}
 
-	TaskBundle bundle = {task, counter};
-	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-	tls.TaskQueue.Push(bundle);
+	const TaskBundle bundle = {task, counter};
+	m_tls[GetCurrentThreadIndex()].TaskQueue.Push(bundle);
+
+	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
+	if (behavior == EmptyQueueBehavior::Sleep) {
+		// Find a thread that is sleeping and wake it
+		for (uint i = 0; i < m_numThreads; ++i) {
+			std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
+			if (m_tls->FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+				m_tls[i].FailedQueuePopAttempts = 0;
+				m_tls[i].FailedQueuePopCV.notify_one();
+
+				break;
+			}
+		}
+	}
 }
 
 void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter) {
@@ -290,8 +334,20 @@ void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter)
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	for (uint i = 0; i < numTasks; ++i) {
-		TaskBundle bundle = {tasks[i], counter};
+		const TaskBundle bundle = {tasks[i], counter};
 		tls.TaskQueue.Push(bundle);
+	}
+
+	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
+	if (behavior == EmptyQueueBehavior::Sleep) {
+		// Wake all the threads
+		for (uint i = 0; i < m_numThreads; ++i) {
+			{
+				std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
+				m_tls[i].FailedQueuePopAttempts = 0;
+			}
+			m_tls[i].FailedQueuePopCV.notify_all();
+		}
 	}
 }
 
