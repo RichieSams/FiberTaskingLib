@@ -504,6 +504,16 @@ void TaskScheduler::AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fib
 
 	// Unlock
 	tls->ReadFibersLock.clear(std::memory_order_release);
+
+	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+	if (behavior == EmptyQueueBehavior::Sleep) {
+		// Kick the thread
+		{
+			std::unique_lock<std::mutex> lock(tls->FailedQueuePopLock);
+			tls->FailedQueuePopAttempts = 0;
+		}
+		tls->FailedQueuePopCV.notify_all();
+	}
 }
 
 void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinToCurrentThread) {
