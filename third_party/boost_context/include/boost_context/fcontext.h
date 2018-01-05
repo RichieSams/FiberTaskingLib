@@ -6,7 +6,7 @@
 // Modified for use in FiberTaskingLib
 //
 // FiberTaskingLib is the legal property of Adrian Astley
-// Copyright Adrian Astley 2015 - 2017
+// Copyright Adrian Astley 2015 - 2018
 
 
 
