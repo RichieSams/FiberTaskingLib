@@ -505,6 +505,12 @@ void TaskScheduler::AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fib
 	// Unlock
 	tls->ReadFibersLock.clear(std::memory_order_release);
 
+	// If the Task is pinned, we add the Task to the pinned thread's ReadyFibers queue, instead
+	// of our own. Normally, this works fine; the other thread will pick it up next time it 
+	// searches for a Task to run.
+	// 
+	// However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
+	// Therefore, we need to kick the thread to make sure that it's awake
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Kick the thread
