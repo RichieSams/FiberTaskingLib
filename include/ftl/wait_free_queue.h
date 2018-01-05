@@ -33,9 +33,9 @@
 #include "ftl/typedefs.h"
 
 #include <atomic>
-#include <vector>
-#include <memory>
 #include <cassert>
+#include <memory>
+#include <vector>
 
 
 namespace ftl {

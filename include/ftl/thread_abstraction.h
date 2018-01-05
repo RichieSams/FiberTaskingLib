@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "ftl/typedefs.h"
 #include "ftl/config.h"
+#include "ftl/typedefs.h"
 
 #include <cassert>
 #include <thread>
@@ -37,8 +37,8 @@
 #define NOMINMAX
 #include <Windows.h>
 
-#include <process.h>
 #include <atomic>
+#include <process.h>
 
 
 namespace ftl {

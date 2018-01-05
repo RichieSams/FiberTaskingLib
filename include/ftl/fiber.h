@@ -28,9 +28,9 @@
 
 #include <boost_context/fcontext.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <algorithm>
 
 #if defined(FTL_VALGRIND)
 	#include <valgrind/valgrind.h>

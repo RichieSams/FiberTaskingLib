@@ -27,9 +27,9 @@
 #include "ftl/typedefs.h"
 
 #include <atomic>
-#include <vector>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <vector>
 
 
 namespace ftl {

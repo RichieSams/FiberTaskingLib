@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/task_scheduler.h"
 #include "ftl/atomic_counter.h"
+#include "ftl/task_scheduler.h"
 
 #include <nonius/nonius.hpp>
 

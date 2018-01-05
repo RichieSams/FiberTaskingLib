@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/typedefs.h"
 #include "ftl/fiber.h"
+#include "ftl/typedefs.h"
 
 #include <atomic>
 
