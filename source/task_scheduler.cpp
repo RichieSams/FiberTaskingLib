@@ -318,7 +318,7 @@ void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
 		// Find a thread that is sleeping and wake it
 		for (uint i = 0; i < m_numThreads; ++i) {
 			std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
-			if (m_tls->FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+			if (m_tls[i].FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 				m_tls[i].FailedQueuePopAttempts = 0;
 				m_tls[i].FailedQueuePopCV.notify_one();
 
