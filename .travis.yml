@@ -156,11 +156,6 @@ matrix:
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-4.8
-        - MY_CXX=g++-4.8
-    - os: osx
-      compiler: gcc
-      env: 
         - MY_CC=gcc-4.9
         - MY_CXX=g++-4.9
     - os: osx

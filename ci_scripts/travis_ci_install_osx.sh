@@ -15,9 +15,6 @@ upgradeBrewFormula () {
 
 
 case "${CXX}" in
-g++-4.8)
-	upgradeBrewFormula gcc@4.8
-	;;
 g++-4.9)
 	upgradeBrewFormula gcc@4.9
 	;;
