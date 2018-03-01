@@ -173,7 +173,7 @@ inline void CloseEvent(EventType eventId) {
 * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
 */
 #pragma warning( push )
-#pragma warning( disable : 4189)
+#pragma warning( disable : 4189 )
 inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	eventId.countWaiters.fetch_add(1u);
 	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
