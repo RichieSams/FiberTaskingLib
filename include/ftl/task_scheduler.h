@@ -63,7 +63,7 @@ public:
 	~TaskScheduler();
 
 private:
-	enum {
+	enum : size_t {
 		FTL_INVALID_INDEX = UINT_MAX
 	};
 
