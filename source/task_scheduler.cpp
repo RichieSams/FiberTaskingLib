@@ -175,8 +175,21 @@ void TaskScheduler::FiberStart(void *arg) {
 				case EmptyQueueBehavior::Sleep:
 				{
 					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
-					++tls.FailedQueuePopAttempts;
+					
+					// Check if we have a ready fiber
+					// Lock
+					while (tls.ReadFibersLock.test_and_set(std::memory_order_acquire)) {
+						// Spin
+					}
+					// Prevent sleepy-time if we have ready fibers
+					if (tls.ReadyFibers.empty()) {
+						++tls.FailedQueuePopAttempts;
+					}
+					
+					// Unlock
+					tls.ReadFibersLock.clear(std::memory_order_release);
 
+					// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
 					while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 						tls.FailedQueuePopCV.wait(lock);
 					}
