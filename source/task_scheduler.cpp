@@ -148,6 +148,11 @@ void TaskScheduler::FiberStart(void *arg) {
 
 			// And we're back
 			taskScheduler->CleanUpOldFiber();
+
+			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
+				std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
+				tls.FailedQueuePopAttempts = 0;
+			}
 		} else {
 			// Get a new task from the queue, and execute it
 			TaskBundle nextTask;
