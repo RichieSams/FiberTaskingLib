@@ -23,7 +23,7 @@
  ##
 
 # GTest
-if (FTL_BUILD_TESTS)
+if (FTL_BUILD_TESTS AND NOT TARGET gtest)
 	SET(gtest_force_shared_crt ON CACHE BOOL "Use the dll runtime" )
 	add_subdirectory(gtest)
 	set_target_properties(gtest PROPERTIES FOLDER third_party)
