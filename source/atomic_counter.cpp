@@ -115,7 +115,8 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 
 		for (uint i = 0; i < nextIndex; ++i) {
 			// Add the fiber to the TaskScheduler's ready list
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			const uint index = readyFiberIndices[i];
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[index].PinnedThreadIndex, m_waitingFibers[index].FiberIndex, m_waitingFibers[index].FiberStoredFlag);
 			// Signal that the slot is free
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
