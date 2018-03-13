@@ -26,6 +26,9 @@
 
 #include "ftl/atomic_counter.h"
 
+#if defined(FTL_WIN32_THREADS)
+#include <Windows.h>
+#endif
 
 namespace ftl {
 

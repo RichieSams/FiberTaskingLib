@@ -27,19 +27,13 @@
 #include "ftl/config.h"
 #include "ftl/typedefs.h"
 
-#include <cassert>
-#include <thread>
-
-
 #if defined(FTL_WIN32_THREADS)
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <Windows.h>
+#include <minwindef.h>
 
 #include <atomic>
-#include <process.h>
-
 
 namespace ftl {
 
@@ -54,7 +48,6 @@ struct EventType {
 	HANDLE event;
 	std::atomic_ulong countWaiters;
 };
-const uint32 EVENTWAIT_INFINITE = INFINITE;
 
 typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 #define FTL_THREAD_FUNC_RETURN_TYPE uint
@@ -73,13 +66,7 @@ typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
 *
 * @return    True if thread creation succeeds, false if it fails
 */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
-	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
-	returnThread->Handle = handle;
-	returnThread->Id = GetThreadId(handle);
-
-	return handle != nullptr;
-}
+bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread);
 
 /**
 * Create a native thread
@@ -92,109 +79,60 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
 *
 * @return    True if thread creation succeeds, false if it fails
 */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
-	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
-
-	if (handle == nullptr) {
-		return false;
-	}
-
-	DWORD_PTR mask = 1ull << coreAffinity;
-	SetThreadAffinityMask(handle, mask);
-	
-	returnThread->Handle = handle;
-	returnThread->Id = GetThreadId(handle);
-	ResumeThread(handle);
-
-	return true;
-}
+bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread);
 
 /** Terminate the current thread */
-inline void EndCurrentThread() {
-	_endthreadex(0);
-}
+void EndCurrentThread();
 
 /**
 * Join 'thread' with the current thread, blocking until 'thread' finishes
 *
 * @param thread    The thread to join
 */
-inline void JoinThread(ThreadType thread) {
-	WaitForSingleObject(thread.Handle, INFINITE);
-}
+void JoinThread(ThreadType thread);
 
 /**
  * Get the current thread
  *
  * @return    The current thread
  */
-inline ThreadType GetCurrentThread() {
-	Win32Thread result{
-		::GetCurrentThread(),
-		::GetCurrentThreadId()
-	};
-
-	return result;
-}
+ThreadType GetCurrentThread();
 
 /**
  * Set the core affinity for the current thread
  *
  * @param coreAffinity    The requested core affinity
  */
-inline void SetCurrentThreadAffinity(size_t coreAffinity) {
-	SetThreadAffinityMask(::GetCurrentThread(), coreAffinity);
-}
+void SetCurrentThreadAffinity(size_t coreAffinity);
 
 /**
  * Create a native event
  *
  * @param event    The handle for the newly created event
  */
-inline void CreateEvent(EventType *event) {
-	event->event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-	event->countWaiters = 0;
-}
-
+void CreateEvent(EventType *event);
 /**
  * Closes and event
  *
  * @param eventId    The event to close
  */
-inline void CloseEvent(EventType eventId) {
-	CloseHandle(eventId.event);
-}
+void CloseEvent(EventType eventId);
 
 /**
 * Wait for the given event to be signaled.
 * The current thread will block until signaled or at least 'milliseconds' time has passed
 *
 * @param eventId         The event to wait on
-* @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
+* @param milliseconds    The maximum amount of time to wait for the event. Use INFINITE to wait infinitely
 */
-#pragma warning( push )
-#pragma warning( disable : 4189 )
-inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
-	eventId.countWaiters.fetch_add(1u);
-	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
-	uint prev = eventId.countWaiters.fetch_sub(1u);
-	if (1 == prev) {
-		// we were the last to awaken, so reset event.
-		ResetEvent(eventId.event);
-	}
-	assert(retval != WAIT_FAILED);
-	assert(prev != 0);
-}
-#pragma warning ( pop )
+void WaitForEvent(EventType &eventId, uint32 milliseconds);
 
 /**
 * Signal the given event. Any threads waiting on the event will resume.
 *
 * @param eventId    The even to signal
 */
-inline void SignalEvent(EventType eventId) {
-	SetEvent(eventId.event);
-}
+void SignalEvent(EventType eventId);
 
 } // End of namespace ftl
 
@@ -384,12 +322,8 @@ namespace ftl {
 *
 * @return    An number of hardware threads
 */
-inline uint GetNumHardwareThreads() {
-	return std::thread::hardware_concurrency();
-}
+uint GetNumHardwareThreads();
 
-inline void YieldThread() {
-	std::this_thread::yield();
-}
+void YieldThread();
 	
 } // End of namespace ftl
