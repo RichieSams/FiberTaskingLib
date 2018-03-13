@@ -31,6 +31,20 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+
+#if !defined(_X86_) && defined(_M_IX86)
+#define _X86_
+#endif
+#if !defined(_AMD64_) && defined(_M_AMD64)
+#define _AMD64_
+#endif
+#if !defined(_ARM_) && defined(_M_ARM)
+#define _ARM_
+#endif
+#if !defined(_ARM64_) && defined(_M_ARM64)
+#define _ARM64_
+#endif
+
 #include <minwindef.h>
 
 #include <atomic>

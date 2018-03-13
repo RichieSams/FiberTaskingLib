@@ -94,16 +94,5 @@ add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
 target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(ftl PUBLIC ../include)
 
-# add definitions for windows targets
-if(FTL_ARCH STREQUAL "x86_64")
-	target_compile_definitions(ftl PRIVATE -D_AMD64_)
-elseif(FTL_ARCH STREQUAL "i386")
-	target_compile_definitions(ftl PRIVATE -D_X86_)
-elseif(FTL_ARCH STREQUAL "arm")
-	target_compile_definitions(ftl PRIVATE -D_ARM_)
-elseif(FTL_ARCH STREQUAL "arm64")
-	target_compile_definitions(ftl PRIVATE -D_ARM64_)
-endif()
-
 # Remove the prefix
 set_target_properties(ftl PROPERTIES PREFIX "")
