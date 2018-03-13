@@ -137,6 +137,8 @@ public:
 	 * @param memoryOrder    The memory order to use for the store
 	 */
 	void Store(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+		// Enter shared section
+		m_lock.fetch_add(1u, std::memory_order_seq_cst);
 		m_value.store(x, memoryOrder);
 		CheckWaitingFibers(x);
 	}
@@ -150,7 +152,9 @@ public:
 	 * @return               The value of the counter before the addition
 	 */
 	uint FetchAdd(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
-		uint prev = m_value.fetch_add(x, memoryOrder);
+		// Enter shared section
+		m_lock.fetch_add(1u, std::memory_order_seq_cst);
+		const uint prev = m_value.fetch_add(x, memoryOrder);
 		CheckWaitingFibers(prev + x);
 
 		return prev;
@@ -165,7 +169,9 @@ public:
 	 * @return               The value of the counter before the subtraction
 	 */
 	uint FetchSub(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
-		uint prev = m_value.fetch_sub(x, memoryOrder);
+		// Enter shared section
+		m_lock.fetch_add(1u, std::memory_order_seq_cst);
+		const uint prev = m_value.fetch_sub(x, memoryOrder);
 		CheckWaitingFibers(prev - x);
 
 		return prev;
@@ -200,3 +206,4 @@ private:
 };
 
 } // End of namespace ftl
+

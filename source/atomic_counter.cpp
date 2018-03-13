@@ -81,9 +81,6 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 }
 
 void AtomicCounter::CheckWaitingFibers(uint value) {
-	// Enter the shared section
-	++m_lock;
-
 	uint readyFiberIndices[NUM_WAITING_FIBER_SLOTS];
 	uint nextIndex = 0;
 
@@ -109,7 +106,7 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 		}
 	}
 	// Exit shared section
-	--m_lock;
+	m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 	// Wait for all threads to exit the shared section if there are fibers to ready
 	if (nextIndex > 0) {
 		while (m_lock.load() > 0) {
@@ -123,8 +120,9 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
 		}
-	}	
+	}
 }
 
 
 } // End of namespace ftl
+
