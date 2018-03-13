@@ -400,7 +400,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 	}
 
 	// Ours is empty, try to steal from the others'
-	std::size_t threadIndex = tls.LastSuccessfulSteal;
+	const std::size_t threadIndex = tls.LastSuccessfulSteal;
 	for (std::size_t i = 0; i < m_numThreads; ++i) {
 		const std::size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
 		if (threadIndexToStealFrom == currentThreadIndex) {
@@ -408,7 +408,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 		}
 		ThreadLocalStorage &otherTLS = m_tls[threadIndexToStealFrom];
 		if (otherTLS.TaskQueue.Steal(nextTask)) {
-			tls.LastSuccessfulSteal = i;
+			tls.LastSuccessfulSteal = threadIndexToStealFrom;
 			return true;
 		}
 	}
@@ -583,3 +583,4 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 }
 
 } // End of namespace ftl
+
