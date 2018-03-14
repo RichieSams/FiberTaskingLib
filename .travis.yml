@@ -176,10 +176,5 @@ matrix:
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-3.8
-        - MY_CXX=clang++-3.8
-    - os: osx
-      compiler: clang
-      env: 
         - MY_CC=clang-3.9
         - MY_CXX=clang++-3.9
