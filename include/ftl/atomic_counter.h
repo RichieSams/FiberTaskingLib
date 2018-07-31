@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "ftl/config.h"
 #include "ftl/typedefs.h"
 
 #include <atomic>
@@ -54,6 +55,10 @@ public:
 	AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0) 
 			: m_taskScheduler(taskScheduler),
 			  m_value(initialValue) {
+		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
+		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_lock, sizeof(m_lock));
+		FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeSlots, sizeof(m_freeSlots[0]) * NUM_WAITING_FIBER_SLOTS);
+
 		for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
 			m_freeSlots[i].store(true);
 			// We initialize InUse to true to prevent CheckWaitingFibers() from checking garbage
@@ -86,6 +91,7 @@ private:
 				  TargetValue(0), 
 				  FiberStoredFlag(nullptr),
 				  PinnedThreadIndex(0) {
+			FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 		}
 
 		/** 
