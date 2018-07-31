@@ -47,6 +47,9 @@ public:
 		: m_top(1), // m_top and m_bottom must start at 1
 		  m_bottom(1), // Otherwise, the first Pop on an empty queue will underflow m_bottom
 		  m_array(new CircularArray(32)) {
+		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_top, sizeof(m_top));
+		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_bottom, sizeof(m_bottom));
+		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_array, sizeof(m_array));
 	}
 	~WaitFreeQueue() {
 		delete m_array.load(std::memory_order_relaxed);

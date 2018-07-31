@@ -228,6 +228,8 @@ TaskScheduler::TaskScheduler()
 	  m_fibers(nullptr), 
 	  m_freeFibers(nullptr), 
 	  m_tls(nullptr) {
+	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_initialized, sizeof(m_initialized));
+	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_quit, sizeof(m_quit));
 }
 
 TaskScheduler::~TaskScheduler() {
@@ -246,6 +248,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	m_fiberPoolSize = fiberPoolSize;
 	m_fibers = new Fiber[fiberPoolSize];
 	m_freeFibers = new std::atomic<bool>[fiberPoolSize];
+	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * fiberPoolSize);
 
 	for (uint i = 0; i < fiberPoolSize; ++i) {
 		m_fibers[i] = std::move(Fiber(512000, FiberStart, this));
