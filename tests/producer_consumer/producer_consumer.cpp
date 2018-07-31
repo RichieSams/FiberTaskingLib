@@ -54,6 +54,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 
 void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint globalCounter(0u);
+	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
 	ftl::Task tasks[kNumProducerTasks];
 	for (uint i = 0; i < kNumProducerTasks; ++i) {
