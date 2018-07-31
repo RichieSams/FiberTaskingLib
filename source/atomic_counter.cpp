@@ -24,6 +24,7 @@
 
 #include "ftl/atomic_counter.h"
 
+#include "ftl/ftl_valgrind.h"
 #include "ftl/task_scheduler.h"
 
 
