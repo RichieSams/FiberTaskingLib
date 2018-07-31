@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "ftl/config.h"
 #include "ftl/ftl_valgrind.h"
 
 #include "boost_context/fcontext.h"
