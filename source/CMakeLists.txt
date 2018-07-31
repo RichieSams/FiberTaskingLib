@@ -82,6 +82,7 @@ SetSourceGroup(NAME Util
 	             ../include/ftl/fiber.h
 	             ../include/ftl/thread_abstraction.h
 	             ../include/ftl/wait_free_queue.h
+				 ../include/ftl/ftl_valgrind.h
 )
 
 # Link all the sources into one

@@ -24,17 +24,13 @@
 
 #pragma once
 
-#include "ftl/config.h"
+#include "ftl/ftl_valgrind.h"
 
-#include <boost_context/fcontext.h>
+#include "boost_context/fcontext.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-
-#if defined(FTL_VALGRIND)
-	#include <valgrind/valgrind.h>
-#endif
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 	#if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
@@ -49,20 +45,6 @@
 
 
 namespace ftl {
-
-#if defined(FTL_VALGRIND)
-	#define FTL_VALGRIND_ID uint m_stackId
-
-	#define FTL_VALGRIND_REGISTER(s, e) \
-		m_stackId = VALGRIND_STACK_REGISTER(s, e)
-
-	#define FTL_VALGRIND_DEREGISTER() VALGRIND_STACK_DEREGISTER(m_stackId)
-#else
-	#define FTL_VALGRIND_ID
-	#define FTL_VALGRIND_REGISTER(s, e)
-	#define FTL_VALGRIND_DEREGISTER()
-#endif
-
 
 inline void MemoryGuard(void *memory, size_t bytes);
 inline void MemoryGuardRelease(void *memory, size_t bytes);

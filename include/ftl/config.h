@@ -52,13 +52,3 @@
 		#define FTL_POSIX_THREADS
 	#endif
 #endif
-
-#if defined(FTL_VALGRIND)
-	#include <valgrind/valgrind.h>
-	#include <valgrind/helgrind.h>
-
-	#define FTL_VALGRIND_HG_DISABLE_CHECKING(s, e) VALGRIND_HG_DISABLE_CHECKING(s, e)
-#else
-	#define FTL_VALGRIND_HG_DISABLE_CHECKING(s, e)
-#endif
-
