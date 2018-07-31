@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "ftl/config.h"
 #include "ftl/typedefs.h"
 
 #include <atomic>
@@ -52,24 +51,7 @@ class AtomicCounter {
 #define NUM_WAITING_FIBER_SLOTS 4
 
 public:
-	AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0) 
-			: m_taskScheduler(taskScheduler),
-			  m_value(initialValue) {
-		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
-		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_lock, sizeof(m_lock));
-		FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeSlots, sizeof(m_freeSlots[0]) * NUM_WAITING_FIBER_SLOTS);
-
-		for (uint i = 0; i < NUM_WAITING_FIBER_SLOTS; ++i) {
-			m_freeSlots[i].store(true);
-			// We initialize InUse to true to prevent CheckWaitingFibers() from checking garbage
-			// data when we are adding a new fiber to the wait list in AddFiberToWaitingList()
-			// For this same reason, when we set a slot to be free (ie. m_freeSlots[i] = true), we
-			// keep InUse == true
-			m_waitingFibers[i].InUse.store(true);
-		}
-
-		m_lock.store(0);
-	}
+	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0);
 
 private:
 	/* The TaskScheduler this counter is associated with */
@@ -85,14 +67,7 @@ private:
 	std::atomic<bool> m_freeSlots[NUM_WAITING_FIBER_SLOTS];
 
 	struct WaitingFiberBundle {
-		WaitingFiberBundle()
-				: InUse(true),
-				  FiberIndex(0),
-				  TargetValue(0), 
-				  FiberStoredFlag(nullptr),
-				  PinnedThreadIndex(0) {
-			FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
-		}
+		WaitingFiberBundle();
 
 		/** 
 		 * A bundle is "InUse" when it's being filled with data, or when it's being removed
@@ -212,4 +187,3 @@ private:
 };
 
 } // End of namespace ftl
-
