@@ -227,7 +227,7 @@ public:
 	 *
 	 * @return    The index of the current thread
 	 */
-	std::size_t GetCurrentThreadIndex();
+	FTL_NOINLINE_POSIX std::size_t GetCurrentThreadIndex();
 
 	/**
 	 * Set the behavior for how worker threads handle an empty queue
