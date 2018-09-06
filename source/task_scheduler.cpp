@@ -373,7 +373,7 @@ void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter)
 	}
 }
 
-NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
+FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 	#if defined(FTL_WIN32_THREADS)
 		DWORD threadId = GetCurrentThreadId();
 		for (std::size_t i = 0; i < m_numThreads; ++i) {
