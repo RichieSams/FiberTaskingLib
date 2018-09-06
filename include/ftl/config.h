@@ -52,3 +52,17 @@
 		#define FTL_POSIX_THREADS
 	#endif
 #endif
+
+#if defined(FTL_POSIX_THREADS)
+	#define FTL_NOINLINE_POSIX __attribute__((noinline))
+	#define FTL_NOINLINE_WIN32
+	#define FTL_NOINLINE FTL_NOINLINE_POSIX
+#elif defined(FTL_WIN32_THREADS)
+	#define FTL_NOINLINE_POSIX
+	#define FTL_NOINLINE_WIN32 __declspec(noinline)
+	#define FTL_NOINLINE FTL_NOINLINE_WIN32
+#else
+	#define FTL_NOINLINE_POSIX
+	#define FTL_NOINLINE_WIN32
+	#define FTL_NOINLINE
+#endif
