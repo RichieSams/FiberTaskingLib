@@ -271,7 +271,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	}
 
 	// Set the properties for the current thread
-	SetCurrentThreadAffinity(1);
+	SetCurrentThreadAffinity(0);
 	m_threads[0] = GetCurrentThread();
 
 	// Create the remaining threads
