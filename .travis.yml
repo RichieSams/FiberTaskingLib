@@ -164,11 +164,6 @@ matrix:
         - MY_CC=gcc-5
         - MY_CXX=g++-5
     - os: osx
-      compiler: gcc
-      env: 
-        - MY_CC=gcc-6
-        - MY_CXX=g++-6
-    - os: osx
       compiler: clang
       env: 
         - MY_CC=clang-3.7
