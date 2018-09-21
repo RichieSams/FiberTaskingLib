@@ -143,7 +143,7 @@ inline ThreadType GetCurrentThread() {
  * @param coreAffinity    The requested core affinity
  */
 inline void SetCurrentThreadAffinity(size_t coreAffinity) {
-	SetThreadAffinityMask(::GetCurrentThread(), coreAffinity);
+	SetThreadAffinityMask(::GetCurrentThread(), 1ull << coreAffinity);
 }
 
 /**
