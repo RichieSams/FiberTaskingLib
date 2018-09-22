@@ -273,6 +273,11 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	// Set the properties for the current thread
 	SetCurrentThreadAffinity(0);
 	m_threads[0] = GetCurrentThread();
+	#if defined(FTL_WIN32_THREADS)
+		// Set the thread handle to INVALID_HANDLE_VALUE
+		// So we don't incorrectly try to reference it from another thread
+		m_threads[0].Handle = INVALID_HANDLE_VALUE;
+	#endif
 
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {
