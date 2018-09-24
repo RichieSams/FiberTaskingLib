@@ -27,6 +27,7 @@
 #include "task_scheduler.h"
 #include "atomic_counter.h"
 #include <cassert>
+#include <system_error>
 #include <mutex>
 
 
@@ -242,5 +243,115 @@ public:
 
 private:
 	M& m_mutex;
+};
+
+template<class M>
+class UniqueLock {
+public:
+	UniqueLock() noexcept : m_mutex(nullptr), m_hasMutex(false) {};
+	UniqueLock(UniqueLock const& other) = delete;
+	UniqueLock(UniqueLock&& other) noexcept {
+		m_mutex = other.m_mutex;
+		m_hasMutex = other.m_hasMutex;
+		other.m_mutex = nullptr;
+		other.m_hasMutex = false;
+	};
+	UniqueLock& operator=(UniqueLock const& other) = delete;
+	UniqueLock& operator=(UniqueLock&& other) noexcept {
+		m_mutex = other.m_mutex;
+		m_hasMutex = other.m_hasMutex;
+		other.m_mutex = nullptr;
+		other.m_hasMutex = false;
+		return *this;
+	};
+
+	UniqueLock(M& m, std::defer_lock_t dl) noexcept {
+		// Don't actually lock mutex
+		m_mutex = &m;
+		m_hasMutex = false;
+	}
+	UniqueLock(M& m, std::try_to_lock_t tl, bool pinToThread = false) {
+		// Only attempt to lock mutex
+		m_mutex = &m;
+		m_hasMutex = m_mutex->try_lock(pinToThread);
+	}
+	UniqueLock(M& m, std::adopt_lock_t al) {
+		// Don't actually lock mutex
+		m_mutex = &m;
+		m_hasMutex = true;
+	}
+
+	void lock(bool pinToThread = false) {
+		if(m_mutex) {
+			if (!m_hasMutex) {
+				m_mutex->lock(pinToThread);
+				m_hasMutex = true;
+			}
+			else {
+				throw std::system_error(EDEADLK, std::system_category());
+			}
+		}
+		else {
+			throw std::system_error(EPERM, std::system_category());
+		}
+	}
+
+	bool try_lock(bool pinToThread = false) {
+		if (m_mutex) {
+			if (!m_hasMutex) {
+				return m_hasMutex = m_mutex->try_lock(pinToThread);
+			}
+			throw std::system_error(EDEADLK, std::system_category());
+		}
+		throw std::system_error(EPERM, std::system_category());
+	}
+
+	void unlock() {
+		if(m_mutex && m_hasMutex) {
+			m_mutex->unlock();
+			m_hasMutex = false;
+		}
+	}
+
+	friend void swap(UniqueLock& lhs, UniqueLock& rhs) noexcept {
+		using std::swap;
+
+		swap(lhs.m_mutex, rhs.m_mutex);
+		swap(lhs.m_hasMutex, rhs.m_hasMutex);
+	}
+
+	void swap(UniqueLock& that) noexcept {
+		using std::swap;
+
+		swap(*this, that);
+	}
+
+	M* release() noexcept {
+		M* ret_val = m_mutex;
+		m_mutex = nullptr;
+		m_hasMutex = false;
+		return ret_val;
+	}
+
+	M* mutex() const noexcept {
+		return m_mutex;
+	}
+
+	bool owns_lock() const noexcept {
+		return m_hasMutex;
+	}
+
+	explicit operator bool() const noexcept {
+		return m_hasMutex;
+	}
+
+	~UniqueLock() {
+		if (m_mutex) {
+			m_mutex->unlock();
+		}
+	}
+private:
+	M* m_mutex;
+	bool m_hasMutex;
 };
 }
