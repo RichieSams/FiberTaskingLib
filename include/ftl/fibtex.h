@@ -27,6 +27,7 @@
 #include "task_scheduler.h"
 #include "atomic_counter.h"
 #include <cassert>
+#include <mutex>
 
 
 namespace ftl {
@@ -123,8 +124,123 @@ public:
 	}
 
 private:
-	bool m_ableToSpin = false;
+	bool m_ableToSpin;
 	ftl::TaskScheduler *m_taskScheduler;
 	ftl::AtomicCounter m_atomicCounter;
+};
+
+/**
+ * A lock guard with pinToThread support. Calls m.lock(pinToThread) and m.unlock().
+ *
+ * @tparam M    Mutex type
+ */
+template<class M>
+class LockGuard {
+public:
+	/**
+	 * Acquires the mutex with pinToThread settings.  Calls m.lock(pinToThread) and m.unlock().
+	 *
+	 * @param mutex          Mutex to acquire.
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
+	explicit LockGuard(M& mutex, bool pinToThread = false) : m_mutex(mutex) {
+		m_mutex.lock(pinToThread);
+	}
+	/**
+	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
+	 *
+	 * @param m    Mutex to adopt ownership of.
+	 * @param t    std::adopt_lock. Value unused.
+	 */
+	LockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+		// Do not lock mutex
+		(void) al;
+	}
+	LockGuard(const LockGuard&) = delete;
+	LockGuard& operator=(const LockGuard&) = delete;
+
+	~LockGuard() {
+		m_mutex.unlock();
+	}
+
+private:
+	M& m_mutex;
+};
+
+/**
+ * A spin lock guard with pinToThread support. Calls m.lock_spin() and m.unlock().
+ *
+ * @tparam M    Mutex type
+ */
+template<class M>
+class SpinLockGuard {
+public:
+	/**
+	 * Acquires the mutex with pinToThread settings.  Calls m.lock_spin(pinToThread, iterations) and m.unlock().
+	 *
+	 * @param mutex          Mutex to acquire.
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 * @param iterations     Amount of iterations to spin before yielding.
+	 */
+	explicit SpinLockGuard(M& mutex, bool pinToThread = false, uint iterations = 1000) : m_mutex(mutex) {
+		m_mutex.lock_spin(pinToThread, iterations);
+	}
+	/**
+	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
+	 *
+	 * @param m    Mutex to adopt ownership of.
+	 * @param t    std::adopt_lock. Value unused.
+	 */
+	SpinLockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+		// Do not lock mutex
+		(void) al;
+	}
+	SpinLockGuard(const SpinLockGuard&) = delete;
+	SpinLockGuard& operator=(const SpinLockGuard&) = delete;
+
+	~SpinLockGuard() {
+		m_mutex.unlock();
+	}
+
+  private:
+	M& m_mutex;
+};
+
+/**
+ * A infinite spin lock guard with pinToThread support. Calls m.lock_spin_infinite() and m.unlock().
+ *
+ * @tparam M    Mutex type
+ */
+template<class M>
+class InfiniteSpinLockGuard {
+public:
+	/**
+	 * Acquires the mutex with pinToThread settings.  Calls m.spin_lock_infinite(pinToThread) and m.unlock().
+	 *
+	 * @param mutex          Mutex to acquire.
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
+	explicit InfiniteSpinLockGuard(M& mutex, bool pinToThread = false) : m_mutex(mutex) {
+		m_mutex.spin_lock_infinite(pinToThread);
+	}
+	/**
+	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
+	 *
+	 * @param m    Mutex to adopt ownership of.
+	 * @param t    std::adopt_lock. Value unused.
+	 */
+	InfiniteSpinLockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+		// Do not lock mutex
+		(void) al;
+	}
+	InfiniteSpinLockGuard(const InfiniteSpinLockGuard&) = delete;
+	InfiniteSpinLockGuard& operator=(const InfiniteSpinLockGuard&) = delete;
+
+	~InfiniteSpinLockGuard() {
+		m_mutex.unlock();
+	}
+
+private:
+	M& m_mutex;
 };
 }
