@@ -79,7 +79,7 @@ public:
 	}
 
 	/**
-	 * Lock mutex using an finite spinlock. Does not spin if there is only one backing thread.
+	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
 	 *
 	 * @param iterations    Times to spin.
 	 */
