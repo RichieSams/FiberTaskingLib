@@ -81,7 +81,7 @@ public:
 	/**
 	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
 	 *
-	 * @param iterations    Times to spin.
+	 * @param iterations    Amount of iterations to spin before yielding.
 	 */
 	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
