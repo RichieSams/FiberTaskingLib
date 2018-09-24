@@ -49,23 +49,23 @@ public:
 	/**
 	 * Lock mutex in traditional way, yielding immediately.
 	 */
-	void lock() {
+	void lock(bool pinToThread = false) {
 		while (true) {
 			if (m_atomicCounter.CompareExchange(0, 1)) {
 				return;
 			}
 
-			m_taskScheduler->WaitForCounter(&m_atomicCounter, 0);
+			m_taskScheduler->WaitForCounter(&m_atomicCounter, 0, pinToThread);
 		}
 	}
 
 	/**
 	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
 	 */
-	void lock_spin() {
+	void lock_spin_infinite(bool pinToThread = false) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
-			lock();
+			lock(pinToThread);
 			return;
 		}
 
@@ -83,10 +83,10 @@ public:
 	 *
 	 * @param iterations    Times to spin.
 	 */
-	void lock_spin_iter(uint iterations = 1000) {
+	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
-			lock();
+			lock(pinToThread);
 			return;
 		}
 
@@ -100,7 +100,7 @@ public:
 		}
 
 		// Spinning didn't grab the lock, we're in for the long hall. Yield.
-		lock();
+		lock(pinToThread);
 	}
 
 	/**
