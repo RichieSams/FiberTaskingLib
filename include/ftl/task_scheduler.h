@@ -230,6 +230,24 @@ public:
 	FTL_NOINLINE_POSIX std::size_t GetCurrentThreadIndex();
 
 	/**
+	 * Gets the amount of backing threads.
+	 *
+	 * @return    Backing thread count
+	 */
+	std::size_t GetThreadCount() {
+		return m_threads.size();
+	}
+
+	/**
+	 * Gets the amount of fibers in the fiber pool.
+	 *
+	 * @return    Fiber pool size
+	 */
+	std::size_t GetFiberCount() {
+		return m_fiberPoolSize;
+	}
+
+	/**
 	 * Set the behavior for how worker threads handle an empty queue
 	 *
 	 * @param behavior    
