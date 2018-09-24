@@ -59,6 +59,14 @@
 #	endif
 #endif
 
+//  SSE on MSVC x86                MSVC x64 has SSE              Clang/GCC define
+#if _M_IX86_FP >= 1 || (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE__)
+#   include <emmintrin.h>
+#   define FTL_PAUSE() _mm_pause()
+#else
+#   define FTL_PAUSE()
+#endif
+
 #if defined(FTL_POSIX_THREADS)
 #	define FTL_NOINLINE_POSIX __attribute__((noinline))
 #	define FTL_NOINLINE_WIN32
