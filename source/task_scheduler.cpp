@@ -46,6 +46,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
 	// Spin wait until everything is initialized
 	while (!taskScheduler->m_initialized.load(std::memory_order_acquire)) {
 		// Spin
+		FTL_PAUSE();
 	}
 
 	// Get a free fiber to switch to
