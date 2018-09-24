@@ -190,6 +190,28 @@ public:
 		return prev;
 	}
 
+	/**
+	 * A wrapper over std::atomic_uint::compare_exchange_strong()
+	 *
+	 * The compare_exchange_strong *will* be atomic, but this function as a whole is *not* atomic
+	 *
+	 * @param expectedValue    The value that is expected to be in the atomic counter
+	 * @param newValue         The value that the atomic counter will be set to if comparison succeeds.
+	 * @param memoryOrder      The memory order to use for the compare_exchange_strong
+	 * @return                 If the compare_exchange_strong succeeded
+	 */
+	bool CompareExchange(uint expectedValue, uint const newValue, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
+		bool const success = m_value.compare_exchange_strong(expectedValue, newValue, memoryOrder);
+		if (success) {
+			CheckWaitingFibers(newValue);
+		}
+
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+		return success;
+	}
+
 private:
 	/**
 	 * Add a fiber to the list of waiting fibers
