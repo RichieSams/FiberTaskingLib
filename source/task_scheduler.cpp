@@ -46,6 +46,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
 	// Spin wait until everything is initialized
 	while (!taskScheduler->m_initialized.load(std::memory_order_acquire)) {
 		// Spin
+		FTL_PAUSE();
 	}
 
 	// Get a free fiber to switch to
@@ -112,6 +113,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 		// Lock
 		while (tls.ReadFibersLock.test_and_set(std::memory_order_acquire)) {
 			// Spin
+			FTL_PAUSE();
 		}
 
 		for (auto iter = tls.ReadyFibers.begin(); iter != tls.ReadyFibers.end(); ++iter) {
@@ -176,6 +178,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 					// Lock
 					while (tls.ReadFibersLock.test_and_set(std::memory_order_acquire)) {
 						// Spin
+						FTL_PAUSE();
 					}
 					// Prevent sleepy-time if we have ready fibers
 					if (tls.ReadyFibers.empty()) {
@@ -515,6 +518,7 @@ void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size
 	// Lock
 	while (tls->ReadFibersLock.test_and_set(std::memory_order_acquire)) {
 		// Spin
+		FTL_PAUSE();
 	}
 
 	tls->ReadyFibers.emplace_back(fiberIndex, fiberStoredFlag);

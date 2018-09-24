@@ -59,6 +59,13 @@
 #	endif
 #endif
 
+#ifdef __SSE2__
+#   include <emmintrin.h>
+#   define FTL_PAUSE() _mm_pause()
+#else
+#   define FTL_PAUSE()
+#endif
+
 #if defined(FTL_POSIX_THREADS)
 #	define FTL_NOINLINE_POSIX __attribute__((noinline))
 #	define FTL_NOINLINE_WIN32
