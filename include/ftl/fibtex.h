@@ -28,14 +28,15 @@
 
 namespace ftl {
 /**
- * A fiber aware mutex. Does not block in the traditional way.
+ * A fiber aware mutex. Does not block in the traditional way. Methods do not follow the lowerCamelCase convention
+ * of the rest of the library in order to comply with C++'s named requirement Basic Lockable and Lockable.
  */
 class Fibtex {
 public:
 	/**
 	 * All Fibtex's have to be aware of the task scheduler in order to yield.
 	 *
-	 * @param taskScheduler ftl::TaskScheduler that will be using this mutex.
+	 * @param taskScheduler    ftl::TaskScheduler that will be using this mutex.
 	 */
 	explicit Fibtex(ftl::TaskScheduler *taskScheduler)
 		: m_taskScheduler(taskScheduler),
@@ -59,12 +60,14 @@ public:
 	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
 	 */
 	void lock_spin() {
+		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
 			lock();
 			return;
 		}
 
 		while (true) {
+			// Spin
 			if (m_atomicCounter.CompareExchange(0, 1)) {
 				return;
 			}
@@ -78,25 +81,29 @@ public:
 	 * @param iterations    Times to spin.
 	 */
 	void lock_spin_iter(uint iterations = 1000) {
+		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
 			lock();
 			return;
 		}
 
+		// Spin for a bit
 		for (uint i = 0; i < iterations; ++i) {
+			// Spin
 			if (m_atomicCounter.CompareExchange(0, 1)) {
 				return;
 			}
 			FTL_PAUSE();
 		}
 
+		// Spinning didn't grab the lock, we're in for the long hall. Yield.
 		lock();
 	}
 
 	/**
 	 * Attempts to lock the lock a single time.
 	 *
-	 * @return If lock successful.
+	 * @return    If lock successful.
 	 */
 	bool try_lock() {
 		return m_atomicCounter.CompareExchange(0, 1);

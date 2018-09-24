@@ -171,12 +171,12 @@ public:
 	/**
 	 * A wrapper over std::atomic_uint::compare_exchange_strong()
 	 *
-	 * The compare_exchange_strong *with* be atomic, but this function as a while is *not* atomic
+	 * The compare_exchange_strong *will* be atomic, but this function as a whole is *not* atomic
 	 *
-	 * \param expectedValue The value that is expected to be in the atomic counter
-	 * \param newValue      The value that the atomic counter will be set to if comparison succeeds.
-	 * \param memoryOrder   The memory order to use for the compare_exchange_strong
-	 * \return              If the compare_exchange_strong succeeded
+	 * @param expectedValue    The value that is expected to be in the atomic counter
+	 * @param newValue         The value that the atomic counter will be set to if comparison succeeds.
+	 * @param memoryOrder      The memory order to use for the compare_exchange_strong
+	 * @return                 If the compare_exchange_strong succeeded
 	 */
 	bool CompareExchange(uint expectedValue, uint newValue, std::memory_order memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
