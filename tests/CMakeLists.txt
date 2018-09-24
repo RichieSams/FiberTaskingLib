@@ -33,6 +33,11 @@ SetSourceGroup(NAME "Fiber Abstraction"
 	             fiber_abstraction/floating_point_fiber_switch.cpp
 )
 
+SetSourceGroup(NAME "Fibtex"
+	PREFIX FTL_TEST
+	SOURCE_FILES fibtex/locking_tests.cpp
+)
+
 SetSourceGroup(NAME "Producer Consumer"
 	PREFIX FTL_TEST
 	SOURCE_FILES producer_consumer/producer_consumer.cpp
@@ -53,6 +58,7 @@ SetSourceGroup(NAME "Utilities"
 set(FIBER_TASKING_LIB_TESTS_SRC
 	${FTL_TEST_FIBER_ABSTRACTION}
 	${FTL_TEST_PRODUCER_CONSUMER}
+	${FTL_TEST_FIBTEX}
 	${FTL_TEST_TRIANGLE_NUMBER}
 	${FTL_TEST_UTILITIES}
 )
