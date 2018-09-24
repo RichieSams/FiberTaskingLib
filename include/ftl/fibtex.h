@@ -26,6 +26,7 @@
 
 #include "task_scheduler.h"
 #include "atomic_counter.h"
+#include <cassert>
 
 
 namespace ftl {
@@ -116,8 +117,8 @@ public:
 	 */
 	void unlock() {
 		if (!m_atomicCounter.CompareExchange(1, 0)) {
-			printf("Mutex was unlocked by another fiber or was double unlocked.\n");
-			return;
+			printf("Error: Mutex was unlocked by another fiber or was double unlocked.\n");
+			assert(false);
 		}
 	}
 
