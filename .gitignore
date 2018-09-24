@@ -3,3 +3,5 @@ build*/
 
 # CLion Project files
 .idea/
+# CLion build files
+cmake-build*/
