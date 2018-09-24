@@ -22,6 +22,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "task_scheduler.h"
 #include "atomic_counter.h"
 
