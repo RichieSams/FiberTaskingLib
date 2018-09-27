@@ -391,4 +391,91 @@ private:
 	M* m_mutex;
 	bool m_hasMutex;
 };
+
+namespace detail{
+template<class M>
+class LockWrapper {
+public:
+	LockWrapper(bool pinToThread, M& mutex) : m_pinToThread(pinToThread), m_mutex(mutex) {}
+	void lock() {
+		m_mutex.lock(m_pinToThread);
+	}
+	bool try_lock() {
+		return m_mutex.try_lock();
+	}
+	void unlock() {
+		m_mutex.unlock();
+	}
+	LockWrapper& toLvalue() const noexcept {
+		return *this;
+	}
+private:
+	M& m_mutex;
+	bool m_pinToThread;
+};
+
+template<class M>
+void unlock_helper(M& mutex) {
+	mutex.unlock();
+}
+
+template <size_t... I>
+struct index_sequence {};
+
+template <size_t N, size_t... I>
+struct make_index_sequence : public make_index_sequence<N - 1, N - 1, I...> {};
+
+template <size_t... I>
+struct make_index_sequence<0, I...> : public index_sequence<I...> {};
+
+template<typename... T, size_t... I>
+void tuple_unlock_helper(std::tuple<T...> &ts, index_sequence<I...>) {
+	void* filler; // need lvalue for std::tie
+	std::tie((unlock_helper(std::get<I>(ts)), filler)...);
+}
+
+template <typename... T>
+void tuple_unlock(std::tuple<T...> &ts) {
+	return tuple_unlock_helper(ts, make_index_sequence<sizeof...(T)>());
+}
+}
+
+template<class Lock1, class Lock2, class... Locks>
+void lock(bool pinToThread, Lock1& l1, Lock2& l2, Locks&... locks) {
+	std::lock(detail::LockWrapper<Lock1>(pinToThread, l1).toLvalue(), detail::LockWrapper<Lock2>(pinToThread, l2).toLvalue(), detail::LockWrapper<Locks>(pinToThread, locks).toLvalue()...);
+}
+
+template<class... M>
+class ScopedLock {
+public:
+	/**
+	 * Acquires the mutex with pinToThread settings.  Calls m.lock(pinToThread) and m.unlock().
+	 *
+	 * @param mutex          Mutex to acquire.
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
+	explicit ScopedLock(bool pinToThread, M&... m) : m_mutexes(m...) {
+		lock(pinToThread, m...);
+	}
+
+	/**
+	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
+	 *
+	 * @param m    Mutex to adopt ownership of.
+	 * @param t    std::adopt_lock. Value unused.
+	 */
+	explicit ScopedLock(std::adopt_lock_t al, M&... m) noexcept : m_mutexes(m...) {
+		// Do not lock mutex
+		(void) al;
+	}
+	ScopedLock(const ScopedLock&) = delete;
+	ScopedLock& operator=(const ScopedLock&) = delete;
+
+	~ScopedLock() {
+		detail::tuple_unlock(m_mutexes);
+	}
+
+  private:
+	std::tuple<M&...> m_mutexes;
+};
 }
