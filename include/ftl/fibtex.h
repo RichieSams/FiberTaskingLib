@@ -48,6 +48,11 @@ public:
 		  m_atomicCounter(taskScheduler, 0),
 		  m_ableToSpin(taskScheduler->GetThreadCount() > 1) {}
 
+	Fibtex(const Fibtex&) = delete;
+	Fibtex(Fibtex&&) = delete;
+	Fibtex& operator=(const Fibtex&) = delete;
+	Fibtex& operator=(Fibtex&&) = delete;
+
 	/**
 	 * Lock mutex in traditional way, yielding immediately.
 	 */
