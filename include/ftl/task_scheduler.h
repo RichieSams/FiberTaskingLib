@@ -234,7 +234,7 @@ public:
 	 *
 	 * @return    Backing thread count
 	 */
-	std::size_t GetThreadCount() {
+	std::size_t GetThreadCount() const noexcept {
 		return m_threads.size();
 	}
 
@@ -243,7 +243,7 @@ public:
 	 *
 	 * @return    Fiber pool size
 	 */
-	std::size_t GetFiberCount() {
+	std::size_t GetFiberCount() const noexcept {
 		return m_fiberPoolSize;
 	}
 
