@@ -158,7 +158,7 @@ public:
 	 * @param m    Mutex to adopt ownership of.
 	 * @param t    std::adopt_lock. Value unused.
 	 */
-	LockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+	LockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -197,7 +197,7 @@ public:
 	 * @param m    Mutex to adopt ownership of.
 	 * @param t    std::adopt_lock. Value unused.
 	 */
-	SpinLockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+	SpinLockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -235,7 +235,7 @@ public:
 	 * @param m    Mutex to adopt ownership of.
 	 * @param t    std::adopt_lock. Value unused.
 	 */
-	InfiniteSpinLockGuard(M& m, std::adopt_lock_t al) : m_mutex(m_mutex) {
+	InfiniteSpinLockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -280,7 +280,7 @@ public:
 		m_mutex = &m;
 		m_hasMutex = m_mutex->try_lock(pinToThread);
 	}
-	UniqueLock(M& m, std::adopt_lock_t al) {
+	UniqueLock(M& m, std::adopt_lock_t al) noexcept {
 		// Don't actually lock mutex
 		m_mutex = &m;
 		m_hasMutex = true;
@@ -290,6 +290,36 @@ public:
 		if(m_mutex) {
 			if (!m_hasMutex) {
 				m_mutex->lock(pinToThread);
+				m_hasMutex = true;
+			}
+			else {
+				throw std::system_error(EDEADLK, std::system_category());
+			}
+		}
+		else {
+			throw std::system_error(EPERM, std::system_category());
+		}
+	}
+
+	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
+		if(m_mutex) {
+			if (!m_hasMutex) {
+				m_mutex->lock_spin(pinToThread, iterations);
+				m_hasMutex = true;
+			}
+			else {
+				throw std::system_error(EDEADLK, std::system_category());
+			}
+		}
+		else {
+			throw std::system_error(EPERM, std::system_category());
+		}
+	}
+
+	void lock_spin_infinite(bool pinToThread = false) {
+		if(m_mutex) {
+			if (!m_hasMutex) {
+				m_mutex->lock_spin_infinite(pinToThread);
 				m_hasMutex = true;
 			}
 			else {
@@ -352,7 +382,9 @@ public:
 
 	~UniqueLock() {
 		if (m_mutex) {
-			m_mutex->unlock();
+			if (m_hasMutex) {
+				m_mutex->unlock();
+			}
 		}
 	}
 private:
