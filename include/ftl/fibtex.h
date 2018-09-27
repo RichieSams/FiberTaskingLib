@@ -67,25 +67,6 @@ public:
 	}
 
 	/**
-	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
-	 */
-	void lock_spin_infinite(bool pinToThread = false) {
-		// Don't spin if there is only one thread and spinning is pointless
-		if (!m_ableToSpin) {
-			lock(pinToThread);
-			return;
-		}
-
-		while (true) {
-			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1)) {
-				return;
-			}
-			FTL_PAUSE();
-		}
-	}
-
-	/**
 	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
 	 *
 	 * @param iterations    Amount of iterations to spin before yielding.
@@ -108,6 +89,25 @@ public:
 
 		// Spinning didn't grab the lock, we're in for the long hall. Yield.
 		lock(pinToThread);
+	}
+
+	/**
+	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
+	 */
+	void lock_spin_infinite(bool pinToThread = false) {
+		// Don't spin if there is only one thread and spinning is pointless
+		if (!m_ableToSpin) {
+			lock(pinToThread);
+			return;
+		}
+
+		while (true) {
+			// Spin
+			if (m_atomicCounter.CompareExchange(0, 1)) {
+				return;
+			}
+			FTL_PAUSE();
+		}
 	}
 
 	/**
