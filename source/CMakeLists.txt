@@ -64,6 +64,11 @@ if ((FTL_ARCH STREQUAL "x86_64") OR (FTL_ARCH STREQUAL "i386"))
 	add_definitions(-DFTL_STRONG_MEMORY_MODEL=1)
 endif()
 
+if (FTL_CONTRIB_CHANGES)
+	add_definitions(-DFTL_CONTRIB_CHANGES=1)
+endif()
+
+
 
 SetSourceGroup(NAME Core
 	PREFIX FTL
@@ -85,15 +90,42 @@ SetSourceGroup(NAME Util
 				 ../include/ftl/ftl_valgrind.h
 )
 
+SetSourceGroup(NAME Contrib
+	PREFIX FTL
+	SOURCE_FILES ../include/ftl/contrib/trampoline.h
+				 contrib.cpp
+)
+
 # Link all the sources into one
 set(FIBER_TASKING_LIB_SRC
 	${FTL_CORE}
 	${FTL_UTIL}
 )
 
+set(FIBER_TASKING_LIB_CONTRIB_SRC
+	${FTL_CONTRIB}
+)
+
 add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
 target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(ftl PUBLIC ../include)
 
+# Contrib static library
+
+add_library(ftl-contrib STATIC ${FIBER_TASKING_LIB_SRC} ${FIBER_TASKING_LIB_CONTRIB_SRC})
+target_link_libraries(ftl-contrib boost_context ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(ftl-contrib PUBLIC ../include)
+target_compile_definitions(ftl-contrib PUBLIC -DFTL_CONTRIB_CHANGES=1)
+set_target_properties(ftl-contrib PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+)
+
+# before 3.10, CMake does not understand MSVC version flags
+if(MSVC AND ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_LESS 3.10)
+	target_compile_options(ftl-contrib PUBLIC "/std:c++17")
+endif()
+
 # Remove the prefix
 set_target_properties(ftl PROPERTIES PREFIX "")
+set_target_properties(ftl-contrib PROPERTIES PREFIX "")

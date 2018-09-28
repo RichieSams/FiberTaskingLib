@@ -30,6 +30,7 @@ option(FTL_BUILD_TESTS "Build FiberTaskingLib tests" ON)
 option(FTL_BUILD_BENCHMARKS "Build FiberTaskingLib benchmarks" ON)
 option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
+option(FTL_BUILD_CONTRIB_TESTS "Should contrib tests be built? (requires C++17)" OFF)
 
 # Include Valgrind
 if (FTL_VALGRIND)

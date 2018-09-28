@@ -152,5 +152,4 @@ void AtomicCounter::CheckWaitingFibers(uint value) {
 	}
 }
 
-
 } // End of namespace ftl
