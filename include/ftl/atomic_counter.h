@@ -35,14 +35,7 @@
 namespace ftl {
 
 class TaskScheduler;
-struct Task;
 
-#ifdef FTL_CONTRIB_CHANGES
-struct BoundTrampolineBase {
-	virtual ~BoundTrampolineBase() = default;
-	virtual operator ftl::Task() & = 0;
-};
-#endif
 /** 
  * AtomicCounter is a wrapper over a C++11 atomic_uint
  * In FiberTaskingLib, AtomicCounter is used to create dependencies between Tasks, and
@@ -103,16 +96,6 @@ private:
 	* This makes the public API cleaner
 	*/
 	friend class TaskScheduler;
-
-	/**/
-
-#ifdef FTL_CONTRIB_CHANGES
-private:
-	std::mutex m_boundTrampolinesLock;
-	std::vector<std::unique_ptr<BoundTrampolineBase>> m_boundTrampolines;
-public:
-	void addTask(std::unique_ptr<BoundTrampolineBase> bound_trampoline);
-#endif
 
 public:
 	/**

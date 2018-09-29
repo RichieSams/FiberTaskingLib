@@ -34,27 +34,14 @@ struct Foo {};
 /*
 	Showcases Trampoline functionality
 
-	Requires C++17
-
 	Features:
 	 - automatic type safe interface and lambdas-as-tasks
 	 - error if mismatched type/count of arguments (if a bit cryptic)
 	 - no need to repeat types
-	 - supports returning values from tasks
-
-	Two usages showcased here: one with automatic memory management, and one with manual-ish memory management
-
-	Downsides:
-	 - C++17
-	 - version A requires intrusive changes to AtomicCounter
-
-	Missing for A:
-	 - Multiple task addition support
-	 - Task return value retrieval
 
 	Glossary:
 	 - Trampoline: wrapper around a lambda / function
-	 - BoundTrampoline: Trampoline + arguments + possible return value
+	 - BoundTrampoline: Trampoline + arguments
 */
 
 void TrampolineMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
@@ -62,25 +49,10 @@ void TrampolineMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	int a = 3, b = 4, d = 6;
 
 	ftl::AtomicCounter counter(taskScheduler);
-	// Version A
-	// Trampoline lifetime is automatically managed by the counter
-	counter.addTask(
-		ftl::Trampoline([](int& a, const int& b, const Foo& f, const int d) { a++; })
-		.bind(a, b, f, d)
-	);
-
+	taskScheduler->AddTask(*ftl::make_trampoline([](int& a, const int& b, const Foo& f, const int d) { a++; }).bind(a, b, f, d), &counter);
 	taskScheduler->WaitForCounter(&counter, 0);
 	// values are correctly captured and const is respected
 	std::cout << a << '\n';
-
-	// Version B
-	// Trampoline lifetime is managed by the user
-	auto bt2 = ftl::Trampoline([](int& a, const int& b, const Foo& f, const int d) {return a+1; }).bind(a, b, f, d);
-	// automatic conversion to ftl::Task
-	taskScheduler->AddTask(*bt2, &counter);
-	taskScheduler->WaitForCounter(&counter, 0);
-	// showcases returning values
-	std::cout << *bt2 << '\n';
 }
 
 TEST(ContribTests, Trampoline) {
