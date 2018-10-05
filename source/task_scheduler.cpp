@@ -542,6 +542,9 @@ void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size
 void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const value, bool const pinToCurrentThread) {
 	// Fast out
 	if (counter->Load(std::memory_order_relaxed) == value) {
+		// wait for threads to drain from counter logic, otherwise we might continue too early
+		while (counter->m_lock.load() > 0) {
+		}
 		return;
 	}
 
