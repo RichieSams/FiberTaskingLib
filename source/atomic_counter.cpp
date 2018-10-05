@@ -58,6 +58,8 @@ AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThr
 
 bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue, std::atomic<bool> *const fiberStoredFlag,
                                           std::size_t const pinnedThreadIndex) {
+
+	m_lock.fetch_add(1u, std::memory_order_seq_cst);
 	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
 		bool expected = true;
 		// Try to acquire the slot
@@ -82,6 +84,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 		// everything
 		uint const value = m_value.load(std::memory_order_relaxed);
 		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
+			m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 			return false;
 		}
 
@@ -91,15 +94,23 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst,
 			                                                  std::memory_order_relaxed)) {
 				// Failed the race. Another thread got to it first.
+				m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 				return false;
 			}
 			// Signal that the slot is now free
 			// Leave IneUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
 
+			
+			m_lock.fetch_sub(1u, std::memory_order_seq_cst);
+
+			// wait for threads to drain from counter logic, otherwise we might continue too early
+			while (m_lock.load() > 0) {
+			}
 			return true;
 		}
 
+		m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 		return false;
 	}
 
