@@ -44,9 +44,9 @@ public:
 	 * @param taskScheduler    ftl::TaskScheduler that will be using this mutex.
 	 */
 	explicit Fibtex(ftl::TaskScheduler *taskScheduler)
-		: m_taskScheduler(taskScheduler),
-		  m_atomicCounter(taskScheduler, 0),
-		  m_ableToSpin(taskScheduler->GetThreadCount() > 1) {}
+		: m_ableToSpin(taskScheduler->GetThreadCount() > 1),
+		  m_taskScheduler(taskScheduler),
+		  m_atomicCounter(taskScheduler, 0) {}
 
 	Fibtex(const Fibtex&) = delete;
 	Fibtex(Fibtex&&) = delete;
@@ -396,7 +396,8 @@ namespace detail{
 template<class M>
 class LockWrapper {
 public:
-	LockWrapper(bool pinToThread, M& mutex) : m_pinToThread(pinToThread), m_mutex(mutex) {}
+	/**
+	LockWrapper(bool pinToThread, M& mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {}
 	void lock() {
 		m_mutex.lock(m_pinToThread);
 	}
