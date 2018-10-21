@@ -58,7 +58,7 @@ public:
 	 */
 	void lock(bool pinToThread = false) {
 		while (true) {
-			if (m_atomicCounter.CompareExchange(0, 1)) {
+			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
 				return;
 			}
 
@@ -81,7 +81,7 @@ public:
 		// Spin for a bit
 		for (uint i = 0; i < iterations; ++i) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1)) {
+			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
 				return;
 			}
 			FTL_PAUSE();
@@ -103,7 +103,7 @@ public:
 
 		while (true) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1)) {
+			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
 				return;
 			}
 			FTL_PAUSE();
@@ -116,14 +116,14 @@ public:
 	 * @return    If lock successful.
 	 */
 	bool try_lock() {
-		return m_atomicCounter.CompareExchange(0, 1);
+		return m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel);
 	}
 
 	/**
 	 * Unlock the mutex.
 	 */
 	void unlock() {
-		if (!m_atomicCounter.CompareExchange(1, 0)) {
+		if (!m_atomicCounter.CompareExchange(1, 0, std::memory_order_acq_rel)) {
 			printf("Error: Mutex was unlocked by another fiber or was double unlocked.\n");
 			assert(false);
 		}
