@@ -232,8 +232,8 @@ public:
 	/**
 	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
 	 *
-	 * @param m    Mutex to adopt ownership of.
-	 * @param t    std::adopt_lock. Value unused.
+	 * @param m     Mutex to adopt ownership of.
+	 * @param al    std::adopt_lock. Value unused.
 	 */
 	InfiniteSpinLockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
 		// Do not lock mutex
@@ -250,6 +250,11 @@ private:
 	M& m_mutex;
 };
 
+/**
+ * A UniqueLock that is aware of pinToThread and all possible ftl::Fibtex locking methods
+ * 
+ * @tparam M    Type of mutex to lock over.
+ */
 template<class M>
 class UniqueLock {
 public:
@@ -270,22 +275,47 @@ public:
 		return *this;
 	};
 
+	
+	/**
+	 * Points UniqueLock at mutex but does not actually lock the lock.
+	 *
+	 * @param m     Mutex to hold
+	 * @param dl    std::defer_lock. Unused.
+	 */
 	UniqueLock(M& m, std::defer_lock_t dl) noexcept {
 		// Don't actually lock mutex
 		m_mutex = &m;
 		m_hasMutex = false;
 	}
+	/**
+	 * Points UniqueLock at mutex and tries to lock the lock.
+	 *
+	 * @param m              Mutex to hold
+	 * @param tl             std::try_to_lock. Unused.
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
 	UniqueLock(M& m, std::try_to_lock_t tl, bool pinToThread = false) {
 		// Only attempt to lock mutex
 		m_mutex = &m;
 		m_hasMutex = m_mutex->try_lock(pinToThread);
 	}
+	/**
+	 * Points UniqueLock at mutex, assuming it is already held. Does not lock the lock.
+	 *
+	 * @param m     Mutex to hold
+	 * @param al    std::adopt_lock. Unused.
+	 */
 	UniqueLock(M& m, std::adopt_lock_t al) noexcept {
 		// Don't actually lock mutex
 		m_mutex = &m;
 		m_hasMutex = true;
 	}
 
+	/**
+	 * Locks mutex.
+	 *
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
 	void lock(bool pinToThread = false) {
 		if(m_mutex) {
 			if (!m_hasMutex) {
@@ -301,6 +331,12 @@ public:
 		}
 	}
 
+	/**
+	 * Locks the mutex using a spin lock. After spinning for iterations, bails and does a blocking lock.
+	 *
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 * @param iterations     Amount of iterations to spin for.
+	 */
 	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
 		if(m_mutex) {
 			if (!m_hasMutex) {
@@ -316,6 +352,11 @@ public:
 		}
 	}
 
+	/**
+	 * Locks the mutex using an infinite spin loop. Probably not what you want.
+	 *
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 */
 	void lock_spin_infinite(bool pinToThread = false) {
 		if(m_mutex) {
 			if (!m_hasMutex) {
@@ -331,6 +372,12 @@ public:
 		}
 	}
 
+	/**
+	 * Try to lock the mutex once.
+	 *
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 * @return               True if the lock was locked.
+	 */
 	bool try_lock(bool pinToThread = false) {
 		if (m_mutex) {
 			if (!m_hasMutex) {
@@ -341,6 +388,9 @@ public:
 		throw std::system_error(EPERM, std::system_category());
 	}
 
+	/**
+	 * Unlocks mutex. Safe to call if you do not own the mutex.
+	 */
 	void unlock() {
 		if(m_mutex && m_hasMutex) {
 			m_mutex->unlock();
@@ -348,6 +398,12 @@ public:
 		}
 	}
 
+	/**
+	 * Swaps two UniqueLocks
+	 *
+	 * @param lhs    UniqueLock 1
+	 * @param rhs    UniqueLock 2
+	 */
 	friend void swap(UniqueLock& lhs, UniqueLock& rhs) noexcept {
 		using std::swap;
 
@@ -355,12 +411,22 @@ public:
 		swap(lhs.m_hasMutex, rhs.m_hasMutex);
 	}
 
+	/**
+	 * Member function swap.
+	 *
+	 * @param that    Other lock to swap with.
+	 */
 	void swap(UniqueLock& that) noexcept {
 		using std::swap;
 
 		swap(*this, that);
 	}
 
+	/**
+	 * Gives up ownership of the mutex. You're on your own kiddo. Sets UniqueLock to value as if default constructed.
+	 *
+	 * @return    Pointer to owned mutex.
+	 */
 	M* release() noexcept {
 		M* ret_val = m_mutex;
 		m_mutex = nullptr;
@@ -368,14 +434,27 @@ public:
 		return ret_val;
 	}
 
+	/**
+	 * Get pointer to owned mutex.
+	 *
+	 * @return    Pointer to mutex. Can be nullptr.
+	 */
 	M* mutex() const noexcept {
 		return m_mutex;
 	}
 
+	/**
+	 * Returns if the mutex is currently held.
+	 *
+	 * @return    If mutex is currently held.
+	 */
 	bool owns_lock() const noexcept {
 		return m_hasMutex;
 	}
 
+	/**
+	 * Returns true if lock is held.
+	 */
 	explicit operator bool() const noexcept {
 		return m_hasMutex;
 	}
@@ -393,66 +472,128 @@ private:
 };
 
 namespace detail{
+/**
+ * A little wrapper class that allows pinToThread to be respected when passed to std::lock.
+ *
+ * @tparam M    Mutex type
+ */
 template<class M>
 class LockWrapper {
 public:
 	/**
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+	 * @param mutex          Mutex to wrap around.
+	 */
 	LockWrapper(bool pinToThread, M& mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {}
+	/**
+	 * Locks mutex
+	 */
 	void lock() {
 		m_mutex.lock(m_pinToThread);
 	}
+	/**
+	 * Tries to lock mutex
+	 *
+	 * @return    If mutex successfully locked.
+	 */
 	bool try_lock() {
-		return m_mutex.try_lock();
+		return m_mutex.try_lock(m_pinToThread);
 	}
-	void unlock() {
+	/**
+	 * Unlocks mutex.
+	 */
+	void unlock() const {
 		m_mutex.unlock();
-	}
-	LockWrapper& toLvalue() const noexcept {
-		return *this;
 	}
 private:
 	M& m_mutex;
 	bool m_pinToThread;
 };
 
+/**
+ * Unlocks given mutex. Helper function for tuple_unlock
+ *
+ * @tparam M       Mutex Type
+ * @param mutex    Mutex to unlock
+ */
 template<class M>
 void unlock_helper(M& mutex) {
 	mutex.unlock();
 }
 
+/**
+ * Backport of std::index_sequence
+ */
 template <size_t... I>
 struct index_sequence {};
 
+/**
+* Backport of std::make_index_sequence
+*/
 template <size_t N, size_t... I>
 struct make_index_sequence : public make_index_sequence<N - 1, N - 1, I...> {};
 
 template <size_t... I>
 struct make_index_sequence<0, I...> : public index_sequence<I...> {};
 
+/**
+ * Abuses std::tie and the comma operator in order to run unlock_helper on all members of a tuple.
+ *
+ * @param ts    Tuple of mutexes to unlock.
+ */
 template<typename... T, size_t... I>
 void tuple_unlock_helper(std::tuple<T...> &ts, index_sequence<I...>) {
 	void* filler; // need lvalue for std::tie
 	std::tie((unlock_helper(std::get<I>(ts)), filler)...);
 }
 
+/**
+ * Generates the index sequence needed to iterate over the tuple in tuple_unlock_helper.
+ *
+ * @param ts    Tuple of mutexes to unlock.
+ */
 template <typename... T>
 void tuple_unlock(std::tuple<T...> &ts) {
 	return tuple_unlock_helper(ts, make_index_sequence<sizeof...(T)>());
 }
 }
 
+/**
+ * pinToThread aware std::lock
+ *
+ * @tparam Lock1         Type of lock 1
+ * @tparam Lock2         Type of lock 2
+ * @tparam Locks         Type of the variadic locks
+ * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock
+ * @param l1             First lock to lock
+ * @param l2             Second lock to lock
+ * @param locks          Variadic locks to lock
+ */
 template<class Lock1, class Lock2, class... Locks>
 void lock(bool pinToThread, Lock1& l1, Lock2& l2, Locks&... locks) {
-	std::lock(detail::LockWrapper<Lock1>(pinToThread, l1).toLvalue(), detail::LockWrapper<Lock2>(pinToThread, l2).toLvalue(), detail::LockWrapper<Locks>(pinToThread, locks).toLvalue()...);
+	// This looks crazy and dangerous, because it is. This cast from lvalue to rvalue would normally result
+	// in the lvalue reference pointing to a dead object. However, the temporaries are all destroyed at the semicolon
+	// and all the lock wrappers are all no longer in use once the semicolon rolls around. If this were to be used
+	// in any other way except as an argument to a pure function, this would be an issue. In this case it isn't.
+	// Because std::lock needs lvalues and I have to use variadic expansion, this is by far the cleanest solution.
+	// All others would require some other magic to work properly.
+	std::lock(static_cast<detail::LockWrapper<Lock1&>>(detail::LockWrapper<Lock1>(pinToThread, l1)), 
+		      static_cast<detail::LockWrapper<Lock1&>>(detail::LockWrapper<Lock2>(pinToThread, l2)),
+			  static_cast<detail::LockWrapper<Lock1&>>(detail::LockWrapper<Locks>(pinToThread, locks))...);
 }
 
+/**
+ * std::scoped_lock with pinToThread support. C++11 compliant.
+ *
+ * @tparam M    Variadic types of all mutexes.
+ */
 template<class... M>
 class ScopedLock {
 public:
 	/**
-	 * Acquires the mutex with pinToThread settings.  Calls m.lock(pinToThread) and m.unlock().
+	 * Acquires the mutexes with pinToThread settings. Calls m.lock(pinToThread) and m.unlock().
 	 *
-	 * @param mutex          Mutex to acquire.
+	 * @param m              Mutexes to acquire.
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
 	explicit ScopedLock(bool pinToThread, M&... m) : m_mutexes(m...) {
@@ -460,13 +601,13 @@ public:
 	}
 
 	/**
-	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
+	 * Gets ownership of the mutexes without locking it. Must be passed locked mutexes.
 	 *
-	 * @param m    Mutex to adopt ownership of.
-	 * @param t    std::adopt_lock. Value unused.
+	 * @param al   std::adopt_lock. Value unused.
+	 * @param m    Mutexes to adopt ownership of.
 	 */
 	explicit ScopedLock(std::adopt_lock_t al, M&... m) noexcept : m_mutexes(m...) {
-		// Do not lock mutex
+		// Do not lock mutexes
 		(void) al;
 	}
 	ScopedLock(const ScopedLock&) = delete;
@@ -479,4 +620,26 @@ public:
   private:
 	std::tuple<M&...> m_mutexes;
 };
+
+/**
+ * Acquires the mutexes with pinToThread settings. Calls m.lock(pinToThread) and m.unlock().
+ *
+ * @param m              Mutexes to acquire.
+ * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
+ */
+template<class... M>
+auto make_scoped_lock(bool pinToThread, M&... m) -> ScopedLock<M...> {
+	return ScopedLock<M...>(pinToThread, m...);
+}
+
+/**
+ * Gets ownership of the mutexes without locking it. Must be passed locked mutexes.
+ *
+ * @param al   std::adopt_lock. Value unused.
+ * @param m    Mutexes to adopt ownership of.
+ */
+template<class... M>
+auto make_scoped_lock(std::adopt_lock_t al, M&... m) -> ScopedLock<M...> {
+	return ScopedLock<M...>(al, m...);
+}
 }
