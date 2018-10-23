@@ -54,22 +54,14 @@ public:
 		  m_atomicCounter(taskScheduler, 0) {}
 
 	Fibtex(const Fibtex&) = delete;
-	Fibtex(Fibtex&& that) noexcept {
-		this->m_ableToSpin = that.m_ableToSpin;
-		this->m_taskScheduler = that.m_taskScheduler;
-		this->m_atomicCounter = std::move(that.m_atomicCounter);
-	};
+	Fibtex(Fibtex&& that) = delete;
 	Fibtex& operator=(const Fibtex&) = delete;
-	Fibtex& operator=(Fibtex&& that) noexcept {
-		this->m_ableToSpin = that.m_ableToSpin;
-		this->m_taskScheduler = that.m_taskScheduler;
-		this->m_atomicCounter = std::move(that.m_atomicCounter);
-	};
+	Fibtex& operator=(Fibtex&& that) = delete;
 
 	/**
 	 * Lock mutex in traditional way, yielding immediately.
 	 */
-	void lock(bool pinToThread = false) {
+	void lock(bool const pinToThread = false) {
 		while (true) {
 			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
 				return;
@@ -82,9 +74,10 @@ public:
 	/**
 	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
 	 *
+	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param iterations    Amount of iterations to spin before yielding.
 	 */
-	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
+	void lock_spin(bool const pinToThread = false, uint const iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
 			lock(pinToThread);
@@ -107,7 +100,7 @@ public:
 	/**
 	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
 	 */
-	void lock_spin_infinite(bool pinToThread = false) {
+	void lock_spin_infinite(bool const pinToThread = false) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
 			lock(pinToThread);
@@ -168,10 +161,10 @@ public:
 	/**
 	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
 	 *
-	 * @param m    Mutex to adopt ownership of.
-	 * @param t    ftl::adopt_lock. Value unused.
+	 * @param mutex     Mutex to adopt ownership of.
+	 * @param al        ftl::adopt_lock. Value unused.
 	 */
-	LockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
+	LockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -207,10 +200,10 @@ public:
 	/**
 	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
 	 *
-	 * @param m    Mutex to adopt ownership of.
-	 * @param t    ftl::adopt_lock. Value unused.
+	 * @param mutex    Mutex to adopt ownership of.
+	 * @param al       ftl::adopt_lock. Value unused.
 	 */
-	SpinLockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
+	SpinLockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -245,10 +238,10 @@ public:
 	/**
 	 * Gets ownership of the mutex without locking it. Must be passed a locked mutex.
 	 *
-	 * @param m     Mutex to adopt ownership of.
-	 * @param al    ftl::adopt_lock. Value unused.
+	 * @param mutex     Mutex to adopt ownership of.
+	 * @param al        ftl::adopt_lock. Value unused.
 	 */
-	InfiniteSpinLockGuard(M& m, std::adopt_lock_t al) noexcept : m_mutex(m_mutex) {
+	InfiniteSpinLockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
 		(void) al;
 	}
@@ -271,22 +264,11 @@ private:
 template<class M>
 class UniqueLock {
 public:
-	UniqueLock() noexcept : m_mutex(nullptr), m_hasMutex(false) {};
+	UniqueLock() noexcept = default;
 	UniqueLock(UniqueLock const& other) = delete;
-	UniqueLock(UniqueLock&& other) noexcept {
-		m_mutex = other.m_mutex;
-		m_hasMutex = other.m_hasMutex;
-		other.m_mutex = nullptr;
-		other.m_hasMutex = false;
-	};
+	UniqueLock(UniqueLock&& other) noexcept = default;
 	UniqueLock& operator=(UniqueLock const& other) = delete;
-	UniqueLock& operator=(UniqueLock&& other) noexcept {
-		m_mutex = other.m_mutex;
-		m_hasMutex = other.m_hasMutex;
-		other.m_mutex = nullptr;
-		other.m_hasMutex = false;
-		return *this;
-	};
+	UniqueLock& operator=(UniqueLock&& other) noexcept = default;
 
 	/**
 	 * Points UniqueLock at mutex and locks the lock using .lock().
@@ -303,13 +285,14 @@ public:
 	/**
 	 * Points UniqueLock at mutex but does not actually lock the lock.
 	 *
-	 * @param m     Mutex to hold
-	 * @param dl    ftl::defer_lock. Unused.
+	 * @param mutex     Mutex to hold
+	 * @param dl        ftl::defer_lock. Unused.
 	 */
-	UniqueLock(M& m, std::defer_lock_t dl) noexcept {
+	UniqueLock(M& mutex, std::defer_lock_t dl) noexcept {
 		// Don't actually lock mutex
-		m_mutex = &m;
+		m_mutex = &mutex;
 		m_hasMutex = false;
+		(void) dl;
 	}
 	/**
 	 * Points UniqueLock at mutex and tries to lock the lock.
@@ -322,6 +305,7 @@ public:
 		// Only attempt to lock mutex
 		m_mutex = &m;
 		m_hasMutex = m_mutex->try_lock(pinToThread);
+		(void) tl;
 	}
 	/**
 	 * Points UniqueLock at mutex, assuming it is already held. Does not lock the lock.
@@ -333,6 +317,7 @@ public:
 		// Don't actually lock mutex
 		m_mutex = &m;
 		m_hasMutex = true;
+		(void) al;
 	}
 
 	/**
@@ -491,8 +476,8 @@ public:
 		}
 	}
 private:
-	M* m_mutex;
-	bool m_hasMutex;
+	M* m_mutex = nullptr;
+	bool m_hasMutex = false;
 };
 
 namespace detail{
@@ -508,7 +493,7 @@ public:
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param mutex          Mutex to wrap around.
 	 */
-	LockWrapper(bool pinToThread, M& mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {}
+	LockWrapper(bool const pinToThread, M& mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {}
 	/**
 	 * Locks mutex
 	 */
@@ -562,10 +547,10 @@ struct index_sequence {};
 * Backport of std::make_index_sequence
 */
 template <size_t N, size_t... I>
-struct make_index_sequence : public make_index_sequence<N - 1, N - 1, I...> {};
+struct make_index_sequence : make_index_sequence<N - 1, N - 1, I...> {};
 
 template <size_t... I>
-struct make_index_sequence<0, I...> : public index_sequence<I...> {};
+struct make_index_sequence<0, I...> : index_sequence<I...> {};
 
 /**
  * Abuses std::tie and the comma operator in order to run unlock_helper on all members of a tuple.
@@ -605,7 +590,7 @@ void lock(bool pinToThread, Lock1& l1, Lock2& l2, Locks&... locks) {
 	// This looks crazy and dangerous, because it is. This cast from lvalue to rvalue would normally result
 	// in the lvalue reference pointing to a dead object. However, the temporaries are all destroyed at the semicolon
 	// and all the lock wrappers are all no longer in use once the semicolon rolls around. If this were to be used
-	// in any other way except as an argument to a pure function, this would be an issue. In this case it isn't.
+	// in any other way except as an argument to a pure(ish) function, this would be an issue. In this case it isn't.
 	// Because std::lock needs lvalues and I have to use variadic expansion, this is by far the cleanest solution.
 	// All others would require some other magic to work properly.
 	std::lock(detail::LockWrapper<Lock1>(pinToThread, l1).get_lvalue(),
