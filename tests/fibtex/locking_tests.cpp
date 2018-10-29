@@ -41,7 +41,7 @@ struct MutexData {
 };
 
 
-void LockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
+void lock_guard_test(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	ftl::LockGuard<ftl::Fibtex> lg(data->common_mutex);
@@ -53,7 +53,7 @@ void LockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 }
 
 
-void SpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
+void spin_lock_guard_test(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 //	ftl::SpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
@@ -64,7 +64,7 @@ void SpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	data->counter.store(value, std::memory_order_release);
 }
 
-void InfiniteSpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
+void infinite_spin_lock_guard_test(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 //	ftl::InfiniteSpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
@@ -76,7 +76,7 @@ void InfiniteSpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 }
 
 
-void UniqueLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
+void unique_lock_guard_test(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	ftl::UniqueLock<ftl::Fibtex> lock(data->common_mutex, ftl::defer_lock);
@@ -104,7 +104,7 @@ void UniqueLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	lock.unlock();
 }
 
-void ScopeGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
+void scope_guard_test(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	auto lock = ftl::make_scoped_lock(false, data->common_mutex, data->second_mutex);
@@ -115,30 +115,32 @@ void ScopeGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	data->counter.store(value, std::memory_order_release);
 }
 
-void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
+void futex_main_task(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto& md = *reinterpret_cast<MutexData*>(arg);
 	ftl::AtomicCounter c(taskScheduler);
 
-	for (std::size_t i = 0; i < 5; ++i) {
-		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{UniqueLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{UniqueLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{ScopeGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{ScopeGuardTest, &md}, &c);
+	constexpr std::size_t iterations = 2000;
+
+	for (std::size_t i = 0; i < iterations; ++i) {
+		// taskScheduler->AddTask(ftl::Task{lock_guard_test, &md}, &c);
+		// taskScheduler->AddTask(ftl::Task{lock_guard_test, &md}, &c);
+		// taskScheduler->AddTask(ftl::Task{spin_lock_guard_test, &md}, &c);
+		// taskScheduler->AddTask(ftl::Task{spin_lock_guard_test, &md}, &c);
+		// taskScheduler->AddTask(ftl::Task{infinite_spin_lock_guard_test, &md}, &c);
+		// taskScheduler->AddTask(ftl::Task{infinite_spin_lock_guard_test, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{unique_lock_guard_test, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{unique_lock_guard_test, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{scope_guard_test, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{scope_guard_test, &md}, &c);
+
+		taskScheduler->WaitForCounter(&c, 0);
 	}
 
-	taskScheduler->WaitForCounter(&c, 0);
-
-	GTEST_ASSERT_EQ(md.counter.load(std::memory_order_acquire), 7 * 2 * 5);
+	GTEST_ASSERT_EQ(md.counter.load(std::memory_order_acquire), 7 * 2 * iterations);
 }
 
 TEST(FunctionalTests, LockingTests) {
 	ftl::TaskScheduler taskScheduler;
 	MutexData md(&taskScheduler, 0);
-	taskScheduler.Run(400, FutexMainTask, &md);
+	taskScheduler.Run(400, futex_main_task, &md, 4, ftl::EmptyQueueBehavior::Yield);
 }
