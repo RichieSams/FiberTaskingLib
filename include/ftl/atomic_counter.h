@@ -48,7 +48,9 @@ class AtomicCounter {
  * If a user tries to have more fibers wait on a counter, the fiber will not be tracked,
  * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang
  */
-#define NUM_WAITING_FIBER_SLOTS 4
+#ifndef NUM_WAITING_FIBER_SLOTS
+	#define NUM_WAITING_FIBER_SLOTS 4
+#endif
 
 public:
 	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0, uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
