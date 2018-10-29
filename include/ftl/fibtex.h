@@ -75,7 +75,7 @@ public:
 	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
 	 *
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
-	 * @param iterations    Amount of iterations to spin before yielding.
+	 * @param iterations     Amount of iterations to spin before yielding.
 	 */
 	void lock_spin(bool const pinToThread = false, uint const iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
