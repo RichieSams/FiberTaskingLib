@@ -30,13 +30,18 @@
 
 
 struct MutexData {
+	MutexData(ftl::TaskScheduler* scheduler, std::size_t starting_number)
+	    : common_mutex(scheduler),
+	      second_mutex(scheduler),
+	      counter(starting_number) {}
+
 	ftl::Fibtex common_mutex;
 	ftl::Fibtex second_mutex;
 	std::atomic<std::size_t> counter;
 };
 
 
-void LockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
+void LockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	ftl::LockGuard<ftl::Fibtex> lg(data->common_mutex);
@@ -48,10 +53,10 @@ void LockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
 }
 
 
-void SpinLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
+void SpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
-	ftl::SpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
+//	ftl::SpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
 
 	// Intentional non-atomic increment
 	std::size_t value = data->counter.load(std::memory_order_acquire);
@@ -59,10 +64,10 @@ void SpinLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
 	data->counter.store(value, std::memory_order_release);
 }
 
-void InfiniteSpinLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
+void InfiniteSpinLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
-	ftl::InfiniteSpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
+//	ftl::InfiniteSpinLockGuard<ftl::Fibtex> lg(data->common_mutex);
 
 	// Intentional non-atomic increment
 	std::size_t value = data->counter.load(std::memory_order_acquire);
@@ -71,7 +76,7 @@ void InfiniteSpinLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
 }
 
 
-void UniqueLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
+void UniqueLockGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	ftl::UniqueLock<ftl::Fibtex> lock(data->common_mutex, ftl::defer_lock);
@@ -99,7 +104,7 @@ void UniqueLockGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
 	lock.unlock();
 }
 
-void ScopeGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
+void ScopeGuardTest(ftl::TaskScheduler* scheduler, void* arg) {
 	auto* data = reinterpret_cast<MutexData*>(arg);
 
 	auto lock = ftl::make_scoped_lock(false, data->common_mutex, data->second_mutex);
@@ -111,9 +116,29 @@ void ScopeGuardTest(ftl::TaskScheduler& scheduler, void* arg) {
 }
 
 void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
-	MutexData md {
-		ftl::Fibtex(taskScheduler),
-		ftl::Fibtex(taskScheduler),
-		0
-	};
+	auto& md = *reinterpret_cast<MutexData*>(arg);
+	ftl::AtomicCounter c(taskScheduler);
+
+	for (std::size_t i = 0; i < 5; ++i) {
+		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{UniqueLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{UniqueLockGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{ScopeGuardTest, &md}, &c);
+		taskScheduler->AddTask(ftl::Task{ScopeGuardTest, &md}, &c);
+	}
+
+	taskScheduler->WaitForCounter(&c, 0);
+
+	GTEST_ASSERT_EQ(md.counter.load(std::memory_order_acquire), 7 * 2 * 5);
+}
+
+TEST(FunctionalTests, LockingTests) {
+	ftl::TaskScheduler taskScheduler;
+	MutexData md(&taskScheduler, 0);
+	taskScheduler.Run(400, FutexMainTask, &md);
 }
