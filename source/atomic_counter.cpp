@@ -110,7 +110,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 }
 
 void AtomicCounter::CheckWaitingFibers(uint value) {
-	uint readyFiberIndices[m_waitingFibers.size()];
+	std::vector<uint> readyFiberIndices(m_waitingFibers.size(), 0);
 	uint nextIndex = 0;
 
 	for (uint i = 0; i < m_waitingFibers.size(); ++i) {
