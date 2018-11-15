@@ -51,7 +51,7 @@ class AtomicCounter {
 #define NUM_WAITING_FIBER_SLOTS 4
 
 public:
-	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0);
+	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0, uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 private:
 	/* The TaskScheduler this counter is associated with */
@@ -89,7 +89,7 @@ private:
 		 */
 		std::size_t PinnedThreadIndex;
 	};
-	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
+	std::vector<WaitingFiberBundle> m_waitingFibers;
 
 	/**
 	* We friend TaskScheduler so we can keep AddFiberToWaitingList() private
