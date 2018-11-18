@@ -112,7 +112,7 @@ private:
 		uint TargetValue;
 	};
 
-	struct ThreadLocalStorage {
+	struct alignas(CACHE_LINE_SIZE) ThreadLocalStorage {
 		ThreadLocalStorage()
 			: ThreadFiber(),
 			  CurrentFiberIndex(FTL_INVALID_INDEX),
@@ -159,10 +159,6 @@ private:
 		*/
 		std::mutex FailedQueuePopLock;
 		std::condition_variable FailedQueuePopCV;
-
-	private:
-		/* Cache-line pad */
-		char pad[64];
 	};
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple TaskScheduler

@@ -66,3 +66,22 @@
 	#define FTL_NOINLINE_WIN32
 	#define FTL_NOINLINE
 #endif
+
+#ifdef __has_include
+	#if __has_include(<version>)
+		#include <version>
+	#else
+		#include <new>
+	#endif
+#else
+	#include <new>
+#endif
+
+namespace ftl {
+#ifdef __cpp_lib_hardware_interference_size
+	constexpr static std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size();
+#else
+	constexpr static std::size_t CACHE_LINE_SIZE = 64;
+#endif
+}
+
