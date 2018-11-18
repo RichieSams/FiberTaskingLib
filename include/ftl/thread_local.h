@@ -24,6 +24,10 @@
 
 #pragma once
 
+#ifndef FTL_THREAD_LOCAL_HANDLE_DEBUG
+	#define FTL_THREAD_LOCAL_HANDLE_DEBUG FTL_DEBUG
+#endif
+
 #include "ftl/task_scheduler.h"
 
 #include <vector>
@@ -42,21 +46,29 @@ class ThreadLocal;
  */
 template<class T>
 class ThreadLocalHandle {
+private:
 	friend ThreadLocal<T>;
 
+	void valid_handle(T& value);
+	
+public:
 	T& operator*() {
+		valid_handle(m_value);
 		return m_value;
 	}
 	T* operator->() {
+		valid_handle(m_value);
 		return &m_value;
 	}
 private:
-	explicit ThreadLocalHandle(T& v) : m_value{v} {};
+	ThreadLocalHandle(ThreadLocal<T>& parent, T& v) : m_parent{parent}, m_value {v} {};
 
+	ThreadLocal<T>& m_parent;
 	T& m_value;
 };
 
-/**
+
+	/**
  * Fiber compatible version of the thread_local keyword. Acts like a pointer. Think of this as you would the thread_local keyword,
  * not something you put in containers, but a specification of a variable itself. Non-copyable and non-movable.
  * For proper semantics, all variables that are ThreadLocal<> must be static.
@@ -128,6 +140,18 @@ private:
 	TaskScheduler* m_scheduler;
 	std::vector<T> m_data;
 };
+
+#if FTL_THREAD_LOCAL_HANDLE_DEBUG 
+template<class T>
+void ThreadLocalHandle<T>::valid_handle(T& value) {
+	if (&*m_parent != &value) {
+		assert(!"Invalid ThreadLocalHandle");
+	};
+}
+#else
+template<class T>
+bool ThreadLocalHandle<T>::valid_handle(T& value) {}
+#endif
 
 // C++17 deduction guide
 #ifdef __cpp_deduction_guides
