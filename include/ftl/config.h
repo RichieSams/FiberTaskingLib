@@ -24,6 +24,12 @@
 
 #pragma once
 
+#ifndef FTL_DEBUG
+	#ifndef NDEBUG 
+		#define FTL_DEBUG 1
+	#endif
+#endif
+
 // Determine the OS
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 	#define FTL_OS_WINDOWS
