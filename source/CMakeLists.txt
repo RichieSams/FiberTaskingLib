@@ -81,6 +81,7 @@ SetSourceGroup(NAME Util
 	SOURCE_FILES ../include/ftl/config.h
 	             ../include/ftl/fiber.h
 	             ../include/ftl/thread_abstraction.h
+	             ../include/ftl/thread_local.h
 	             ../include/ftl/wait_free_queue.h
 				 ../include/ftl/ftl_valgrind.h
 )
