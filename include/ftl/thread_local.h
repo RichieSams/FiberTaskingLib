@@ -65,6 +65,16 @@ private:
  */
 template<class T>
 class ThreadLocal {
+private:
+	template<class VP_T>
+	struct alignas(64) ValuePadder {
+		template<class... Args>
+		explicit ValuePadder(Args&&... args) : m_value(std::forward<Args>(args)...) {}
+
+		VP_T m_value;
+	};
+
+	static_assert(sizeof(ValuePadder<T>) % 64 == 0, "alignas() force-padding failed");
 public:
 	/**
 	 * Default construct all T's inside the thread local variable.
@@ -106,7 +116,7 @@ public:
 	 * @return    Handle to the thread's version of T.
 	 */
 	ThreadLocalHandle<T> GetHandle() {
-		return ThreadLocalHandle<T>{**this};
+		return ThreadLocalHandle<ValuePadder<T>>{**this};
 	}
 
 	T& operator*() {
