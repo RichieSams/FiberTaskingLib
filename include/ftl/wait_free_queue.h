@@ -93,13 +93,9 @@ private:
 		}
 	};
 
-	std::atomic<uint64> m_top;
-	// Cache-line pad
-	char pad[64];
-	std::atomic<uint64> m_bottom;
-	// Cache-line pad
-	char pad2[64];
-	std::atomic<CircularArray *> m_array;
+	alignas(CACHE_LINE_SIZE) std::atomic<uint64> m_top;
+	alignas(CACHE_LINE_SIZE) std::atomic<uint64> m_bottom;
+	alignas(CACHE_LINE_SIZE) std::atomic<CircularArray *> m_array;
 
 
 public:
