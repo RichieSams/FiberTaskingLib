@@ -30,7 +30,7 @@
 
 #include "ftl/task_scheduler.h"
 
-#include <vector>
+#include <functional>
 
 namespace ftl {
 
@@ -50,7 +50,7 @@ private:
 	friend ThreadLocal<T>;
 
 	void valid_handle(T& value);
-	
+
 public:
 	T& operator*() {
 		valid_handle(m_value);
@@ -72,7 +72,7 @@ private:
  * Fiber compatible version of the thread_local keyword. Acts like a pointer. Think of this as you would the thread_local keyword,
  * not something you put in containers, but a specification of a variable itself. Non-copyable and non-movable.
  * For proper semantics, all variables that are ThreadLocal<> must be static.
- * 
+ *
  * @tparam T    Object type to store.
  */
 template<class T>
@@ -80,10 +80,8 @@ class ThreadLocal {
 private:
 	template<class VP_T>
 	struct alignas(CACHE_LINE_SIZE) ValuePadder {
-		template<class... Args>
-		explicit ValuePadder(Args&&... args) : m_value(std::forward<Args>(args)...) {}
-
 		VP_T m_value;
+		bool m_inited = true;
 	};
 
 public:
@@ -92,32 +90,36 @@ public:
 	 *
 	 * @param ts    The task scheduler to be thread local to.
 	 */
-	explicit ThreadLocal(TaskScheduler* ts) : m_scheduler{ts}, m_data{ts->GetThreadCount()} {}
+	explicit ThreadLocal(TaskScheduler* ts)
+		: m_scheduler{ts},
+		  m_initalizer{},
+		  m_data{new ValuePadder<T>[ts->GetThreadCount()]} {}
 
 	/**
-	 * Emplace construct all T's inside the thread local variable using perfect forwarding.
+	 * Construct all T's by calling a void factory function the first time you use your data.
 	 *
-	 * @tparam Arg1    Type of the first argument to the constructor
-	 * @tparam Args    Variadic types of the other arguments to the constructor
-	 * @param ts       The task scheduler to be thread local to
-	 * @param arg1     First argument to the constructor
-	 * @param args     Rest of the arguments to the constructor
+	 * @tparam F      Type of the factory function
+	 * @param ts      The task scheduler to be thread local to
+	 * @param args    Factory function to initialize the values with.
 	 */
-	template<class Arg1, class... Args>
-	ThreadLocal(TaskScheduler* ts, Arg1&& arg1, Args&&... args) : m_scheduler{ts}, m_data{} {
-		auto const threads = m_scheduler->GetThreadCount();
-
-		m_data.reserve(threads);
-
-		for (std::size_t i = 0; i < threads; ++i) {
-			m_data.emplace_back(std::forward<Arg1>(arg1), std::forward<Args>(args)...);
-		}
-	}
+	template<class F>
+	ThreadLocal(TaskScheduler* ts, F&& factory)
+	  : m_scheduler{ts},
+	    m_initalizer{std::forward<F>(factory)},
+	    m_data(static_cast<ValuePadder<T>*>(::operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
+        for (std::size_t i = 0; i < ts->GetThreadCount(); ++i) {
+            m_data[i].m_inited = false;
+        }
+    }
 
 	ThreadLocal(ThreadLocal const& other) = delete;
 	ThreadLocal(ThreadLocal&& other) noexcept = delete;
 	ThreadLocal& operator=(ThreadLocal const& other) = delete;
 	ThreadLocal& operator=(ThreadLocal&& other) noexcept = delete;
+
+	~ThreadLocal() {
+		delete[] m_data;
+	}
 
 	/**
 	 * Get a handle to your thread's T. You must be careful that you don't jump to another thread in the mean time, but this will allow
@@ -127,21 +129,32 @@ public:
 	 * @return    Handle to the thread's version of T.
 	 */
 	ThreadLocalHandle<T> GetHandle() {
-		return ThreadLocalHandle<ValuePadder<T>>{**this};
+		return ThreadLocalHandle<T>{**this};
 	}
 
 	T& operator*() {
-		return m_data[m_scheduler->GetCurrentThreadIndex()];
+		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
+		if(!m_data[idx].m_inited) {
+			new(&m_data[idx].m_value) T(m_initalizer());
+			m_data[idx].m_inited = true;
+		}
+		return m_data[idx].m_value;
 	}
 	T* operator->() {
-		return &m_data[m_scheduler->GetCurrentThreadIndex()];
+		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
+		if(!m_data[idx].m_inited) {
+			new(&m_data[idx].m_value) T(m_initalizer());
+			m_data[idx].m_inited = true;
+		}
+		return &m_data[idx].m_value;
 	}
 private:
 	TaskScheduler* m_scheduler;
-	std::vector<T> m_data;
+	std::function<T()> m_initalizer;
+	ValuePadder<T>* m_data;
 };
 
-#if FTL_THREAD_LOCAL_HANDLE_DEBUG 
+#if FTL_THREAD_LOCAL_HANDLE_DEBUG
 template<class T>
 void ThreadLocalHandle<T>::valid_handle(T& value) {
 	if (&*m_parent != &value) {
