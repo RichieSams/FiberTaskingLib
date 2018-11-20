@@ -37,3 +37,6 @@ set_target_properties(boost_context PROPERTIES FOLDER third_party)
 # Nonius
 add_library(nonius INTERFACE)
 target_include_directories(nonius SYSTEM INTERFACE nonius/include)
+
+# PMR
+add_subdirectory(pmr)
