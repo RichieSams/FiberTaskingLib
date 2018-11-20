@@ -34,7 +34,8 @@ AtomicCounter::AtomicCounter(TaskScheduler *taskScheduler, uint initialValue, ui
 		: m_taskScheduler(taskScheduler),
 		  m_value(initialValue),
 		  m_lock(0),
-		  m_waitingFibers(fiberSlots){
+		  m_waitingFibers(fiberSlots),
+		  m_freeSlots(fiberSlots) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_lock, sizeof(m_lock));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeSlots, sizeof(m_freeSlots[0]) * m_waitingFibers.size());

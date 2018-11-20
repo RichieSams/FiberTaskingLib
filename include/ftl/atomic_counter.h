@@ -66,7 +66,7 @@ private:
 	 * True: Free
 	 * False: Full
 	 */
-	std::atomic<bool> m_freeSlots[NUM_WAITING_FIBER_SLOTS];
+	std::vector<std::atomic<bool> > m_freeSlots;
 
 	struct WaitingFiberBundle {
 		WaitingFiberBundle();
