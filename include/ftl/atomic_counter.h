@@ -48,10 +48,13 @@ class AtomicCounter {
  * If a user tries to have more fibers wait on a counter, the fiber will not be tracked,
  * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang
  */
-#define NUM_WAITING_FIBER_SLOTS 4
+#ifndef NUM_WAITING_FIBER_SLOTS
+	#define NUM_WAITING_FIBER_SLOTS 4
+#endif
 
 public:
-	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0);
+	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0, uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	~AtomicCounter();
 
 private:
 	/* The TaskScheduler this counter is associated with */
@@ -63,8 +66,12 @@ private:
 	/* An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
 	 * False: Full
+	 * 
+	 * We can't use a vector for m_freeSlots because std::atomic<t> is non-copyable and
+	 * non-moveable. std::vector constructor, push_back, and emplace_back all use either
+	 * copy or move
 	 */
-	std::atomic<bool> m_freeSlots[NUM_WAITING_FIBER_SLOTS];
+	std::atomic<bool> *m_freeSlots;
 
 	struct WaitingFiberBundle {
 		WaitingFiberBundle();
@@ -89,7 +96,7 @@ private:
 		 */
 		std::size_t PinnedThreadIndex;
 	};
-	WaitingFiberBundle m_waitingFibers[NUM_WAITING_FIBER_SLOTS];
+	std::vector<WaitingFiberBundle> m_waitingFibers;
 
 	/**
 	* We friend TaskScheduler so we can keep AddFiberToWaitingList() private
