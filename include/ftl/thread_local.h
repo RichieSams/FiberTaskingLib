@@ -163,7 +163,7 @@ void ThreadLocalHandle<T>::valid_handle(T& value) {
 }
 #else
 template<class T>
-bool ThreadLocalHandle<T>::valid_handle(T& value) {}
+void ThreadLocalHandle<T>::valid_handle(T& value) {}
 #endif
 
 // C++17 deduction guide
