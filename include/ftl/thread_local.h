@@ -129,7 +129,7 @@ public:
 	 *
 	 * @return    Handle to the thread's version of T.
 	 */
-	ThreadLocalHandle<T> GetHandle() {
+	ThreadLocalHandle<T> getHandle() {
 		return ThreadLocalHandle<T>{*this, **this};
 	}
 
