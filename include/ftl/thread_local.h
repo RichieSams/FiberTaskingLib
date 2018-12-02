@@ -135,21 +135,22 @@ public:
 
 	T& operator*() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
-		if(!m_data[idx].m_inited) {
-			new(&m_data[idx].m_value) T(m_initalizer());
-			m_data[idx].m_inited = true;
-		}
+		init_value(idx);
 		return m_data[idx].m_value;
 	}
 	T* operator->() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
-		if(!m_data[idx].m_inited) {
-			new(&m_data[idx].m_value) T(m_initalizer());
-			m_data[idx].m_inited = true;
-		}
+		init_value(idx);
 		return &m_data[idx].m_value;
 	}
 private:
+	void init_value(std::size_t idx) {
+		if (!m_data[idx].m_inited) {
+			new(&m_data[idx].m_value) T(m_initalizer());
+			m_data[idx].m_inited = true;
+		}
+	}
+
 	TaskScheduler* m_scheduler;
 	std::function<T()> m_initalizer;
 	ValuePadder<T>* m_data;
