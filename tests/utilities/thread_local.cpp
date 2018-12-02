@@ -40,7 +40,7 @@ namespace ThreadLocalTests {
 		*single_init_singleton(scheduler) += 1;
 	}
 
-	static std::atomic<std::size_t> side_effect_count = 0;
+	static std::atomic<std::size_t> side_effect_count = std::size_t(0);
 	ftl::ThreadLocal<std::size_t>& side_effect_singleton(ftl::TaskScheduler* scheduler) {
 		static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return side_effect_count++; });
 
