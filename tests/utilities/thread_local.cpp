@@ -56,7 +56,7 @@ namespace ThreadLocalTests {
 		std::vector<ftl::Task> single_init_tasks(scheduler->GetThreadCount(), ftl::Task{ single_init, nullptr });
 
 		ftl::AtomicCounter ac(scheduler);
-		scheduler->AddTasks(single_init_tasks.size(), single_init_tasks.data(), &ac);
+		scheduler->AddTasks(static_cast<uint>(single_init_tasks.size()), single_init_tasks.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
 		auto single_init_vals = single_init_singleton(scheduler).getAllValues();
@@ -66,7 +66,7 @@ namespace ThreadLocalTests {
 		// Side Effects
 		std::vector<ftl::Task> side_effect_task(10000, ftl::Task{ side_effect, nullptr });
 
-		scheduler->AddTasks(side_effect_task.size(), side_effect_task.data(), &ac);
+		scheduler->AddTasks(static_cast<uint>(side_effect_task.size()), side_effect_task.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
 		auto side_effect_vals = side_effect_singleton(scheduler).getAllValues();

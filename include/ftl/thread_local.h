@@ -91,10 +91,18 @@ public:
 	 *
 	 * @param ts    The task scheduler to be thread local to.
 	 */
+
+#ifdef FTL_OS_WINDOWS
+	#pragma warning(push)
+	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay.
+#endif
 	explicit ThreadLocal(TaskScheduler* ts)
 		: m_scheduler{ts},
 		  m_initalizer{},
 		  m_data{new ValuePadder<T>[ts->GetThreadCount()]} {}
+#ifdef FTL_OS_WINDOWS
+	#pragma warning(pop)
+#endif
 
 	/**
 	 * Construct all T's by calling a void factory function the first time you use your data.
