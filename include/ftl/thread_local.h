@@ -143,6 +143,18 @@ public:
 		init_value(idx);
 		return &m_data[idx].m_value;
 	}
+	std::vector<T> getAllValues() {
+		std::vector<T> vec;
+		std::size_t const threads = m_scheduler->GetThreadCount();
+		vec.reserve(threads);
+
+		for (std::size_t i = 0; i < threads; ++i) {
+			init_value(i);
+			vec.emplace_back(m_data[i].m_value);
+		}
+
+		return vec;
+	}
 private:
 	void init_value(std::size_t idx) {
 		if (!m_data[idx].m_inited) {
