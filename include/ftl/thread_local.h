@@ -80,6 +80,7 @@ class ThreadLocal {
 private:
 	template<class VP_T>
 	struct alignas(CACHE_LINE_SIZE) ValuePadder {
+		ValuePadder() : m_value() {}
 		VP_T m_value;
 		bool m_inited = true;
 	};
