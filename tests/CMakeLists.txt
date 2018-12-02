@@ -43,12 +43,18 @@ SetSourceGroup(NAME "Triangle Number"
 	SOURCE_FILES triangle_number/calc_triangle_num.cpp
 )
 
+SetSourceGroup(NAME "Utilities"
+	PREFIX FTL_TEST
+	SOURCE_FILES utilities/thread_local.cpp
+)
+
 
 # Link all the sources into one
 set(FIBER_TASKING_LIB_TESTS_SRC
 	${FTL_TEST_FIBER_ABSTRACTION}
 	${FTL_TEST_PRODUCER_CONSUMER}
 	${FTL_TEST_TRIANGLE_NUMBER}
+	${FTL_TEST_UTILITIES}
 )
 
 
