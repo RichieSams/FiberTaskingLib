@@ -92,17 +92,17 @@ public:
 	 * @param ts    The task scheduler to be thread local to.
 	 */
 
-#ifdef _MSVC
+#ifdef _MSC_VER
 	#pragma warning(push)
-	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay.
-#endif // _MSVC
+	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
+#endif // _MSC_VER
 	explicit ThreadLocal(TaskScheduler* ts)
 		: m_scheduler{ts},
-		  m_initalizer{},
+		  m_initializer{},
 		  m_data{new ValuePadder<T>[ts->GetThreadCount()]} {}
-#ifdef _MSVC
+#ifdef _MSC_VER
 	#pragma warning(pop)
-#endif // _MSVC
+#endif // _MSC_VER
 
 	/**
 	 * Construct all T's by calling a void factory function the first time you use your data.
@@ -114,7 +114,7 @@ public:
 	template<class F>
 	ThreadLocal(TaskScheduler* ts, F&& factory)
 	  : m_scheduler{ts},
-	    m_initalizer{std::forward<F>(factory)},
+	    m_initializer{std::forward<F>(factory)},
 	    m_data(static_cast<ValuePadder<T>*>(::operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
         for (std::size_t i = 0; i < ts->GetThreadCount(); ++i) {
             m_data[i].m_inited = false;
@@ -143,12 +143,12 @@ public:
 
 	T& operator*() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
-		init_value(idx);
+		InitValue(idx);
 		return m_data[idx].m_value;
 	}
 	T* operator->() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
-		init_value(idx);
+		InitValue(idx);
 		return &m_data[idx].m_value;
 	}
 
@@ -164,7 +164,7 @@ public:
 		vec.reserve(threads);
 
 		for (std::size_t i = 0; i < threads; ++i) {
-			init_value(i);
+			InitValue(i);
 			vec.emplace_back(m_data[i].m_value);
 		}
 
@@ -183,22 +183,22 @@ public:
 		vec.reserve(threads);
 
 		for (std::size_t i = 0; i < threads; ++i) {
-			init_value(i);
+			InitValue(i);
 			vec.emplace_back(std::ref(m_data[i].m_value));
 		}
 
 		return vec;
 	}
 private:
-	void init_value(std::size_t idx) {
+	void InitValue(std::size_t idx) {
 		if (!m_data[idx].m_inited) {
-			new(&m_data[idx].m_value) T(m_initalizer());
+			new(&m_data[idx].m_value) T(m_initializer());
 			m_data[idx].m_inited = true;
 		}
 	}
 
 	TaskScheduler* m_scheduler;
-	std::function<T()> m_initalizer;
+	std::function<T()> m_initializer;
 	ValuePadder<T>* m_data;
 };
 

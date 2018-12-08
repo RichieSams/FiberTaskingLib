@@ -264,11 +264,18 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 
 	// Initialize threads and TLS
 	m_threads.resize(m_numThreads);
+#ifdef _MSC_VER
+	#pragma warning(push)
+	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
+#endif // _MSC_VER
 	m_tls = new ThreadLocalStorage[m_numThreads];
 	// Initialize all the locks before we start the other threads
 	for (uint i = 0; i < m_numThreads; ++i) {
 		m_tls[i].ReadFibersLock.clear();
 	}
+#ifdef _MSC_VER
+	#pragma warning(pop)
+#endif // _MSC_VER
 
 	// Set the properties for the current thread
 	SetCurrentThreadAffinity(0);
