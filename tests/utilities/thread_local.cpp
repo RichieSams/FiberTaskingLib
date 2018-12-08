@@ -30,54 +30,58 @@
 #include <numeric>
 
 namespace ThreadLocalTests {
-	ftl::ThreadLocal<std::size_t>& single_init_singleton(ftl::TaskScheduler* scheduler) {
+	ftl::ThreadLocal<std::size_t>& SingleInitSingleton(ftl::TaskScheduler* scheduler) {
 		static ftl::ThreadLocal<std::size_t> counter(scheduler);
 
 		return counter;
 	}
 
-	void single_init(ftl::TaskScheduler* scheduler, void*) {
-		*single_init_singleton(scheduler) += 1;
+	void SimpleInit(ftl::TaskScheduler* scheduler, void*) {
+		*SingleInitSingleton(scheduler) += 1;
 	}
 
-	static std::atomic<std::size_t> side_effect_count{0};
-	ftl::ThreadLocal<std::size_t>& side_effect_singleton(ftl::TaskScheduler* scheduler) {
-		static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return side_effect_count++; });
+	static std::atomic<std::size_t> sideEffectCount{0};
+	ftl::ThreadLocal<std::size_t>& SideEffectSingleton(ftl::TaskScheduler* scheduler) {
+		static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return sideEffectCount++; });
 
 		return counter;
 	}
 
-	void side_effect(ftl::TaskScheduler* scheduler, void*) {
-		*side_effect_singleton(scheduler);
+	void SideEffect(ftl::TaskScheduler* scheduler, void*) {
+		*SideEffectSingleton(scheduler);
 	}
 
-	void main_task(ftl::TaskScheduler* scheduler, void* data) {
+	void MainTask(ftl::TaskScheduler* scheduler, void*) {
 		// Single Init
-		std::vector<ftl::Task> single_init_tasks(scheduler->GetThreadCount(), ftl::Task{ single_init, nullptr });
+		std::vector<ftl::Task> singleInitTask(scheduler->GetThreadCount(), ftl::Task{ SimpleInit, nullptr });
 
 		ftl::AtomicCounter ac(scheduler);
-		scheduler->AddTasks(static_cast<uint>(single_init_tasks.size()), single_init_tasks.data(), &ac);
+		scheduler->AddTasks(static_cast<uint>(singleInitTask.size()), singleInitTask.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
-		auto single_init_vals = single_init_singleton(scheduler).GetAllValues();
+		auto singleInitVals = SingleInitSingleton(scheduler).GetAllValues();
 
-		ASSERT_EQ(scheduler->GetThreadCount(), std::accumulate(single_init_vals.begin(), single_init_vals.end(), std::size_t{0}));
+		ASSERT_EQ(scheduler->GetThreadCount(), std::accumulate(singleInitVals.begin(), singleInitVals.end(), std::size_t{0}));
 
 		// Side Effects
-		std::vector<ftl::Task> side_effect_task(10000, ftl::Task{ side_effect, nullptr });
+		std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{ SideEffect, nullptr });
 
-		scheduler->AddTasks(static_cast<uint>(side_effect_task.size()), side_effect_task.data(), &ac);
+		scheduler->AddTasks(static_cast<uint>(sideEffectTask.size()), sideEffectTask.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
-		auto side_effect_vals = side_effect_singleton(scheduler).GetAllValues();
+		auto sideEffect = SideEffectSingleton(scheduler).GetAllValues();
 
-		ASSERT_LE(side_effect_count, scheduler->GetThreadCount());
-		ASSERT_EQ(side_effect_count - 1, *std::max_element(side_effect_vals.begin(), side_effect_vals.end()));
+		// The initializer will only fire once per thread, so there must be less than the thread count
+		// in calls to it, but there should be at least one.
+		ASSERT_LE(sideEffectCount, scheduler->GetThreadCount());
+		ASSERT_GE(sideEffectCount, 1);
+		// The count minus one should be the greatest value within the TLS.
+		ASSERT_EQ(sideEffectCount - 1, *std::max_element(sideEffect.begin(), sideEffect.end()));
 	}
 }
 
 
 TEST(FunctionalTests, ThreadLocal) {
 	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Run(400, ThreadLocalTests::main_task);
+	taskScheduler.Run(400, ThreadLocalTests::MainTask);
 }
