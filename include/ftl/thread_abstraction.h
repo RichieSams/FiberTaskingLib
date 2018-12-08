@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,16 +30,14 @@
 #include <cassert>
 #include <thread>
 
-
 #if defined(FTL_WIN32_THREADS)
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#	define WIN32_LEAN_AND_MEAN
+#	define NOMINMAX
+#	include <Windows.h>
 
-#include <atomic>
-#include <process.h>
-
+#	include <atomic>
+#	include <process.h>
 
 namespace ftl {
 
@@ -57,22 +55,21 @@ struct EventType {
 const uint32 EVENTWAIT_INFINITE = INFINITE;
 
 typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
-#define FTL_THREAD_FUNC_RETURN_TYPE uint
-#define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE __stdcall
-#define FTL_THREAD_FUNC_END return 0
-
+#	define FTL_THREAD_FUNC_RETURN_TYPE uint
+#	define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE __stdcall
+#	define FTL_THREAD_FUNC_END return 0
 
 /**
-* Create a native thread
-*
-* @param stackSize       The size of the stack
-* @param startRoutine    The start routine
-* @param arg             The argument for the start routine
-* @param coreAffinity    The core affinity
-* @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
-*
-* @return    True if thread creation succeeds, false if it fails
-*/
+ * Create a native thread
+ *
+ * @param stackSize       The size of the stack
+ * @param startRoutine    The start routine
+ * @param arg             The argument for the start routine
+ * @param coreAffinity    The core affinity
+ * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
+ *
+ * @return    True if thread creation succeeds, false if it fails
+ */
 inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
 	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
 	returnThread->Handle = handle;
@@ -82,18 +79,20 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
 }
 
 /**
-* Create a native thread
-*
-* @param stackSize       The size of the stack
-* @param startRoutine    The start routine
-* @param arg             The argument for the start routine
-* @param coreAffinity    The core affinity
-* @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
-*
-* @return    True if thread creation succeeds, false if it fails
-*/
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
-	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
+ * Create a native thread
+ *
+ * @param stackSize       The size of the stack
+ * @param startRoutine    The start routine
+ * @param arg             The argument for the start routine
+ * @param coreAffinity    The core affinity
+ * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
+ *
+ * @return    True if thread creation succeeds, false if it fails
+ */
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity,
+                         ThreadType *returnThread) {
+	HANDLE handle =
+	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 
 	if (handle == nullptr) {
 		return false;
@@ -101,7 +100,7 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
 
 	DWORD_PTR mask = 1ull << coreAffinity;
 	SetThreadAffinityMask(handle, mask);
-	
+
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
 	ResumeThread(handle);
@@ -115,10 +114,10 @@ inline void EndCurrentThread() {
 }
 
 /**
-* Join 'thread' with the current thread, blocking until 'thread' finishes
-*
-* @param thread    The thread to join
-*/
+ * Join 'thread' with the current thread, blocking until 'thread' finishes
+ *
+ * @param thread    The thread to join
+ */
 inline void JoinThread(ThreadType thread) {
 	WaitForSingleObject(thread.Handle, INFINITE);
 }
@@ -129,10 +128,7 @@ inline void JoinThread(ThreadType thread) {
  * @return    The current thread
  */
 inline ThreadType GetCurrentThread() {
-	Win32Thread result{
-		::GetCurrentThread(),
-		::GetCurrentThreadId()
-	};
+	Win32Thread result{::GetCurrentThread(), ::GetCurrentThreadId()};
 
 	return result;
 }
@@ -166,14 +162,14 @@ inline void CloseEvent(EventType eventId) {
 }
 
 /**
-* Wait for the given event to be signaled.
-* The current thread will block until signaled or at least 'milliseconds' time has passed
-*
-* @param eventId         The event to wait on
-* @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
-*/
-#pragma warning( push )
-#pragma warning( disable : 4189 )
+ * Wait for the given event to be signaled.
+ * The current thread will block until signaled or at least 'milliseconds' time has passed
+ *
+ * @param eventId         The event to wait on
+ * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
+ */
+#	pragma warning(push)
+#	pragma warning(disable : 4189)
 inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	eventId.countWaiters.fetch_add(1u);
 	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
@@ -185,39 +181,37 @@ inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	assert(retval != WAIT_FAILED);
 	assert(prev != 0);
 }
-#pragma warning ( pop )
+#	pragma warning(pop)
 
 /**
-* Signal the given event. Any threads waiting on the event will resume.
-*
-* @param eventId    The even to signal
-*/
+ * Signal the given event. Any threads waiting on the event will resume.
+ *
+ * @param eventId    The even to signal
+ */
 inline void SignalEvent(EventType eventId) {
 	SetEvent(eventId.event);
 }
 
 } // End of namespace ftl
 
-
 #elif defined(FTL_POSIX_THREADS)
 
-#include <pthread.h>
-#include <unistd.h>
-
+#	include <pthread.h>
+#	include <unistd.h>
 
 namespace ftl {
 
 typedef pthread_t ThreadType;
 struct EventType {
-	pthread_cond_t  cond;
+	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 };
 const uint32 EVENTWAIT_INFINITE = -1;
 
 typedef void *(*ThreadStartRoutine)(void *arg);
-#define FTL_THREAD_FUNC_RETURN_TYPE void *
-#define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE
-#define FTL_THREAD_FUNC_END return nullptr
+#	define FTL_THREAD_FUNC_RETURN_TYPE void *
+#	define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE
+#	define FTL_THREAD_FUNC_END return nullptr
 
 /**
  * Create a native thread
@@ -255,21 +249,22 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity, ThreadType *returnThread) {
+inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity,
+                         ThreadType *returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
 	// Set stack size
 	pthread_attr_setstacksize(&threadAttr, stackSize);
 
-	// TODO: OSX and MinGW Thread Affinity
-	#if defined(FTL_OS_LINUX)
-		// Set core affinity
-		cpu_set_t cpuSet;
-		CPU_ZERO(&cpuSet);
-		CPU_SET(coreAffinity, &cpuSet);
-		pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
-	#endif
+// TODO: OSX and MinGW Thread Affinity
+#	if defined(FTL_OS_LINUX)
+	// Set core affinity
+	cpu_set_t cpuSet;
+	CPU_ZERO(&cpuSet);
+	CPU_SET(coreAffinity, &cpuSet);
+	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
+#	endif
 
 	int success = pthread_create(returnThread, &threadAttr, startRoutine, arg);
 
@@ -294,35 +289,35 @@ inline void JoinThread(ThreadType thread) {
 }
 
 /**
-* Get the current thread
-*
-* @return    The current thread
-*/
+ * Get the current thread
+ *
+ * @return    The current thread
+ */
 inline ThreadType GetCurrentThread() {
 	return pthread_self();
 }
 
 /**
-* Set the core affinity for the current thread
-*
-* @param coreAffinity    The requested core affinity
-*/
+ * Set the core affinity for the current thread
+ *
+ * @param coreAffinity    The requested core affinity
+ */
 inline void SetCurrentThreadAffinity(size_t coreAffinity) {
-	// TODO: OSX and MinGW Thread Affinity
-	#if defined(FTL_OS_LINUX)
-		cpu_set_t cpuSet;
-		CPU_ZERO(&cpuSet);
-		CPU_SET(coreAffinity, &cpuSet);
+// TODO: OSX and MinGW Thread Affinity
+#	if defined(FTL_OS_LINUX)
+	cpu_set_t cpuSet;
+	CPU_ZERO(&cpuSet);
+	CPU_SET(coreAffinity, &cpuSet);
 
-		pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
-	#endif
+	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
+#	endif
 }
 
 /**
-* Create a native event
-*
-* @param event    The handle for the newly created event
-*/
+ * Create a native event
+ *
+ * @param event    The handle for the newly created event
+ */
 inline void CreateEvent(EventType *event) {
 	*event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 }
@@ -373,17 +368,16 @@ inline void SignalEvent(EventType eventId) {
 } // End of namespace ftl
 
 #else
-	#error No Thread library found
+#	error No Thread library found
 #endif
 
-
 namespace ftl {
-	
+
 /**
-* Get the number of hardware threads. This should take Hyperthreading, etc. into account
-*
-* @return    An number of hardware threads
-*/
+ * Get the number of hardware threads. This should take Hyperthreading, etc. into account
+ *
+ * @return    An number of hardware threads
+ */
 inline uint GetNumHardwareThreads() {
 	return std::thread::hardware_concurrency();
 }
@@ -391,5 +385,5 @@ inline uint GetNumHardwareThreads() {
 inline void YieldThread() {
 	std::this_thread::yield();
 }
-	
+
 } // End of namespace ftl
