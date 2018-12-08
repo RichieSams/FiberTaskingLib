@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,14 +27,12 @@
 
 #include <gtest/gtest.h>
 
-
 struct NumberSubset {
 	uint64 start;
 	uint64 end;
 
 	uint64 total;
 };
-
 
 void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
@@ -49,18 +47,17 @@ void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
 	subset->total += subset->end;
 }
 
-
 /**
-* Calculates the value of a triangle number by dividing the additions up into tasks
-*
-* A triangle number is defined as:
-*         Tn = 1 + 2 + 3 + ... + n
-*
-* The code is checked against the numerical solution which is:
-*         Tn = n * (n + 1) / 2
-*
-* TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
-*/
+ * Calculates the value of a triangle number by dividing the additions up into tasks
+ *
+ * A triangle number is defined as:
+ *         Tn = 1 + 2 + 3 + ... + n
+ *
+ * The code is checked against the numerical solution which is:
+ *         Tn = n * (n + 1) / 2
+ *
+ * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
+ */
 void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
@@ -82,7 +79,7 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 			subset->end = triangleNum;
 		}
 
-		tasks[i] = { AddNumberSubset, subset };
+		tasks[i] = {AddNumberSubset, subset};
 
 		nextNumber = subset->end + 1;
 	}
@@ -93,7 +90,6 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	delete[] tasks;
 
 	taskScheduler->WaitForCounter(&counter, 0);
-
 
 	// Add the results
 	uint64 result = 0ull;
@@ -107,9 +103,6 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// Cleanup
 	delete[] subsets;
 }
-
-
-
 
 TEST(FunctionalTests, CalcTriangleNum) {
 	ftl::TaskScheduler taskScheduler;

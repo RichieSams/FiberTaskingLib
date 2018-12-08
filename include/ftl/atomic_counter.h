@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,12 +31,11 @@
 #include <mutex>
 #include <vector>
 
-
 namespace ftl {
 
 class TaskScheduler;
 
-/** 
+/**
  * AtomicCounter is a wrapper over a C++11 atomic_uint
  * In FiberTaskingLib, AtomicCounter is used to create dependencies between Tasks, and
  * is how you wait for a set of Tasks to finish.
@@ -44,16 +43,17 @@ class TaskScheduler;
 class AtomicCounter {
 
 /**
- * This value defines how many fibers can simultaneously wait on a counter 
+ * This value defines how many fibers can simultaneously wait on a counter
  * If a user tries to have more fibers wait on a counter, the fiber will not be tracked,
  * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang
  */
 #ifndef NUM_WAITING_FIBER_SLOTS
-	#define NUM_WAITING_FIBER_SLOTS 4
+#	define NUM_WAITING_FIBER_SLOTS 4
 #endif
 
 public:
-	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0, uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0,
+	                       uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
 	~AtomicCounter();
 
 private:
@@ -66,7 +66,7 @@ private:
 	/* An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
 	 * False: Full
-	 * 
+	 *
 	 * We can't use a vector for m_freeSlots because std::atomic<t> is non-copyable and
 	 * non-moveable. std::vector constructor, push_back, and emplace_back all use either
 	 * copy or move
@@ -76,7 +76,7 @@ private:
 	struct WaitingFiberBundle {
 		WaitingFiberBundle();
 
-		/** 
+		/**
 		 * A bundle is "InUse" when it's being filled with data, or when it's being removed
 		 * The wait checking code uses this atomic to prevent multiple threads from modifying the same slot
 		 */
@@ -85,7 +85,7 @@ private:
 		std::size_t FiberIndex;
 		/* The value the fiber is waiting for */
 		uint TargetValue;
-		/** 
+		/**
 		 * A flag signaling if the fiber has been successfully switched out of and "cleaned up"
 		 * See TaskScheduler::CleanUpOldFiber()
 		 */
@@ -99,17 +99,17 @@ private:
 	std::vector<WaitingFiberBundle> m_waitingFibers;
 
 	/**
-	* We friend TaskScheduler so we can keep AddFiberToWaitingList() private
-	* This makes the public API cleaner
-	*/
+	 * We friend TaskScheduler so we can keep AddFiberToWaitingList() private
+	 * This makes the public API cleaner
+	 */
 	friend class TaskScheduler;
 
 public:
 	/**
 	 * A wrapper over std::atomic_uint::load()
-	 * 
+	 *
 	 * The load *will* be atomic, but this function as a whole is *not* atomic
-	 * 
+	 *
 	 * @param memoryOrder    The memory order to use for the load
 	 * @return               The current value of the counter
 	 */
@@ -118,9 +118,9 @@ public:
 	}
 	/**
 	 * A wrapper over std::atomic_uint::store()
-	 * 
+	 *
 	 * The store *will* be atomic, but this function as a whole is *not* atomic
-	 * 
+	 *
 	 * @param x              The value to load into the counter
 	 * @param memoryOrder    The memory order to use for the store
 	 */
@@ -132,9 +132,9 @@ public:
 	}
 	/**
 	 * A wrapper over std::atomic_uint::fetch_add()
-	 * 
+	 *
 	 * The fetch_add *will* be atomic, but this function as a whole is *not* atomic
-	 * 
+	 *
 	 * @param x              The value to add to the counter
 	 * @param memoryOrder    The memory order to use for the fetch_add
 	 * @return               The value of the counter before the addition
@@ -168,12 +168,12 @@ public:
 private:
 	/**
 	 * Add a fiber to the list of waiting fibers
-	 * 
+	 *
 	 * NOTE: Called by TaskScheduler from inside WaitForCounter
-	 * 
-	 * WARNING: The end-user must guarantee that the number of simultaneous waiting fibers is 
-	 * less than or equal to NUM_WAITING_FIBER_SLOTS. If a user tries to have more fibers wait 
-	 * on a counter, the fiber will not be tracked, which will cause WaitForCounter() to 
+	 *
+	 * WARNING: The end-user must guarantee that the number of simultaneous waiting fibers is
+	 * less than or equal to NUM_WAITING_FIBER_SLOTS. If a user tries to have more fibers wait
+	 * on a counter, the fiber will not be tracked, which will cause WaitForCounter() to
 	 * infinitely sleep. This will probably cause a hang
 	 *
 	 * @param fiberIndex           The index of the fiber that is waiting
@@ -182,11 +182,12 @@ private:
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<std::size_t>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag, std::size_t pinnedThreadIndex = std::numeric_limits<std::size_t>::max());
+	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag,
+	                           std::size_t pinnedThreadIndex = std::numeric_limits<std::size_t>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue
-	 * If it finds one, it removes it from the list, and signals the 
+	 * If it finds one, it removes it from the list, and signals the
 	 * TaskScheduler to add it to its ready task list
 	 *
 	 * @param value    The value to check

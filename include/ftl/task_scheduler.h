@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,6 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-
 
 namespace ftl {
 
@@ -63,13 +62,11 @@ public:
 	~TaskScheduler();
 
 private:
-	enum : size_t {
-		FTL_INVALID_INDEX = UINT_MAX
-	};
+	enum : size_t { FTL_INVALID_INDEX = UINT_MAX };
 
 	std::size_t m_numThreads;
-	std::vector<ThreadType> m_threads;	
-	
+	std::vector<ThreadType> m_threads;
+
 	std::size_t m_fiberPoolSize;
 	/* The backing storage for the fiber pool */
 	Fiber *m_fibers;
@@ -79,12 +76,12 @@ private:
 	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
 	 */
 	std::atomic<bool> *m_freeFibers;
-	
+
 	std::atomic<bool> m_initialized;
 	std::atomic<bool> m_quit;
 
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior;
-	
+
 	enum class FiberDestination {
 		None = 0,
 		ToPool = 1,
@@ -92,9 +89,9 @@ private:
 	};
 
 	/**
-	* Holds a task that is ready to to be executed by the worker threads
-	* Counter is the counter for the task(group). It will be decremented when the task completes
-	*/
+	 * Holds a task that is ready to to be executed by the worker threads
+	 * Counter is the counter for the task(group). It will be decremented when the task completes
+	 */
 	struct TaskBundle {
 		Task TaskToExecute;
 		AtomicCounter *Counter;
@@ -102,9 +99,7 @@ private:
 
 	struct PinnedWaitingFiberBundle {
 		PinnedWaitingFiberBundle(std::size_t fiberIndex, AtomicCounter *counter, uint targetValue)
-			: FiberIndex(fiberIndex), 
-			  Counter(counter), 
-			  TargetValue(targetValue) {
+		    : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
 		std::size_t FiberIndex;
@@ -114,25 +109,26 @@ private:
 
 	struct ThreadLocalStorage {
 		ThreadLocalStorage()
-			: ThreadFiber(),
-			  CurrentFiberIndex(FTL_INVALID_INDEX),
-			  OldFiberIndex(FTL_INVALID_INDEX),
-			  OldFiberDestination(FiberDestination::None),
-			  TaskQueue(),
-			  LastSuccessfulSteal(1),
-			  OldFiberStoredFlag(nullptr), 
-			  FailedQueuePopAttempts(0) {
+		    : ThreadFiber(),
+		      CurrentFiberIndex(FTL_INVALID_INDEX),
+		      OldFiberIndex(FTL_INVALID_INDEX),
+		      OldFiberDestination(FiberDestination::None),
+		      TaskQueue(),
+		      LastSuccessfulSteal(1),
+		      OldFiberStoredFlag(nullptr),
+		      FailedQueuePopAttempts(0) {
 		}
 
 	public:
 		/**
-		* The current fiber implementation requires that fibers created from threads finish on the same thread where they started
-		*
-		* To accommodate this, we have save the initial fibers created in each thread, and immediately switch
-		* out of them into the general fiber pool. Once the 'mainTask' has finished, we signal all the threads to
-		* start quitting. When they receive the signal, they switch back to the ThreadFiber, allowing it to 
-		* safely clean up.
-		*/
+		 * The current fiber implementation requires that fibers created from threads finish on the same thread where
+		 * they started
+		 *
+		 * To accommodate this, we have save the initial fibers created in each thread, and immediately switch
+		 * out of them into the general fiber pool. Once the 'mainTask' has finished, we signal all the threads to
+		 * start quitting. When they receive the signal, they switch back to the ThreadFiber, allowing it to
+		 * safely clean up.
+		 */
 		Fiber ThreadFiber;
 		/* The index of the current fiber in m_fibers */
 		std::size_t CurrentFiberIndex;
@@ -145,18 +141,18 @@ private:
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		std::size_t LastSuccessfulSteal;
 		std::atomic<bool> *OldFiberStoredFlag;
-		std::vector<std::pair<std::size_t, std::atomic<bool> *> > ReadyFibers;
+		std::vector<std::pair<std::size_t, std::atomic<bool> *>> ReadyFibers;
 		std::atomic_flag ReadFibersLock;
 		uint32 FailedQueuePopAttempts;
 		/**
-		* This lock is used with the CV below to put threads to sleep when there
-		* is no work to do. It also protects accesses to FailedQueuePopAttempts.
-		*
-		* We *could* use an atomic for FailedQueuePopAttempts, however, we still need
-		* to lock when changing the value, because spurious wakes of the CV could
-		* cause a thread to fail to wake up. See https://stackoverflow.com/a/36130475
-		* So, if we need to lock, there is no reason to have the overhead of an atomic as well.
-		*/
+		 * This lock is used with the CV below to put threads to sleep when there
+		 * is no work to do. It also protects accesses to FailedQueuePopAttempts.
+		 *
+		 * We *could* use an atomic for FailedQueuePopAttempts, however, we still need
+		 * to lock when changing the value, because spurious wakes of the CV could
+		 * cause a thread to fail to wake up. See https://stackoverflow.com/a/36130475
+		 * So, if we need to lock, there is no reason to have the overhead of an atomic as well.
+		 */
 		std::mutex FailedQueuePopLock;
 		std::condition_variable FailedQueuePopCV;
 
@@ -165,42 +161,45 @@ private:
 		char pad[64];
 	};
 	/**
-	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple TaskScheduler
-	 * instances. In addition, with the current fiber implementation, we have no way of telling the compiler to disable TLS optimizations, so we
-	 * have to fake TLS anyhow. 
+	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple
+	 * TaskScheduler instances. In addition, with the current fiber implementation, we have no way of telling the
+	 * compiler to disable TLS optimizations, so we have to fake TLS anyhow.
 	 *
-	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index into
-	 * their storage using m_tls[GetCurrentThreadIndex()]
+	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index
+	 * into their storage using m_tls[GetCurrentThreadIndex()]
 	 */
 	ThreadLocalStorage *m_tls;
 
-	/** 
+	/**
 	 * We friend AtomicCounter so we can keep AddReadyFiber() private
 	 * This makes the public API cleaner
 	 */
 	friend class AtomicCounter;
 
-
 public:
 	/**
 	 * Initializes the TaskScheduler and then starts executing 'mainTask'
 	 *
-	 * NOTE: Run will "block" until 'mainTask' returns. However, it doesn't block in the traditional sense; 'mainTask' is created as a Fiber.
-	 * Therefore, the current thread will save it's current state, and then switch execution to the the 'mainTask' fiber. When 'mainTask'
-	 * finishes, the thread will switch back to the saved state, and Run() will return.
+	 * NOTE: Run will "block" until 'mainTask' returns. However, it doesn't block in the traditional sense; 'mainTask'
+	 * is created as a Fiber. Therefore, the current thread will save it's current state, and then switch execution to
+	 * the the 'mainTask' fiber. When 'mainTask' finishes, the thread will switch back to the saved state, and Run()
+	 * will return.
 	 *
-	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
+	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current
+	 * task is waiting on a counter
 	 * @param mainTask          The main task to run
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 */
-	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0, EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
+	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0,
+	         EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
 
 	/**
 	 * Adds a task to the internal queue.
 	 *
 	 * @param task       The task to queue
-	 * @param counter    An atomic counter corresponding to this task. Initially it will be set to 1. When the task completes, it will be decremented.
+	 * @param counter    An atomic counter corresponding to this task. Initially it will be set to 1. When the task
+	 * completes, it will be decremented.
 	 */
 	void AddTask(Task task, AtomicCounter *counter = nullptr);
 	/**
@@ -208,7 +207,8 @@ public:
 	 *
 	 * @param numTasks    The number of tasks
 	 * @param tasks       The tasks to queue
-	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to numTasks. When each task completes, it will be decremented.
+	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to
+	 * numTasks. When each task completes, it will be decremented.
 	 */
 	void AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter = nullptr);
 
@@ -232,8 +232,8 @@ public:
 	/**
 	 * Set the behavior for how worker threads handle an empty queue
 	 *
-	 * @param behavior    
-	 * @return     
+	 * @param behavior
+	 * @return
 	 */
 	void SetEmptyQueueBehavior(EmptyQueueBehavior behavior) {
 		m_emptyQueueBehavior.store(behavior, std::memory_order_relaxed);
@@ -261,11 +261,14 @@ private:
 	void CleanUpOldFiber();
 
 	/**
-	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching for a new task
+	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching
+	 * for a new task
 	 *
-	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal std::numeric_limits<std::size_t>::max()
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal
+	 * std::numeric_limits<std::size_t>::max()
 	 * @param fiberIndex           The index of the fiber to add
-	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
+	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
+	 * up"
 	 */
 	void AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
 
@@ -277,10 +280,10 @@ private:
 	 */
 	static FTL_THREAD_FUNC_DECL ThreadStart(void *arg);
 	/**
-	* The fiberProc function that wraps the main fiber procedure given by the user
-	*
-	* @param arg    An instance of TaskScheduler
-	*/
+	 * The fiberProc function that wraps the main fiber procedure given by the user
+	 *
+	 * @param arg    An instance of TaskScheduler
+	 */
 	static void MainFiberStart(void *arg);
 	/**
 	 * The fiberProc function for all fibers in the fiber pool

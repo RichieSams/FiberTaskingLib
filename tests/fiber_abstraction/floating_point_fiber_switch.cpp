@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,6 @@
 #include <atomic>
 
 #include <gtest/gtest.h>
-
 
 struct MultipleFiberArg {
 	double Counter;
@@ -52,7 +51,6 @@ void FloatingPointFirstLevelFiberStart(void *arg) {
 	// Let's do an intermediate check
 	GTEST_ASSERT_EQ(((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0), singleFiberArg->Counter);
 
-
 	// Now run the rest of the sequence
 	singleFiberArg->Counter *= 4.0;
 	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
@@ -60,7 +58,6 @@ void FloatingPointFirstLevelFiberStart(void *arg) {
 	// Return from fifth
 	singleFiberArg->Counter += 1.0;
 	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
-
 
 	// We should never get here
 	FAIL();
@@ -80,7 +77,6 @@ void FloatingPointSecondLevelFiberStart(void *arg) {
 	singleFiberArg->Counter += 7.0;
 	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
 
-
 	// We should never get here
 	FAIL();
 }
@@ -98,7 +94,6 @@ void FloatingPointThirdLevelFiberStart(void *arg) {
 	// Return from fifth
 	singleFiberArg->Counter *= 6.0;
 	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
-
 
 	// We should never get here
 	FAIL();
@@ -118,7 +113,6 @@ void FloatingPointFourthLevelFiberStart(void *arg) {
 	singleFiberArg->Counter *= 5.0;
 	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
 
-
 	// We should never get here
 	FAIL();
 }
@@ -137,7 +131,6 @@ void FloatingPointFifthLevelFiberStart(void *arg) {
 	singleFiberArg->Counter += 1.0;
 	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
 
-
 	// We should never get here
 	FAIL();
 }
@@ -155,7 +148,6 @@ void FloatingPointSixthLevelFiberStart(void *arg) {
 	// Return from third
 	singleFiberArg->Counter -= 3.0;
 	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->MainFiber);
-
 
 	// We should never get here
 	FAIL();
@@ -176,6 +168,8 @@ TEST(FiberAbstraction, FloatingPointFiberSwitch) {
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.FirstFiber);
 
-	GTEST_ASSERT_EQ(((((((((((((((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), singleFiberArg.Counter);
+	// clang-format off
+	GTEST_ASSERT_EQ(((((((((((((((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3),
+	                singleFiberArg.Counter);
+	// clang-format on
 }
-

@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,16 +34,15 @@
 #include <cstdlib>
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
-	#if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-		#include <sys/mman.h>
-		#include <unistd.h>
-	#elif defined(FTL_OS_WINDOWS)
-		#define WIN32_LEAN_AND_MEAN
-		#define NOMINMAX
-		#include <Windows.h>
-	#endif
+#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
+#		include <sys/mman.h>
+#		include <unistd.h>
+#	elif defined(FTL_OS_WINDOWS)
+#		define WIN32_LEAN_AND_MEAN
+#		define NOMINMAX
+#		include <Windows.h>
+#	endif
 #endif
-
 
 namespace ftl {
 
@@ -56,45 +55,41 @@ inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple);
 
 typedef void (*FiberStartRoutine)(void *arg);
 
-
 class Fiber {
 public:
 	/**
 	 * Default constructor
 	 * Nothing is allocated. This can be used as a thread fiber.
 	 */
-	Fiber()
-		: m_stack(nullptr),
-		  m_systemPageSize(0),
-		  m_stackSize(0),
-		  m_context(nullptr),
-		  m_arg(0) {
+	Fiber() : m_stack(nullptr), m_systemPageSize(0), m_stackSize(0), m_context(nullptr), m_arg(0) {
 	}
 	/**
 	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
 	 *
-	 * @param stackSize        The stack size for the fiber. If guard pages are being used, this will be rounded up to the next multiple of the system page size
+	 * @param stackSize        The stack size for the fiber. If guard pages are being used, this will be rounded up to
+	 * the next multiple of the system page size
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, void *arg)
-			: m_arg(arg) {
-		#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-			m_systemPageSize = SystemPageSize();
-		#else
-			m_systemPageSize = 0;
-		#endif
+	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, void *arg) : m_arg(arg) {
+#if defined(FTL_FIBER_STACK_GUARD_PAGES)
+		m_systemPageSize = SystemPageSize();
+#else
+		m_systemPageSize = 0;
+#endif
 
 		m_stackSize = RoundUp(stackSize, m_systemPageSize);
 		// We add a guard page both the top and the bottom of the stack
 		m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
-		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
-		
-		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
-		#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-			MemoryGuard(static_cast<char *>(m_stack), m_systemPageSize);
-			MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, m_systemPageSize);
-		#endif
+		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize,
+		                                         startRoutine);
+
+		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize,
+		                      static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
+#if defined(FTL_FIBER_STACK_GUARD_PAGES)
+		MemoryGuard(static_cast<char *>(m_stack), m_systemPageSize);
+		MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, m_systemPageSize);
+#endif
 	}
 
 	/**
@@ -110,8 +105,7 @@ public:
 	 *
 	 * @return
 	 */
-	Fiber(Fiber &&other)
-			: Fiber() {
+	Fiber(Fiber &&other) : Fiber() {
 		swap(*this, other);
 	}
 
@@ -171,15 +165,15 @@ public:
 		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
 		m_arg = arg;
 	}
-	
+
 private:
 	/**
-	* Helper function for the move operators
-	* Swaps all the member variables
-	*
-	* @param first     The first fiber
-	* @param second    The second fiber
-	*/
+	 * Helper function for the move operators
+	 * Swaps all the member variables
+	 *
+	 * @param first     The first fiber
+	 * @param second    The second fiber
+	 */
 	void swap(Fiber &first, Fiber &second) {
 		using std::swap;
 
@@ -192,85 +186,85 @@ private:
 };
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
-	#if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-		inline void MemoryGuard(void *memory, size_t bytes) {
-			int result = mprotect(memory, bytes, PROT_NONE);
-			assert(!result);
-		}
+#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
+inline void MemoryGuard(void *memory, size_t bytes) {
+	int result = mprotect(memory, bytes, PROT_NONE);
+	assert(!result);
+}
 
-		inline void MemoryGuardRelease(void *memory, size_t bytes) {
-			int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
-			assert(!result);
-		}
+inline void MemoryGuardRelease(void *memory, size_t bytes) {
+	int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
+	assert(!result);
+}
 
-		inline std::size_t SystemPageSize() {
-			int pageSize = getpagesize();
-			return pageSize;
-		}
+inline std::size_t SystemPageSize() {
+	int pageSize = getpagesize();
+	return pageSize;
+}
 
-		inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
-			void *returnPtr;
-			posix_memalign(&returnPtr, alignment, size);
+inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+	void *returnPtr;
+	posix_memalign(&returnPtr, alignment, size);
 
-			return returnPtr;
-		}
+	return returnPtr;
+}
 
-		inline void AlignedFree(void *block) {
-			free(block);
-		}
-	#elif defined(FTL_OS_WINDOWS)
-		inline void MemoryGuard(void *memory, size_t bytes) {
-			DWORD ignored;
+inline void AlignedFree(void *block) {
+	free(block);
+}
+#	elif defined(FTL_OS_WINDOWS)
+inline void MemoryGuard(void *memory, size_t bytes) {
+	DWORD ignored;
 
-			BOOL result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
-			assert(result);
-		}
+	BOOL result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
+	assert(result);
+}
 
-		inline void MemoryGuardRelease(void *memory, size_t bytes) {
-			DWORD ignored;
+inline void MemoryGuardRelease(void *memory, size_t bytes) {
+	DWORD ignored;
 
-			BOOL result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
-			assert(result);
-		}
+	BOOL result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
+	assert(result);
+}
 
-		inline std::size_t SystemPageSize() {
-			SYSTEM_INFO sysInfo;
-			GetSystemInfo(&sysInfo);
-			return sysInfo.dwPageSize;
-		}
+inline std::size_t SystemPageSize() {
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	return sysInfo.dwPageSize;
+}
 
-		inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
-			return _aligned_malloc(size, alignment);
-		}
+inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+	return _aligned_malloc(size, alignment);
+}
 
-		inline void AlignedFree(void *block) {
-			_aligned_free(block);
-		}
-	#else
-		#error "Need a way to protect memory for this platform".
-	#endif
+inline void AlignedFree(void *block) {
+	_aligned_free(block);
+}
+#	else
+#		error "Need a way to protect memory for this platform".
+#	endif
 #else
-	inline void MemoryGuard(void *memory, size_t bytes) {
-		(void)memory;
-		(void)bytes;
-	}
+inline void MemoryGuard(void *memory, size_t bytes) {
+	(void)memory;
+	(void)bytes;
+}
 
-	inline void MemoryGuardRelease(void *memory, size_t bytes) {
-		(void)memory;
-		(void)bytes;
-	}
+inline void MemoryGuardRelease(void *memory, size_t bytes) {
+	(void)memory;
+	(void)bytes;
+}
 
-	inline std::size_t SystemPageSize() {
-		return 0;
-	}
+inline std::size_t SystemPageSize() {
+	return 0;
+}
 
-	inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
-		return malloc(size);
-	}
+inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+	return malloc(size);
+}
 
-	inline void AlignedFree(void *block) {
-		free(block);
-	}
+inline void AlignedFree(void *block) {
+	free(block);
+}
 #endif
 
 inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple) {
