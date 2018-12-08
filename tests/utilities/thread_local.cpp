@@ -59,7 +59,7 @@ namespace ThreadLocalTests {
 		scheduler->AddTasks(static_cast<uint>(single_init_tasks.size()), single_init_tasks.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
-		auto single_init_vals = single_init_singleton(scheduler).getAllValues();
+		auto single_init_vals = single_init_singleton(scheduler).GetAllValues();
 
 		ASSERT_EQ(scheduler->GetThreadCount(), std::accumulate(single_init_vals.begin(), single_init_vals.end(), std::size_t{0}));
 
@@ -69,7 +69,7 @@ namespace ThreadLocalTests {
 		scheduler->AddTasks(static_cast<uint>(side_effect_task.size()), side_effect_task.data(), &ac);
 		scheduler->WaitForCounter(&ac, 0);
 
-		auto side_effect_vals = side_effect_singleton(scheduler).getAllValues();
+		auto side_effect_vals = side_effect_singleton(scheduler).GetAllValues();
 
 		ASSERT_LE(side_effect_count, scheduler->GetThreadCount());
 		ASSERT_EQ(side_effect_count - 1, *std::max_element(side_effect_vals.begin(), side_effect_vals.end()));

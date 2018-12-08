@@ -49,15 +49,15 @@ class ThreadLocalHandle {
 private:
 	friend ThreadLocal<T>;
 
-	void valid_handle(T& value);
+	void ValidHandle(T &value);
 
 public:
 	T& operator*() {
-		valid_handle(m_value);
+		ValidHandle(m_value);
 		return m_value;
 	}
 	T* operator->() {
-		valid_handle(m_value);
+		ValidHandle(m_value);
 		return &m_value;
 	}
 private:
@@ -92,17 +92,17 @@ public:
 	 * @param ts    The task scheduler to be thread local to.
 	 */
 
-#ifdef FTL_OS_WINDOWS
+#ifdef _MSVC
 	#pragma warning(push)
 	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay.
-#endif
+#endif // _MSVC
 	explicit ThreadLocal(TaskScheduler* ts)
 		: m_scheduler{ts},
 		  m_initalizer{},
 		  m_data{new ValuePadder<T>[ts->GetThreadCount()]} {}
-#ifdef FTL_OS_WINDOWS
+#ifdef _MSVC
 	#pragma warning(pop)
-#endif
+#endif // _MSVC
 
 	/**
 	 * Construct all T's by calling a void factory function the first time you use your data.
@@ -137,7 +137,7 @@ public:
 	 *
 	 * @return    Handle to the thread's version of T.
 	 */
-	ThreadLocalHandle<T> getHandle() {
+	ThreadLocalHandle<T> GetHandle() {
 		return ThreadLocalHandle<T>{*this, **this};
 	}
 
@@ -151,7 +151,14 @@ public:
 		init_value(idx);
 		return &m_data[idx].m_value;
 	}
-	std::vector<T> getAllValues() {
+
+	/**
+	 * Returns a copy of all the elements within the thread_local value. Operation is _not_ thread safe,
+	 * it does not take any locks or copy any object atomically.
+	 *
+	 * @return    Vector of all the values.
+	 */
+	std::vector<T> GetAllValues() {
 		std::vector<T> vec;
 		std::size_t const threads = m_scheduler->GetThreadCount();
 		vec.reserve(threads);
@@ -159,6 +166,25 @@ public:
 		for (std::size_t i = 0; i < threads; ++i) {
 			init_value(i);
 			vec.emplace_back(m_data[i].m_value);
+		}
+
+		return vec;
+	}
+
+	/**
+	 * Returns a reference to all of the elements within the thread_local value. Operation is thread safe within the
+	 * the thread_local object itself, but does not guarantee thread safety when accessing the references.
+	 *
+	 * @return    Vector of all the values.
+	 */
+	std::vector<std::reference_wrapper<T>> GetAllValuesByRef() {
+		std::vector<T> vec;
+		std::size_t const threads = m_scheduler->GetThreadCount();
+		vec.reserve(threads);
+
+		for (std::size_t i = 0; i < threads; ++i) {
+			init_value(i);
+			vec.emplace_back(std::ref(m_data[i].m_value));
 		}
 
 		return vec;
@@ -178,14 +204,14 @@ private:
 
 #if FTL_THREAD_LOCAL_HANDLE_DEBUG
 template<class T>
-void ThreadLocalHandle<T>::valid_handle(T& value) {
+void ThreadLocalHandle<T>::ValidHandle(T &value) {
 	if (&*m_parent != &value) {
 		assert(!"Invalid ThreadLocalHandle");
 	};
 }
 #else
 template<class T>
-void ThreadLocalHandle<T>::valid_handle(T& value) {}
+void ThreadLocalHandle<T>::ValidHandle(T& value) {}
 #endif
 
 // C++17 deduction guide
