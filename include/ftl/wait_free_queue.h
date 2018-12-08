@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@
 
 /**
  * This is an implementation of 'Correct and Efficient Work-Stealing for Weak Memory Models' by Le et. al [2013]
- * 
+ *
  * https://hal.inria.fr/hal-00802885
  */
 
@@ -37,16 +37,15 @@
 #include <memory>
 #include <vector>
 
-
 namespace ftl {
 
-template<typename T>
+template <typename T>
 class WaitFreeQueue {
 public:
 	WaitFreeQueue()
-		: m_top(1), // m_top and m_bottom must start at 1
-		  m_bottom(1), // Otherwise, the first Pop on an empty queue will underflow m_bottom
-		  m_array(new CircularArray(32)) {
+	    : m_top(1),    // m_top and m_bottom must start at 1
+	      m_bottom(1), // Otherwise, the first Pop on an empty queue will underflow m_bottom
+	      m_array(new CircularArray(32)) {
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_top, sizeof(m_top));
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_bottom, sizeof(m_bottom));
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_array, sizeof(m_array));
@@ -58,8 +57,7 @@ public:
 private:
 	class CircularArray {
 	public:
-		CircularArray(std::size_t n)
-				: items(n) {
+		CircularArray(std::size_t n) : items(n) {
 			assert(!(n == 0) && !(n & (n - 1)) && "n must be a power of 2");
 		}
 
@@ -97,7 +95,6 @@ private:
 	alignas(CACHE_LINE_SIZE) std::atomic<uint64> m_bottom;
 	alignas(CACHE_LINE_SIZE) std::atomic<CircularArray *> m_array;
 
-
 public:
 	void Push(T value) {
 		uint64 b = m_bottom.load(std::memory_order_relaxed);
@@ -111,11 +108,11 @@ public:
 		}
 		array->Put(b, value);
 
-		#if defined(FTL_STRONG_MEMORY_MODEL)
-			std::atomic_signal_fence(std::memory_order_release);
-		#else
-			std::atomic_thread_fence(std::memory_order_release);
-		#endif
+#if defined(FTL_STRONG_MEMORY_MODEL)
+		std::atomic_signal_fence(std::memory_order_release);
+#else
+		std::atomic_thread_fence(std::memory_order_release);
+#endif
 
 		m_bottom.store(b + 1, std::memory_order_relaxed);
 	}
@@ -134,7 +131,8 @@ public:
 			*value = array->Get(b);
 			if (t == b) {
 				/* Single last element in queue. */
-				if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+				if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst,
+				                                                  std::memory_order_relaxed)) {
 					/* Failed race. */
 					result = false;
 				}
@@ -152,25 +150,26 @@ public:
 	bool Steal(T *value) {
 		uint64 t = m_top.load(std::memory_order_acquire);
 
-		#if defined(FTL_STRONG_MEMORY_MODEL)
-			std::atomic_signal_fence(std::memory_order_seq_cst);
-		#else
-			std::atomic_thread_fence(std::memory_order_seq_cst);
-		#endif
+#if defined(FTL_STRONG_MEMORY_MODEL)
+		std::atomic_signal_fence(std::memory_order_seq_cst);
+#else
+		std::atomic_thread_fence(std::memory_order_seq_cst);
+#endif
 
 		uint64 b = m_bottom.load(std::memory_order_acquire);
 		if (t < b) {
 			/* Non-empty queue. */
 			CircularArray *array = m_array.load(std::memory_order_consume);
 			*value = array->Get(t);
-			if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+			if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst,
+			                                                  std::memory_order_relaxed)) {
 				/* Failed race. */
 				return false;
 			}
 
 			return true;
 		}
-		
+
 		return false;
 	}
 };

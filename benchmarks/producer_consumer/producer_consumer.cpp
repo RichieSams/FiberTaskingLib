@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,7 @@
 
 #include <nonius/nonius.hpp>
 
-
- // Constants
+// Constants
 const uint kNumProducerTasks = 100u;
 const uint kNumConsumerTasks = 1000u;
 const uint kNumIterations = 1;
@@ -40,7 +39,7 @@ void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	ftl::Task *tasks = new ftl::Task[kNumConsumerTasks];
 	for (uint i = 0; i < kNumConsumerTasks; ++i) {
-		tasks[i] = { Consumer, arg };
+		tasks[i] = {Consumer, arg};
 	}
 
 	ftl::AtomicCounter counter(taskScheduler);
@@ -50,15 +49,14 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	taskScheduler->WaitForCounter(&counter, 0);
 }
 
-
 void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
-	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
+	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
 
 	ftl::Task *tasks = new ftl::Task[kNumProducerTasks];
 	for (uint i = 0; i < kNumProducerTasks; ++i) {
 		tasks[i] = {Producer, nullptr};
 	}
-	
+
 	meter.measure([=] {
 		for (uint i = 0; i < kNumIterations; ++i) {
 			ftl::AtomicCounter counter(taskScheduler);
@@ -73,7 +71,7 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
-	ftl::TaskScheduler* taskScheduler = new ftl::TaskScheduler();
+	ftl::TaskScheduler *taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(kNumProducerTasks + 20, ProducerConsumerMainTask, &meter);
 	delete taskScheduler;
 });

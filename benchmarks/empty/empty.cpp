@@ -1,4 +1,4 @@
-/** 
+/**
  * FiberTaskingLib - A tasking library that uses fibers for efficient task switching
  *
  * This library was created as a proof of concept of the ideas presented by
@@ -12,9 +12,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,7 @@
 
 #include <nonius/nonius.hpp>
 
-
- // Constants
+// Constants
 const uint kNumTasks = 65000;
 const uint kNumIterations = 1;
 
@@ -37,7 +36,7 @@ void EmptyBenchmarkTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 void EmptyBenchmarkMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
-	auto& meter = *reinterpret_cast<nonius::chronometer*>(arg);
+	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
 
 	ftl::Task *tasks = new ftl::Task[kNumTasks];
 	for (uint i = 0; i < kNumTasks; ++i) {
@@ -52,13 +51,13 @@ void EmptyBenchmarkMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 			taskScheduler->WaitForCounter(&counter, 0);
 		}
 	});
-	
+
 	// Cleanup
 	delete[] tasks;
 }
 
 NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
-	ftl::TaskScheduler* taskScheduler = new ftl::TaskScheduler();
+	ftl::TaskScheduler *taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(20, EmptyBenchmarkMainTask, &meter);
 	delete taskScheduler;
 });
