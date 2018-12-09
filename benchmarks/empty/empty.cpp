@@ -31,7 +31,7 @@
 constexpr static uint K_NUM_TASKS = 65000;
 constexpr static uint K_NUM_ITERATIONS = 1;
 
-void EmptyBenchmarkTask(ftl::TaskScheduler *taskScheduler, void *arg) {
+void EmptyBenchmarkTask(ftl::TaskScheduler *, void *) {
 	// No-Op
 }
 
@@ -60,4 +60,4 @@ NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
 	ftl::TaskScheduler *taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(20, EmptyBenchmarkMainTask, &meter);
 	delete taskScheduler;
-});
+})

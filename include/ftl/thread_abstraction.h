@@ -129,7 +129,7 @@ inline void JoinThread(ThreadType const thread) {
  * @return    The current thread
  */
 inline ThreadType GetCurrentThread() {
-	Win32Thread const result{::GetCurrentThread(), ::GetCurrentThreadId()};
+	Win32Thread const result{::GetCurrentThread(), GetCurrentThreadId()};
 
 	return result;
 }

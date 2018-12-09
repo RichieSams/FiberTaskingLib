@@ -34,7 +34,7 @@ struct NumberSubset {
 	uint64 Total;
 };
 
-void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
+void AddNumberSubset(ftl::TaskScheduler *, void *arg) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->Total = 0;
@@ -58,7 +58,7 @@ void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
  *
  * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
  */
-void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
+void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 	// Define the constants to test
 	const uint64 triangleNum = 47593243ull;
 	const uint64 numAdditionsPerTask = 10000ull;

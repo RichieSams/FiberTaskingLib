@@ -28,7 +28,7 @@ namespace ftl {
 
 class TaskScheduler;
 
-typedef void (*TaskFunction)(ftl::TaskScheduler *taskScheduler, void *arg);
+typedef void (*TaskFunction)(TaskScheduler *taskScheduler, void *arg);
 
 struct Task {
 	TaskFunction Function;
