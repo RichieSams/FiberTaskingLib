@@ -64,7 +64,7 @@ AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
 bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue,
                                           std::atomic<bool> *const fiberStoredFlag,
                                           std::size_t const pinnedThreadIndex) {
-	for (uint i = 0; i < m_waitingFibers.size(); ++i) {
+	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
 		bool expected = true;
 		// Try to acquire the slot
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst,
@@ -121,7 +121,7 @@ void AtomicCounter::CheckWaitingFibers(uint const value) {
 	std::vector<uint> readyFiberIndices(m_waitingFibers.size(), 0);
 	uint nextIndex = 0;
 
-	for (uint i = 0; i < m_waitingFibers.size(); ++i) {
+	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
 		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;
@@ -144,7 +144,7 @@ void AtomicCounter::CheckWaitingFibers(uint const value) {
 		}
 	}
 	// Exit shared section
-	m_lock.fetch_sub(1u, std::memory_order_seq_cst);
+	m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 	// Wait for all threads to exit the shared section if there are fibers to ready
 	if (nextIndex > 0) {
 		while (m_lock.load() > 0) {

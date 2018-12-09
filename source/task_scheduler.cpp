@@ -36,7 +36,7 @@ struct ThreadStartArgs {
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
-	ThreadStartArgs *const threadArgs = reinterpret_cast<ThreadStartArgs *const>(arg);
+	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *const>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	uint const index = threadArgs->ThreadIndex;
 
@@ -70,7 +70,7 @@ struct MainFiberStartArgs {
 };
 
 void TaskScheduler::MainFiberStart(void *const arg) {
-	MainFiberStartArgs *mainFiberArgs = reinterpret_cast<MainFiberStartArgs *>(arg);
+	auto *const mainFiberArgs = reinterpret_cast<MainFiberStartArgs *const>(arg);
 	TaskScheduler *taskScheduler = mainFiberArgs->Scheduler;
 
 	// Call the main task procedure
@@ -81,7 +81,7 @@ void TaskScheduler::MainFiberStart(void *const arg) {
 
 	// Signal any waiting threads so they can finish
 	if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
-		for (uint i = 0; i < taskScheduler->m_numThreads; ++i) {
+		for (std::size_t i = 0; i < taskScheduler->m_numThreads; ++i) {
 			{
 				std::unique_lock<std::mutex> lock(taskScheduler->m_tls[i].FailedQueuePopLock);
 				taskScheduler->m_tls[i].FailedQueuePopAttempts = 0;
@@ -99,7 +99,7 @@ void TaskScheduler::MainFiberStart(void *const arg) {
 }
 
 void TaskScheduler::FiberStart(void *const arg) {
-	TaskScheduler *const taskScheduler = reinterpret_cast<TaskScheduler *const>(arg);
+	auto *const taskScheduler = reinterpret_cast<TaskScheduler *const>(arg);
 
 	// If we just started from the pool, we may need to clean up from another fiber
 	taskScheduler->CleanUpOldFiber();
@@ -257,7 +257,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 #endif // _MSC_VER
 	m_tls = new ThreadLocalStorage[m_numThreads];
 	// Initialize all the locks before we start the other threads
-	for (uint i = 0; i < m_numThreads; ++i) {
+	for (std::size_t i = 0; i < m_numThreads; ++i) {
 		m_tls[i].ReadFibersLock.clear();
 	}
 #ifdef _MSC_VER
@@ -274,7 +274,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 #endif
 
 	// Create the remaining threads
-	for (uint i = 1; i < m_numThreads; ++i) {
+	for (std::size_t i = 1; i < m_numThreads; ++i) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
 		threadArgs->ThreadIndex = i;
@@ -332,7 +332,7 @@ void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Find a thread that is sleeping and wake it
-		for (uint i = 0; i < m_numThreads; ++i) {
+		for (std::size_t i = 0; i < m_numThreads; ++i) {
 			std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
 			if (m_tls[i].FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 				m_tls[i].FailedQueuePopAttempts = 0;
@@ -358,7 +358,7 @@ void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, Atomi
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Wake all the threads
-		for (uint i = 0; i < m_numThreads; ++i) {
+		for (std::size_t i = 0; i < m_numThreads; ++i) {
 			{
 				std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
 				m_tls[i].FailedQueuePopAttempts = 0;
@@ -379,7 +379,7 @@ FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 #elif defined(FTL_POSIX_THREADS)
 	pthread_t const currentThread = pthread_self();
 	for (std::size_t i = 0; i < m_numThreads; ++i) {
-		if (pthread_equal(currentThread, m_threads[i])) {
+		if (pthread_equal(currentThread, m_threads[i]) != 0) {
 			return i;
 		}
 	}
