@@ -28,8 +28,8 @@
 #include <nonius/nonius.hpp>
 
 // Constants
-constexpr static uint K_NUM_PRODUCER_TASKS = 100u;
-constexpr static uint K_NUM_CONSUMER_TASKS = 1000u;
+constexpr static uint K_NUM_PRODUCER_TASKS = 100U;
+constexpr static uint K_NUM_CONSUMER_TASKS = 1000U;
 constexpr static uint K_NUM_ITERATIONS = 1;
 
 void Consumer(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
