@@ -152,6 +152,7 @@ void FloatingPointSixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, FloatingPointFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0.0;

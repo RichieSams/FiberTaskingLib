@@ -53,6 +53,11 @@ class AtomicCounter {
 public:
 	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0,
 	                       uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
+
+	AtomicCounter(AtomicCounter const &) = delete;
+	AtomicCounter(AtomicCounter &&) noexcept = delete;
+	AtomicCounter &operator=(AtomicCounter const &) = delete;
+	AtomicCounter &operator=(AtomicCounter &&) noexcept = delete;
 	~AtomicCounter();
 
 private:
