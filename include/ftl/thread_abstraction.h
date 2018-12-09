@@ -223,7 +223,7 @@ using ThreadStartRoutine = void *(*)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
                          ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
@@ -250,7 +250,7 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
                          size_t const coreAffinity, ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
@@ -347,7 +347,7 @@ inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	if (milliseconds == EVENTWAIT_INFINITE) {
 		pthread_cond_wait(&eventId.cond, &eventId.mutex);
 	} else {
-		timespec waittime;
+		timespec waittime{};
 		waittime.tv_sec = milliseconds / mills_in_sec;
 		milliseconds -= waittime.tv_sec * mills_in_sec;
 		waittime.tv_nsec = milliseconds * mills_in_sec;

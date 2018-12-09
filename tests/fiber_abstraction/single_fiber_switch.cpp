@@ -29,7 +29,7 @@
 #include <gtest/gtest.h>
 
 struct SingleFiberArg {
-	std::atomic_long Counter;
+	std::atomic_long Counter{0};
 	ftl::Fiber MainFiber;
 	ftl::Fiber OtherFiber;
 };

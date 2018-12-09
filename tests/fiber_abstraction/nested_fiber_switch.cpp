@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 
 struct MultipleFiberArg {
-	uint64 Counter;
+	uint64 Counter{0};
 	ftl::Fiber MainFiber;
 	ftl::Fiber FirstFiber;
 	ftl::Fiber SecondFiber;
