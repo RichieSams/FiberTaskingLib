@@ -46,15 +46,15 @@ struct Win32Thread {
 	DWORD Id;
 };
 
-typedef Win32Thread ThreadType;
+using ThreadType = Win32Thread;
 
 struct EventType {
 	HANDLE Event;
 	std::atomic_ulong CountWaiters;
 };
-const uint32 EVENTWAIT_INFINITE = INFINITE;
+constexpr static uint32 EVENTWAIT_INFINITE = INFINITE;
 
-typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
+using ThreadStartRoutine = uint(__stdcall *)(void *arg);
 #	define FTL_THREAD_FUNC_RETURN_TYPE uint
 #	define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE __stdcall
 #	define FTL_THREAD_FUNC_END return 0
@@ -201,14 +201,14 @@ inline void SignalEvent(EventType const eventId) {
 
 namespace ftl {
 
-typedef pthread_t ThreadType;
+using ThreadType = pthread_t;
 struct EventType {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 };
-const uint32 EVENTWAIT_INFINITE = -1;
+constexpr static uint32 EVENTWAIT_INFINITE = -1;
 
-typedef void *(*ThreadStartRoutine)(void *arg);
+using ThreadStartRoutine = void *(*)(void *arg);
 #	define FTL_THREAD_FUNC_RETURN_TYPE void *
 #	define FTL_THREAD_FUNC_DECL FTL_THREAD_FUNC_RETURN_TYPE
 #	define FTL_THREAD_FUNC_END return nullptr

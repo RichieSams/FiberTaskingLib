@@ -82,7 +82,7 @@ private:
 		// linked list of all previous arrays. This is done because other threads
 		// could still be accessing elements from the smaller arrays.
 		CircularArray *Grow(std::size_t const top, std::size_t const bottom) {
-			auto * const newArray = new CircularArray(Size() * 2);
+			auto *const newArray = new CircularArray(Size() * 2);
 			newArray->m_previous.reset(this);
 			for (std::size_t i = top; i != bottom; i++) {
 				newArray->Put(i, Get(i));
