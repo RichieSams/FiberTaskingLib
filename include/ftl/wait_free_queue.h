@@ -50,6 +50,11 @@ public:
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_bottom, sizeof(m_bottom));
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_array, sizeof(m_array));
 	}
+
+	WaitFreeQueue(WaitFreeQueue const &) = delete;
+	WaitFreeQueue(WaitFreeQueue &&) noexcept = delete;
+	WaitFreeQueue &operator=(WaitFreeQueue const &) = delete;
+	WaitFreeQueue &operator=(WaitFreeQueue &&) noexcept = delete;
 	~WaitFreeQueue() {
 		delete m_array.load(std::memory_order_relaxed);
 	}

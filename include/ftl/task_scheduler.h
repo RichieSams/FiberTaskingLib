@@ -62,6 +62,11 @@ enum class EmptyQueueBehavior {
 class TaskScheduler {
 public:
 	TaskScheduler();
+
+	TaskScheduler(TaskScheduler const &) = delete;
+	TaskScheduler(TaskScheduler &&) noexcept = delete;
+	TaskScheduler &operator=(TaskScheduler const &) = delete;
+	TaskScheduler &operator=(TaskScheduler &&) noexcept = delete;
 	~TaskScheduler();
 
 private:

@@ -100,6 +100,12 @@ public:
 	 */
 	Fiber(const Fiber &other) = delete;
 	/**
+	 * Deleted copy assignment operator
+	 * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
+	 */
+	Fiber &operator=(Fiber &other) = delete;
+
+	/**
 	 * Move constructor
 	 * This does a swap() of all the member variables
 	 *
