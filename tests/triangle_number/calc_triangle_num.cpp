@@ -60,21 +60,21 @@ void AddNumberSubset(ftl::TaskScheduler */*scheduler*/, void *arg) {
  */
 void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void */*arg*/) {
 	// Define the constants to test
-	const uint64 triangleNum = 47593243ull;
-	const uint64 numAdditionsPerTask = 10000ull;
-	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
+	const uint64 triangleNum = 47593243ULL;
+	const uint64 numAdditionsPerTask = 10000ULL;
+	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ULL) / numAdditionsPerTask;
 
 	// Create the tasks
 	auto *tasks = new ftl::Task[numTasks];
 	// We have to declare this on the heap so other threads can access it
 	auto *subsets = new NumberSubset[numTasks];
-	uint64 nextNumber = 1ull;
+	uint64 nextNumber = 1ULL;
 
-	for (uint64 i = 0ull; i < numTasks; ++i) {
+	for (uint64 i = 0ULL; i < numTasks; ++i) {
 		NumberSubset *subset = &subsets[i];
 
 		subset->Start = nextNumber;
-		subset->End = nextNumber + numAdditionsPerTask - 1ull;
+		subset->End = nextNumber + numAdditionsPerTask - 1ULL;
 		if (subset->End > triangleNum) {
 			subset->End = triangleNum;
 		}
@@ -92,13 +92,13 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void */*arg*/) {
 	taskScheduler->WaitForCounter(&counter, 0);
 
 	// Add the results
-	uint64 result = 0ull;
+	uint64 result = 0ULL;
 	for (uint64 i = 0; i < numTasks; ++i) {
 		result += subsets[i].Total;
 	}
 
 	// Test
-	GTEST_ASSERT_EQ(triangleNum * (triangleNum + 1ull) / 2ull, result);
+	GTEST_ASSERT_EQ(triangleNum * (triangleNum + 1ULL) / 2ULL, result);
 
 	// Cleanup
 	delete[] subsets;

@@ -125,7 +125,7 @@ public:
 	 */
 	void Store(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
-		m_lock.fetch_add(1u, std::memory_order_seq_cst);
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 		m_value.store(x, memoryOrder);
 		CheckWaitingFibers(x);
 	}
@@ -140,7 +140,7 @@ public:
 	 */
 	uint FetchAdd(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
-		m_lock.fetch_add(1u, std::memory_order_seq_cst);
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 		const uint prev = m_value.fetch_add(x, memoryOrder);
 		CheckWaitingFibers(prev + x);
 
@@ -157,7 +157,7 @@ public:
 	 */
 	uint FetchSub(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
-		m_lock.fetch_add(1u, std::memory_order_seq_cst);
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 		const uint prev = m_value.fetch_sub(x, memoryOrder);
 		CheckWaitingFibers(prev - x);
 

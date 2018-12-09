@@ -27,8 +27,8 @@
 
 #include <gtest/gtest.h>
 
-constexpr static uint K_NUM_PRODUCER_TASKS = 100u;
-constexpr static uint K_NUM_CONSUMER_TASKS = 10000u;
+constexpr static uint K_NUM_PRODUCER_TASKS = 100U;
+constexpr static uint K_NUM_CONSUMER_TASKS = 10000U;
 
 void Consumer(ftl::TaskScheduler */*scheduler*/, void *arg) {
 	auto *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
@@ -50,7 +50,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void */*arg*/) {
-	std::atomic_uint globalCounter(0u);
+	std::atomic_uint globalCounter(0U);
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
 	ftl::Task tasks[K_NUM_PRODUCER_TASKS];

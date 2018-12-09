@@ -49,7 +49,7 @@ void FirstLevelFiberStart(void *arg) {
 	// Return from sixth
 	// We just finished 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1
 	// Let's do an intermediate check
-	GTEST_ASSERT_EQ(((((((0ull + 8ull) * 3ull) + 7ull) * 6ull) - 9ull) * 2ull), singleFiberArg->Counter);
+	GTEST_ASSERT_EQ(((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL), singleFiberArg->Counter);
 
 	// Now run the rest of the sequence
 	singleFiberArg->Counter *= 4;
@@ -155,7 +155,7 @@ void SixthLevelFiberStart(void *arg) {
 
 TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
-	singleFiberArg.Counter = 0ull;
+	singleFiberArg.Counter = 0ULL;
 	singleFiberArg.FirstFiber = std::move(ftl::Fiber(524288, FirstLevelFiberStart, &singleFiberArg));
 	singleFiberArg.SecondFiber = std::move(ftl::Fiber(524288, SecondLevelFiberStart, &singleFiberArg));
 	singleFiberArg.ThirdFiber = std::move(ftl::Fiber(524288, ThirdLevelFiberStart, &singleFiberArg));
@@ -169,7 +169,7 @@ TEST(FiberAbstraction, NestedFiberSwitch) {
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.FirstFiber);
 
 	// clang-format off
-	GTEST_ASSERT_EQ(((((((((((((((((((0ull + 8ull) * 3ull) + 7ull) * 6ull) - 9ull) * 2ull) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), 
+	GTEST_ASSERT_EQ(((((((((((((((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), 
 		            singleFiberArg.Counter);
 	// clang-format on
 }
