@@ -340,7 +340,7 @@ inline void CloseEvent(EventType const eventId) {
  * @param eventId         The event to wait on
  * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
  */
-inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
+inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
 	if (milliseconds == EVENTWAIT_INFINITE) {
