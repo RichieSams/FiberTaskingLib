@@ -63,8 +63,7 @@ public:
 	 * Default constructor
 	 * Nothing is allocated. This can be used as a thread fiber.
 	 */
-	Fiber() {
-	}
+	Fiber() = default;
 	/**
 	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
 	 *
@@ -98,12 +97,12 @@ public:
 	 * Deleted copy constructor
 	 * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
 	 */
-	Fiber(const Fiber &other) = delete;
+	Fiber(Fiber const &other) = delete;
 	/**
 	 * Deleted copy assignment operator
 	 * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
 	 */
-	Fiber &operator=(Fiber &other) = delete;
+	Fiber &operator=(Fiber const &other) = delete;
 
 	/**
 	 * Move constructor
@@ -282,8 +281,9 @@ inline std::size_t RoundUp(std::size_t const numToRound, std::size_t const multi
 	}
 
 	std::size_t const remainder = numToRound % multiple;
-	if (remainder == 0)
+	if (remainder == 0) {
 		return numToRound;
+	}
 
 	return numToRound + multiple - remainder;
 }
