@@ -136,15 +136,15 @@ private:
 		/* The index of the previously executed fiber in m_fibers */
 		std::size_t OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
-		FiberDestination OldFiberDestination;
+		FiberDestination OldFiberDestination{FiberDestination::none};
 		/* The queue of waiting tasks */
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
-		std::size_t LastSuccessfulSteal;
-		std::atomic<bool> *OldFiberStoredFlag;
+		std::size_t LastSuccessfulSteal{1};
+		std::atomic<bool> *OldFiberStoredFlag{nullptr};
 		std::vector<std::pair<std::size_t, std::atomic<bool> *>> ReadyFibers;
 		std::atomic_flag ReadFibersLock;
-		uint32 FailedQueuePopAttempts;
+		uint32 FailedQueuePopAttempts{0};
 		/**
 		 * This lock is used with the CV below to put threads to sleep when there
 		 * is no work to do. It also protects accesses to FailedQueuePopAttempts.

@@ -63,7 +63,7 @@ public:
 	 * Default constructor
 	 * Nothing is allocated. This can be used as a thread fiber.
 	 */
-	Fiber() : m_stack(nullptr), m_systemPageSize(0), m_stackSize(0), m_context(nullptr), m_arg(nullptr) {
+	Fiber() {
 	}
 	/**
 	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
@@ -135,11 +135,11 @@ public:
 	}
 
 private:
-	void *m_stack;
-	std::size_t m_systemPageSize;
-	std::size_t m_stackSize;
-	boost_context::fcontext_t m_context;
-	void *m_arg;
+	void *m_stack{nullptr};
+	std::size_t m_systemPageSize{0};
+	std::size_t m_stackSize{0};
+	boost_context::fcontext_t m_context{nullptr};
+	void *m_arg{nullptr};
 	FTL_VALGRIND_ID
 
 public:
