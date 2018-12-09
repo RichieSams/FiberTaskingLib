@@ -70,8 +70,9 @@ typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
-	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+                         ThreadType *const returnThread) {
+	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
 
@@ -89,16 +90,16 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity,
-                         ThreadType *returnThread) {
-	HANDLE handle =
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+                         size_t const coreAffinity, ThreadType *const returnThread) {
+	HANDLE const handle =
 	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 
 	if (handle == nullptr) {
 		return false;
 	}
 
-	DWORD_PTR mask = 1ull << coreAffinity;
+	DWORD_PTR const mask = 1ull << coreAffinity;
 	SetThreadAffinityMask(handle, mask);
 
 	returnThread->Handle = handle;
@@ -118,7 +119,7 @@ inline void EndCurrentThread() {
  *
  * @param thread    The thread to join
  */
-inline void JoinThread(ThreadType thread) {
+inline void JoinThread(ThreadType const thread) {
 	WaitForSingleObject(thread.Handle, INFINITE);
 }
 
@@ -128,7 +129,7 @@ inline void JoinThread(ThreadType thread) {
  * @return    The current thread
  */
 inline ThreadType GetCurrentThread() {
-	Win32Thread result{::GetCurrentThread(), ::GetCurrentThreadId()};
+	Win32Thread const result{::GetCurrentThread(), ::GetCurrentThreadId()};
 
 	return result;
 }
@@ -138,7 +139,7 @@ inline ThreadType GetCurrentThread() {
  *
  * @param coreAffinity    The requested core affinity
  */
-inline void SetCurrentThreadAffinity(size_t coreAffinity) {
+inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
 	SetThreadAffinityMask(::GetCurrentThread(), 1ull << coreAffinity);
 }
 
@@ -147,7 +148,7 @@ inline void SetCurrentThreadAffinity(size_t coreAffinity) {
  *
  * @param event    The handle for the newly created event
  */
-inline void CreateEvent(EventType *event) {
+inline void CreateEvent(EventType *const event) {
 	event->event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
 	event->countWaiters = 0;
 }
@@ -157,7 +158,7 @@ inline void CreateEvent(EventType *event) {
  *
  * @param eventId    The event to close
  */
-inline void CloseEvent(EventType eventId) {
+inline void CloseEvent(EventType const eventId) {
 	CloseHandle(eventId.event);
 }
 
@@ -170,10 +171,10 @@ inline void CloseEvent(EventType eventId) {
  */
 #	pragma warning(push)
 #	pragma warning(disable : 4189)
-inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
+inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
 	eventId.countWaiters.fetch_add(1u);
-	DWORD retval = WaitForSingleObject(eventId.event, milliseconds);
-	uint prev = eventId.countWaiters.fetch_sub(1u);
+	DWORD const retval = WaitForSingleObject(eventId.event, milliseconds);
+	uint const prev = eventId.countWaiters.fetch_sub(1u);
 	if (1 == prev) {
 		// we were the last to awaken, so reset event.
 		ResetEvent(eventId.event);
@@ -188,7 +189,7 @@ inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
  *
  * @param eventId    The even to signal
  */
-inline void SignalEvent(EventType eventId) {
+inline void SignalEvent(EventType const eventId) {
 	SetEvent(eventId.event);
 }
 
@@ -223,7 +224,8 @@ typedef void *(*ThreadStartRoutine)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, ThreadType *returnThread) {
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+                         ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -249,8 +251,8 @@ inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint stackSize, ThreadStartRoutine startRoutine, void *arg, size_t coreAffinity,
-                         ThreadType *returnThread) {
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+                         size_t const coreAffinity, ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -284,7 +286,7 @@ inline void EndCurrentThread() {
  *
  * @param thread    The thread to join
  */
-inline void JoinThread(ThreadType thread) {
+inline void JoinThread(ThreadType const thread) {
 	pthread_join(thread, nullptr);
 }
 
@@ -302,7 +304,7 @@ inline ThreadType GetCurrentThread() {
  *
  * @param coreAffinity    The requested core affinity
  */
-inline void SetCurrentThreadAffinity(size_t coreAffinity) {
+inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
 // TODO: OSX and MinGW Thread Affinity
 #	if defined(FTL_OS_LINUX)
 	cpu_set_t cpuSet;
@@ -318,7 +320,7 @@ inline void SetCurrentThreadAffinity(size_t coreAffinity) {
  *
  * @param event    The handle for the newly created event
  */
-inline void CreateEvent(EventType *event) {
+inline void CreateEvent(EventType *const event) {
 	*event = {PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 }
 
@@ -327,7 +329,7 @@ inline void CreateEvent(EventType *event) {
  *
  * @param eventId    The event to close
  */
-inline void CloseEvent(EventType eventId) {
+inline void CloseEvent(EventType const eventId) {
 	// No op
 }
 
@@ -338,7 +340,7 @@ inline void CloseEvent(EventType eventId) {
  * @param eventId         The event to wait on
  * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
  */
-inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
+inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
 	if (milliseconds == EVENTWAIT_INFINITE) {
