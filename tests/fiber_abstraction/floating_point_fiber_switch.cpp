@@ -29,7 +29,7 @@
 #include <gtest/gtest.h>
 
 struct MultipleFiberArg {
-	double Counter;
+	double Counter{0};
 	ftl::Fiber MainFiber;
 	ftl::Fiber FirstFiber;
 	ftl::Fiber SecondFiber;

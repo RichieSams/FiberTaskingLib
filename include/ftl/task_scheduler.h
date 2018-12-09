@@ -148,7 +148,7 @@ private:
 		std::size_t LastSuccessfulSteal{1};
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
 		std::vector<std::pair<std::size_t, std::atomic<bool> *>> ReadyFibers;
-		std::atomic_flag ReadFibersLock;
+		std::atomic_flag ReadFibersLock{};
 		uint32 FailedQueuePopAttempts{0};
 		/**
 		 * This lock is used with the CV below to put threads to sleep when there

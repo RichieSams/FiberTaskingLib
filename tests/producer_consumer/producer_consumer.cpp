@@ -25,6 +25,7 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
+#include <array>
 #include <gtest/gtest.h>
 
 constexpr static uint K_NUM_PRODUCER_TASKS = 100U;
@@ -53,13 +54,13 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/)
 	std::atomic_uint globalCounter(0U);
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
-	ftl::Task tasks[K_NUM_PRODUCER_TASKS];
-	for (uint i = 0; i < K_NUM_PRODUCER_TASKS; ++i) {
-		tasks[i] = {Producer, &globalCounter};
+	std::array<ftl::Task, K_NUM_PRODUCER_TASKS> tasks{};
+	for (auto &&task : tasks) {
+		task = {Producer, &globalCounter};
 	}
 
 	ftl::AtomicCounter counter(taskScheduler);
-	taskScheduler->AddTasks(K_NUM_PRODUCER_TASKS, tasks, &counter);
+	taskScheduler->AddTasks(K_NUM_PRODUCER_TASKS, tasks.data(), &counter);
 	taskScheduler->WaitForCounter(&counter, 0);
 
 	// Test to see that all tasks finished
