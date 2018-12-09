@@ -35,4 +35,5 @@ add_subdirectory(boost_context)
 set_target_properties(boost_context PROPERTIES FOLDER third_party)
 
 # Nonius
-add_subdirectory(nonius)
+add_library(nonius INTERFACE)
+target_include_directories(nonius SYSTEM INTERFACE nonius/include)
