@@ -61,7 +61,7 @@ public:
 	 * Default constructor
 	 * Nothing is allocated. This can be used as a thread fiber.
 	 */
-	Fiber() : m_stack(nullptr), m_systemPageSize(0), m_stackSize(0), m_context(nullptr), m_arg(0) {
+	Fiber() : m_stack(nullptr), m_systemPageSize(0), m_stackSize(0), m_context(nullptr), m_arg(nullptr) {
 	}
 	/**
 	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
