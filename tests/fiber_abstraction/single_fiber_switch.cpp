@@ -45,11 +45,13 @@ void SingleFiberStart(void *arg) {
 	FAIL();
 }
 
+constexpr static std::size_t HALF_MEBIBYTE = 524288;
+
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
-	singleFiberArg.OtherFiber = std::move(ftl::Fiber(512000, SingleFiberStart, &singleFiberArg));
+	singleFiberArg.OtherFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, SingleFiberStart, &singleFiberArg));
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 
