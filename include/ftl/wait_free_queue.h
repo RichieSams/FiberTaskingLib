@@ -30,10 +30,10 @@
 
 #pragma once
 
+#include "ftl/assert.h"
 #include "ftl/typedefs.h"
 
 #include <atomic>
-#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -66,7 +66,7 @@ private:
 	class CircularArray {
 	public:
 		explicit CircularArray(std::size_t const n) : m_items(n) {
-			assert(!(n == 0) && !(n & (n - 1)) && "n must be a power of 2");
+			FTL_ASSERT("n must be a power of 2", !(n == 0) && !(n & (n - 1)));
 		}
 
 	private:

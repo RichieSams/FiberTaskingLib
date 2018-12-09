@@ -78,7 +78,8 @@ SetSourceGroup(NAME Core
 
 SetSourceGroup(NAME Util
 	PREFIX FTL
-	SOURCE_FILES ../include/ftl/config.h
+	SOURCE_FILES ../include/ftl/assert.h
+	             ../include/ftl/config.h
 	             ../include/ftl/fiber.h
 	             ../include/ftl/thread_abstraction.h
 	             ../include/ftl/wait_free_queue.h
