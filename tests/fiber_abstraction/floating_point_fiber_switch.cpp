@@ -23,7 +23,6 @@
  */
 
 #include "ftl/fiber.h"
-#include "ftl/typedefs.h"
 
 #include <atomic>
 

@@ -32,7 +32,7 @@ constexpr static uint K_NUM_PRODUCER_TASKS = 100u;
 constexpr static uint K_NUM_CONSUMER_TASKS = 1000u;
 constexpr static uint K_NUM_ITERATIONS = 1;
 
-void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
+void Consumer(ftl::TaskScheduler *, void *) {
 	// No-Op
 }
 
@@ -74,4 +74,4 @@ NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
 	ftl::TaskScheduler *taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(K_NUM_PRODUCER_TASKS + 20, ProducerConsumerMainTask, &meter);
 	delete taskScheduler;
-});
+})

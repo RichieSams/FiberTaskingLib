@@ -33,7 +33,6 @@
 #include <atomic>
 #include <climits>
 #include <condition_variable>
-#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -113,11 +112,9 @@ private:
 
 	struct ThreadLocalStorage {
 		ThreadLocalStorage()
-		    : ThreadFiber(),
-		      CurrentFiberIndex(FTL_INVALID_INDEX),
+		    : CurrentFiberIndex(FTL_INVALID_INDEX),
 		      OldFiberIndex(FTL_INVALID_INDEX),
 		      OldFiberDestination(FiberDestination::none),
-		      TaskQueue(),
 		      LastSuccessfulSteal(1),
 		      OldFiberStoredFlag(nullptr),
 		      FailedQueuePopAttempts(0) {
@@ -189,8 +186,7 @@ public:
 	 * the the 'mainTask' fiber. When 'mainTask' finishes, the thread will switch back to the saved state, and Run()
 	 * will return.
 	 *
-	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current
-	 * task is waiting on a counter
+	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
 	 * @param mainTask          The main task to run
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()

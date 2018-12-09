@@ -24,6 +24,7 @@
 
 #pragma once
 
+// ReSharper disable CppUnusedIncludeDirective
 #include "ftl/config.h"
 #include "ftl/ftl_valgrind.h"
 
@@ -32,6 +33,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+// ReSharper restore CppUnusedIncludeDirective
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 #	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
@@ -138,7 +140,7 @@ private:
 	std::size_t m_stackSize;
 	boost_context::fcontext_t m_context;
 	void *m_arg;
-	FTL_VALGRIND_ID;
+	FTL_VALGRIND_ID
 
 public:
 	/**
@@ -259,7 +261,7 @@ inline std::size_t SystemPageSize() {
 	return 0;
 }
 
-inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
+inline void *AlignedAlloc(std::size_t const size, std::size_t const) {
 	return malloc(size);
 }
 
