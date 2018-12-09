@@ -71,7 +71,7 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(std::size_t stackSize, FiberStartRoutine startRoutine, void *arg) : m_arg(arg) {
+	Fiber(std::size_t const stackSize, FiberStartRoutine const startRoutine, void *arg) : m_arg(arg) {
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 		m_systemPageSize = SystemPageSize();
 #else
@@ -147,7 +147,7 @@ public:
 	 *
 	 * @param fiber    The fiber to switch to
 	 */
-	void SwitchToFiber(Fiber *fiber) {
+	void SwitchToFiber(Fiber *const fiber) {
 		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
 	}
 	/**
@@ -161,7 +161,7 @@ public:
 	 *
 	 * @return
 	 */
-	void Reset(FiberStartRoutine startRoutine, void *arg) {
+	void Reset(FiberStartRoutine const startRoutine, void *arg) {
 		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
 		m_arg = arg;
 	}
@@ -174,7 +174,7 @@ private:
 	 * @param first     The first fiber
 	 * @param second    The second fiber
 	 */
-	void swap(Fiber &first, Fiber &second) {
+	void swap(Fiber &first, Fiber &second) const {
 		using std::swap;
 
 		swap(first.m_stack, second.m_stack);
@@ -187,18 +187,18 @@ private:
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 #	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-inline void MemoryGuard(void *memory, size_t bytes) {
+inline void MemoryGuard(void *const memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_NONE);
 	assert(!result);
 }
 
-inline void MemoryGuardRelease(void *memory, size_t bytes) {
+inline void MemoryGuardRelease(void *const memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
 	assert(!result);
 }
 
 inline std::size_t SystemPageSize() {
-	int pageSize = getpagesize();
+	int const pageSize = getpagesize();
 	return pageSize;
 }
 
@@ -209,18 +209,18 @@ inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
 	return returnPtr;
 }
 
-inline void AlignedFree(void *block) {
+inline void AlignedFree(void *const block) {
 	free(block);
 }
 #	elif defined(FTL_OS_WINDOWS)
-inline void MemoryGuard(void *memory, size_t bytes) {
+inline void MemoryGuard(void *const memory, size_t bytes) {
 	DWORD ignored;
 
 	BOOL result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
 	assert(result);
 }
 
-inline void MemoryGuardRelease(void *memory, size_t bytes) {
+inline void MemoryGuardRelease(void *const memory, size_t bytes) {
 	DWORD ignored;
 
 	BOOL result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
@@ -237,19 +237,19 @@ inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
 	return _aligned_malloc(size, alignment);
 }
 
-inline void AlignedFree(void *block) {
+inline void AlignedFree(void *const block) {
 	_aligned_free(block);
 }
 #	else
 #		error "Need a way to protect memory for this platform".
 #	endif
 #else
-inline void MemoryGuard(void *memory, size_t bytes) {
+inline void MemoryGuard(void *const memory, size_t const bytes) {
 	(void)memory;
 	(void)bytes;
 }
 
-inline void MemoryGuardRelease(void *memory, size_t bytes) {
+inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	(void)memory;
 	(void)bytes;
 }
@@ -258,21 +258,21 @@ inline std::size_t SystemPageSize() {
 	return 0;
 }
 
-inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
 	return malloc(size);
 }
 
-inline void AlignedFree(void *block) {
+inline void AlignedFree(void *const block) {
 	free(block);
 }
 #endif
 
-inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple) {
+inline std::size_t RoundUp(std::size_t const numToRound, std::size_t const multiple) {
 	if (multiple == 0) {
 		return numToRound;
 	}
 
-	std::size_t remainder = numToRound % multiple;
+	std::size_t const remainder = numToRound % multiple;
 	if (remainder == 0)
 		return numToRound;
 
