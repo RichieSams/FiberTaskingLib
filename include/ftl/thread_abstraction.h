@@ -69,7 +69,7 @@ using ThreadStartRoutine = uint(__stdcall *)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
                          ThreadType *const returnThread) {
 	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
 	returnThread->Handle = handle;
@@ -89,7 +89,7 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *arg,
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
                          size_t const coreAffinity, ThreadType *const returnThread) {
 	HANDLE const handle =
 	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
