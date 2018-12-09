@@ -65,7 +65,6 @@ typedef uint(__stdcall *ThreadStartRoutine)(void *arg);
  * @param stackSize       The size of the stack
  * @param startRoutine    The start routine
  * @param arg             The argument for the start routine
- * @param coreAffinity    The core affinity
  * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
  *
  * @return    True if thread creation succeeds, false if it fails

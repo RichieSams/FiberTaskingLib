@@ -56,7 +56,7 @@ void AddNumberSubset(ftl::TaskScheduler *, void *arg) {
  * The code is checked against the numerical solution which is:
  *         Tn = n * (n + 1) / 2
  *
- * TODO: Use gtest's 'Value Paramaterized Tests' to test multiple triangle numbers
+ * TODO: Use gtest's 'Value Parameterized Tests' to test multiple triangle numbers
  */
 void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 	// Define the constants to test
