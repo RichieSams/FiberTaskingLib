@@ -57,7 +57,7 @@ public:
 private:
 	class CircularArray {
 	public:
-		CircularArray(std::size_t const n) : items(n) {
+		explicit CircularArray(std::size_t const n) : items(n) {
 			assert(!(n == 0) && !(n & (n - 1)) && "n must be a power of 2");
 		}
 
