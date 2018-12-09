@@ -49,8 +49,8 @@ struct Win32Thread {
 typedef Win32Thread ThreadType;
 
 struct EventType {
-	HANDLE event;
-	std::atomic_ulong countWaiters;
+	HANDLE Event;
+	std::atomic_ulong CountWaiters;
 };
 const uint32 EVENTWAIT_INFINITE = INFINITE;
 
@@ -149,8 +149,8 @@ inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
  * @param event    The handle for the newly created event
  */
 inline void CreateEvent(EventType *const event) {
-	event->event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-	event->countWaiters = 0;
+	event->Event = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+	event->CountWaiters = 0;
 }
 
 /**
@@ -159,7 +159,7 @@ inline void CreateEvent(EventType *const event) {
  * @param eventId    The event to close
  */
 inline void CloseEvent(EventType const eventId) {
-	CloseHandle(eventId.event);
+	CloseHandle(eventId.Event);
 }
 
 /**
@@ -172,12 +172,12 @@ inline void CloseEvent(EventType const eventId) {
 #	pragma warning(push)
 #	pragma warning(disable : 4189)
 inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
-	eventId.countWaiters.fetch_add(1u);
-	DWORD const retval = WaitForSingleObject(eventId.event, milliseconds);
-	uint const prev = eventId.countWaiters.fetch_sub(1u);
+	eventId.CountWaiters.fetch_add(1u);
+	DWORD const retval = WaitForSingleObject(eventId.Event, milliseconds);
+	uint const prev = eventId.CountWaiters.fetch_sub(1u);
 	if (1 == prev) {
 		// we were the last to awaken, so reset event.
-		ResetEvent(eventId.event);
+		ResetEvent(eventId.Event);
 	}
 	assert(retval != WAIT_FAILED);
 	assert(prev != 0);
@@ -190,7 +190,7 @@ inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
  * @param eventId    The even to signal
  */
 inline void SignalEvent(EventType const eventId) {
-	SetEvent(eventId.event);
+	SetEvent(eventId.Event);
 }
 
 } // End of namespace ftl
