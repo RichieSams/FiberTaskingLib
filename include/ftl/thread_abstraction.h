@@ -342,13 +342,15 @@ inline void CloseEvent(EventType const eventId) {
 inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
+	constexpr uint32 mills_in_sec = 1000;
+
 	if (milliseconds == EVENTWAIT_INFINITE) {
 		pthread_cond_wait(&eventId.cond, &eventId.mutex);
 	} else {
 		timespec waittime;
-		waittime.tv_sec = milliseconds / 1000;
-		milliseconds -= waittime.tv_sec * 1000;
-		waittime.tv_nsec = milliseconds * 1000;
+		waittime.tv_sec = milliseconds / mills_in_sec;
+		milliseconds -= waittime.tv_sec * mills_in_sec;
+		waittime.tv_nsec = milliseconds * mills_in_sec;
 		pthread_cond_timedwait(&eventId.cond, &eventId.mutex, &waittime);
 	}
 
