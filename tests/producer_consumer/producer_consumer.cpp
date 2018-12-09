@@ -71,6 +71,7 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/)
 /**
  * Tests that all scheduled tasks finish properly
  */
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FunctionalTests, ProducerConsumer) {
 	ftl::TaskScheduler taskScheduler;
 	taskScheduler.Run(400, ProducerConsumerMainTask);

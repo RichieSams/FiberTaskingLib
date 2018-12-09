@@ -153,6 +153,7 @@ void SixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0ULL;

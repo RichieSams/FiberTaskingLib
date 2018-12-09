@@ -45,6 +45,7 @@ void SingleFiberStart(void *arg) {
 	FAIL();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);

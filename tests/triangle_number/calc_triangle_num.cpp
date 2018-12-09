@@ -104,6 +104,7 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
 	delete[] subsets;
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FunctionalTests, CalcTriangleNum) {
 	ftl::TaskScheduler taskScheduler;
 	taskScheduler.Run(400, TriangleNumberMainTask);
