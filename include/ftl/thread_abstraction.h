@@ -277,7 +277,7 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
 
 /** Terminate the current thread */
 inline void EndCurrentThread() {
-	pthread_exit(NULL);
+	pthread_exit(nullptr);
 }
 
 /**
