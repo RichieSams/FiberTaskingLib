@@ -31,7 +31,7 @@
 constexpr static uint K_NUM_TASKS = 65000;
 constexpr static uint K_NUM_ITERATIONS = 1;
 
-void EmptyBenchmarkTask(ftl::TaskScheduler */*scheduler*/, void */*arg*/) {
+void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 	// No-Op
 }
 
