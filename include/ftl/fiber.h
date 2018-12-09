@@ -25,13 +25,13 @@
 #pragma once
 
 // ReSharper disable CppUnusedIncludeDirective
+#include "ftl/assert.h"
 #include "ftl/config.h"
 #include "ftl/ftl_valgrind.h"
 
 #include "boost_context/fcontext.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdlib>
 // ReSharper restore CppUnusedIncludeDirective
 
@@ -198,12 +198,12 @@ private:
 #	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
 inline void MemoryGuard(void *const memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_NONE);
-	assert(!result);
+	FTL_ASSERT("mprotect", !result);
 }
 
 inline void MemoryGuardRelease(void *const memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
-	assert(!result);
+	FTL_ASSERT("mprotect", !result);
 }
 
 inline std::size_t SystemPageSize() {
@@ -226,14 +226,14 @@ inline void MemoryGuard(void *const memory, size_t bytes) {
 	DWORD ignored;
 
 	BOOL result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
-	assert(result);
+	FTL_ASSERT("VirtualProtect", result);
 }
 
 inline void MemoryGuardRelease(void *const memory, size_t bytes) {
 	DWORD ignored;
 
 	BOOL result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
-	assert(result);
+	FTL_ASSERT("VirtualProtect", result);
 }
 
 inline std::size_t SystemPageSize() {
