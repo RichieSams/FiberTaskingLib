@@ -174,7 +174,8 @@ private:
 	 * @param first     The first fiber
 	 * @param second    The second fiber
 	 */
-	void swap(Fiber &first, Fiber &second) const {
+	// ReSharper disable once CppInconsistentNaming
+	friend void swap(Fiber &first, Fiber &second) noexcept {
 		using std::swap;
 
 		swap(first.m_stack, second.m_stack);

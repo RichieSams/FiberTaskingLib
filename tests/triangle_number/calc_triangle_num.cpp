@@ -28,23 +28,23 @@
 #include <gtest/gtest.h>
 
 struct NumberSubset {
-	uint64 start;
-	uint64 end;
+	uint64 Start;
+	uint64 End;
 
-	uint64 total;
+	uint64 Total;
 };
 
 void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
 	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
-	subset->total = 0;
+	subset->Total = 0;
 
-	while (subset->start != subset->end) {
-		subset->total += subset->start;
-		++subset->start;
+	while (subset->Start != subset->End) {
+		subset->Total += subset->Start;
+		++subset->Start;
 	}
 
-	subset->total += subset->end;
+	subset->Total += subset->End;
 }
 
 /**
@@ -73,15 +73,15 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	for (uint64 i = 0ull; i < numTasks; ++i) {
 		NumberSubset *subset = &subsets[i];
 
-		subset->start = nextNumber;
-		subset->end = nextNumber + numAdditionsPerTask - 1ull;
-		if (subset->end > triangleNum) {
-			subset->end = triangleNum;
+		subset->Start = nextNumber;
+		subset->End = nextNumber + numAdditionsPerTask - 1ull;
+		if (subset->End > triangleNum) {
+			subset->End = triangleNum;
 		}
 
 		tasks[i] = {AddNumberSubset, subset};
 
-		nextNumber = subset->end + 1;
+		nextNumber = subset->End + 1;
 	}
 
 	// Schedule the tasks and wait for them to complete
@@ -94,7 +94,7 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	// Add the results
 	uint64 result = 0ull;
 	for (uint64 i = 0; i < numTasks; ++i) {
-		result += subsets[i].total;
+		result += subsets[i].Total;
 	}
 
 	// Test

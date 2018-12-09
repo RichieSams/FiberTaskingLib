@@ -27,8 +27,8 @@
 
 #include <gtest/gtest.h>
 
-const uint kNumProducerTasks = 100u;
-const uint kNumConsumerTasks = 10000u;
+constexpr static uint K_NUM_PRODUCER_TASKS = 100u;
+constexpr static uint K_NUM_CONSUMER_TASKS = 10000u;
 
 void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
@@ -37,13 +37,13 @@ void Consumer(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
-	ftl::Task *tasks = new ftl::Task[kNumConsumerTasks];
-	for (uint i = 0; i < kNumConsumerTasks; ++i) {
+	ftl::Task *tasks = new ftl::Task[K_NUM_CONSUMER_TASKS];
+	for (uint i = 0; i < K_NUM_CONSUMER_TASKS; ++i) {
 		tasks[i] = {Consumer, arg};
 	}
 
 	ftl::AtomicCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumConsumerTasks, tasks, &counter);
+	taskScheduler->AddTasks(K_NUM_CONSUMER_TASKS, tasks, &counter);
 	delete[] tasks;
 
 	taskScheduler->WaitForCounter(&counter, 0);
@@ -53,17 +53,17 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	std::atomic_uint globalCounter(0u);
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
-	ftl::Task tasks[kNumProducerTasks];
-	for (uint i = 0; i < kNumProducerTasks; ++i) {
+	ftl::Task tasks[K_NUM_PRODUCER_TASKS];
+	for (uint i = 0; i < K_NUM_PRODUCER_TASKS; ++i) {
 		tasks[i] = {Producer, &globalCounter};
 	}
 
 	ftl::AtomicCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
+	taskScheduler->AddTasks(K_NUM_PRODUCER_TASKS, tasks, &counter);
 	taskScheduler->WaitForCounter(&counter, 0);
 
 	// Test to see that all tasks finished
-	GTEST_ASSERT_EQ(kNumProducerTasks * kNumConsumerTasks, globalCounter.load());
+	GTEST_ASSERT_EQ(K_NUM_PRODUCER_TASKS * K_NUM_CONSUMER_TASKS, globalCounter.load());
 
 	// Cleanup
 }

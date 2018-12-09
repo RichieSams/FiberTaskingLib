@@ -31,14 +31,14 @@ namespace ftl {
 enum { kFailedPopAttemptsHeuristic = 5 };
 
 struct ThreadStartArgs {
-	TaskScheduler *taskScheduler;
-	uint threadIndex;
+	TaskScheduler *Scheduler;
+	uint ThreadIndex;
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
-	TaskScheduler *taskScheduler = threadArgs->taskScheduler;
-	uint const index = threadArgs->threadIndex;
+	TaskScheduler *taskScheduler = threadArgs->Scheduler;
+	uint const index = threadArgs->ThreadIndex;
 
 	// Clean up
 	delete threadArgs;
@@ -66,12 +66,12 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 struct MainFiberStartArgs {
 	TaskFunction MainTask;
 	void *Arg;
-	TaskScheduler *taskScheduler;
+	TaskScheduler *Scheduler;
 };
 
 void TaskScheduler::MainFiberStart(void *arg) {
 	MainFiberStartArgs *mainFiberArgs = reinterpret_cast<MainFiberStartArgs *>(arg);
-	TaskScheduler *taskScheduler = mainFiberArgs->taskScheduler;
+	TaskScheduler *taskScheduler = mainFiberArgs->Scheduler;
 
 	// Call the main task procedure
 	mainFiberArgs->MainTask(taskScheduler, mainFiberArgs->Arg);
@@ -133,7 +133,7 @@ void TaskScheduler::FiberStart(void *arg) {
 
 			tls.OldFiberIndex = tls.CurrentFiberIndex;
 			tls.CurrentFiberIndex = waitingFiberIndex;
-			tls.OldFiberDestination = FiberDestination::ToPool;
+			tls.OldFiberDestination = FiberDestination::toPool;
 
 			// Switch
 			taskScheduler->m_fibers[tls.OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls.CurrentFiberIndex]);
@@ -277,8 +277,8 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {
 		ThreadStartArgs *threadArgs = new ThreadStartArgs();
-		threadArgs->taskScheduler = this;
-		threadArgs->threadIndex = i;
+		threadArgs->Scheduler = this;
+		threadArgs->ThreadIndex = i;
 
 		if (!CreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
 			printf("Error: Failed to create all the worker threads");
@@ -297,7 +297,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 
 	// Repurpose it as the main task fiber and switch to it
 	MainFiberStartArgs mainFiberArgs;
-	mainFiberArgs.taskScheduler = this;
+	mainFiberArgs.Scheduler = this;
 	mainFiberArgs.MainTask = mainTask;
 	mainFiberArgs.Arg = mainTaskArg;
 
@@ -487,22 +487,22 @@ void TaskScheduler::CleanUpOldFiber() {
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	switch (tls.OldFiberDestination) {
-	case FiberDestination::ToPool:
+	case FiberDestination::toPool:
 		// In this specific implementation, the fiber pool is a flat array signaled by atomics
 		// So in order to "Push" the fiber to the fiber pool, we just set its corresponding atomic to true
 		m_freeFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
-		tls.OldFiberDestination = FiberDestination::None;
+		tls.OldFiberDestination = FiberDestination::none;
 		tls.OldFiberIndex = FTL_INVALID_INDEX;
 		break;
-	case FiberDestination::ToWaiting:
+	case FiberDestination::toWaiting:
 		// The waiting fibers are stored directly in their counters
 		// They have an atomic<bool> that signals whether the waiting fiber can be consumed if it's ready
 		// We just have to set it to true
 		tls.OldFiberStoredFlag->store(true, std::memory_order_relaxed);
-		tls.OldFiberDestination = FiberDestination::None;
+		tls.OldFiberDestination = FiberDestination::none;
 		tls.OldFiberIndex = FTL_INVALID_INDEX;
 		break;
-	case FiberDestination::None:
+	case FiberDestination::none:
 	default:
 		break;
 	}
@@ -576,7 +576,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint const value, boo
 	// Fill in tls
 	tls.OldFiberIndex = currentFiberIndex;
 	tls.CurrentFiberIndex = freeFiberIndex;
-	tls.OldFiberDestination = FiberDestination::ToWaiting;
+	tls.OldFiberDestination = FiberDestination::toWaiting;
 	tls.OldFiberStoredFlag = fiberStoredFlag;
 
 	// Switch
