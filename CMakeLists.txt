@@ -69,3 +69,8 @@ endif()
 if (FTL_BUILD_BENCHMARKS)
 	add_subdirectory(benchmarks)
 endif()
+
+# Linter scripts
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+configure_file(tools/lint-clang.bash.in tools/lint-clang.bash @ONLY)
+configure_file(tools/format.bash.in tools/format.bash @ONLY)
