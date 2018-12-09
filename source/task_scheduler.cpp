@@ -332,12 +332,21 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 }
 
 void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
+	static thread_local std::size_t externalIndex = 0;
+
 	if (counter != nullptr) {
 		counter->Store(1);
 	}
 
 	const TaskBundle bundle = {task, counter};
-	m_tls[GetCurrentThreadIndex()].TaskQueue.Push(bundle);
+	std::size_t const threadIdx = GetCurrentThreadIndex();
+	if (threadIdx != FTL_INVALID_INDEX) {
+		m_tls[GetCurrentThreadIndex()].TaskQueue.Push(bundle);
+	}
+	else {
+		m_tls[externalIndex].TaskQueue.Push(bundle);
+		externalIndex = (externalIndex + 1) % m_numThreads;
+	}
 
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
@@ -355,11 +364,17 @@ void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
 }
 
 void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter) {
+	static thread_local std::size_t externalIndex = 0;
 	if (counter != nullptr) {
 		counter->Store(numTasks);
 	}
 
-	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	std::size_t threadIdx = GetCurrentThreadIndex();
+	if (threadIdx == FTL_INVALID_INDEX) {
+		threadIdx = externalIndex;
+		externalIndex = (externalIndex + 1) % m_numThreads;
+	}
+	ThreadLocalStorage &tls = m_tls[threadIdx];
 	for (uint i = 0; i < numTasks; ++i) {
 		const TaskBundle bundle = {tasks[i], counter};
 		tls.TaskQueue.Push(bundle);
