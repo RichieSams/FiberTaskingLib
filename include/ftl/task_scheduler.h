@@ -210,7 +210,7 @@ public:
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to
 	 * numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter = nullptr);
+	void AddTasks(uint numTasks, Task const *tasks, AtomicCounter *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value

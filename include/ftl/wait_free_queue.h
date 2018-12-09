@@ -131,7 +131,7 @@ public:
 
 	bool Pop(T *value) {
 		uint64 b = m_bottom.load(std::memory_order_relaxed) - 1;
-		CircularArray *array = m_array.load(std::memory_order_relaxed);
+		CircularArray *const array = m_array.load(std::memory_order_relaxed);
 		m_bottom.store(b, std::memory_order_relaxed);
 
 		std::atomic_thread_fence(std::memory_order_seq_cst);
@@ -159,7 +159,7 @@ public:
 		return result;
 	}
 
-	bool Steal(T *value) {
+	bool Steal(T *const value) {
 		uint64 t = m_top.load(std::memory_order_acquire);
 
 #if defined(FTL_STRONG_MEMORY_MODEL)
@@ -171,7 +171,7 @@ public:
 		uint64 const b = m_bottom.load(std::memory_order_acquire);
 		if (t < b) {
 			/* Non-empty queue. */
-			CircularArray *array = m_array.load(std::memory_order_consume);
+			CircularArray *const array = m_array.load(std::memory_order_consume);
 			*value = array->Get(t);
 			return std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst,
 			                                                    std::memory_order_relaxed);
