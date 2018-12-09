@@ -261,7 +261,7 @@ inline std::size_t SystemPageSize() {
 	return 0;
 }
 
-inline void *AlignedAlloc(std::size_t const size, std::size_t const) {
+inline void *AlignedAlloc(std::size_t const size, std::size_t const /*alignment*/) {
 	return malloc(size);
 }
 
