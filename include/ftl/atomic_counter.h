@@ -113,7 +113,7 @@ public:
 	 * @param memoryOrder    The memory order to use for the load
 	 * @return               The current value of the counter
 	 */
-	uint Load(std::memory_order memoryOrder = std::memory_order_seq_cst) {
+	uint Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) const noexcept {
 		return m_value.load(memoryOrder);
 	}
 	/**
@@ -124,7 +124,7 @@ public:
 	 * @param x              The value to load into the counter
 	 * @param memoryOrder    The memory order to use for the store
 	 */
-	void Store(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+	void Store(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
 		m_lock.fetch_add(1u, std::memory_order_seq_cst);
 		m_value.store(x, memoryOrder);
@@ -139,7 +139,7 @@ public:
 	 * @param memoryOrder    The memory order to use for the fetch_add
 	 * @return               The value of the counter before the addition
 	 */
-	uint FetchAdd(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+	uint FetchAdd(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
 		m_lock.fetch_add(1u, std::memory_order_seq_cst);
 		const uint prev = m_value.fetch_add(x, memoryOrder);
@@ -156,7 +156,7 @@ public:
 	 * @param memoryOrder    The memory order to use for the fetch_sub
 	 * @return               The value of the counter before the subtraction
 	 */
-	uint FetchSub(uint x, std::memory_order memoryOrder = std::memory_order_seq_cst) {
+	uint FetchSub(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		// Enter shared section
 		m_lock.fetch_add(1u, std::memory_order_seq_cst);
 		const uint prev = m_value.fetch_sub(x, memoryOrder);

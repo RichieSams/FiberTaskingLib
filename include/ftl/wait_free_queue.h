@@ -57,7 +57,7 @@ public:
 private:
 	class CircularArray {
 	public:
-		CircularArray(std::size_t n) : items(n) {
+		CircularArray(std::size_t const n) : items(n) {
 			assert(!(n == 0) && !(n & (n - 1)) && "n must be a power of 2");
 		}
 
@@ -70,18 +70,18 @@ private:
 			return items.size();
 		}
 
-		T Get(std::size_t index) {
+		T Get(std::size_t const index) {
 			return items[index & (Size() - 1)];
 		}
 
-		void Put(std::size_t index, T x) {
+		void Put(std::size_t const index, T x) {
 			items[index & (Size() - 1)] = x;
 		}
 
 		// Growing the array returns a new circular_array object and keeps a
 		// linked list of all previous arrays. This is done because other threads
 		// could still be accessing elements from the smaller arrays.
-		CircularArray *Grow(std::size_t top, std::size_t bottom) {
+		CircularArray *Grow(std::size_t const top, std::size_t const bottom) {
 			CircularArray *new_array = new CircularArray(Size() * 2);
 			new_array->previous.reset(this);
 			for (std::size_t i = top; i != bottom; i++) {
@@ -160,7 +160,7 @@ public:
 		std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
 
-		uint64 b = m_bottom.load(std::memory_order_acquire);
+		uint64 const b = m_bottom.load(std::memory_order_acquire);
 		if (t < b) {
 			/* Non-empty queue. */
 			CircularArray *array = m_array.load(std::memory_order_consume);

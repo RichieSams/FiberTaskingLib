@@ -29,7 +29,7 @@
 
 namespace ftl {
 
-AtomicCounter::AtomicCounter(TaskScheduler *taskScheduler, uint initialValue, uint fiberSlots)
+AtomicCounter::AtomicCounter(TaskScheduler *const taskScheduler, uint const initialValue, uint const fiberSlots)
     : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_waitingFibers(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
 
@@ -61,8 +61,9 @@ AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag,
-                                          std::size_t pinnedThreadIndex) {
+bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue,
+                                          std::atomic<bool> *const fiberStoredFlag,
+                                          std::size_t const pinnedThreadIndex) {
 	for (uint i = 0; i < m_waitingFibers.size(); ++i) {
 		bool expected = true;
 		// Try to acquire the slot
@@ -85,7 +86,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 
 		// Now we do a check of the waiting fiber, to see if we reached the target value while we were storing
 		// everything
-		uint value = m_value.load(std::memory_order_relaxed);
+		uint const value = m_value.load(std::memory_order_relaxed);
 		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
 			return false;
 		}
@@ -115,7 +116,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t fiberIndex, uint targetVal
 	return false;
 }
 
-void AtomicCounter::CheckWaitingFibers(uint value) {
+void AtomicCounter::CheckWaitingFibers(uint const value) {
 	std::vector<uint> readyFiberIndices(m_waitingFibers.size(), 0);
 	uint nextIndex = 0;
 

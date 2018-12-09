@@ -38,7 +38,7 @@ struct ThreadStartArgs {
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	ThreadStartArgs *threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->taskScheduler;
-	uint index = threadArgs->threadIndex;
+	uint const index = threadArgs->threadIndex;
 
 	// Clean up
 	delete threadArgs;
@@ -49,7 +49,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
 	}
 
 	// Get a free fiber to switch to
-	std::size_t freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
+	std::size_t const freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
 
 	// Initialize tls
 	taskScheduler->m_tls[index].CurrentFiberIndex = freeFiberIndex;
@@ -149,8 +149,8 @@ void TaskScheduler::FiberStart(void *arg) {
 		} else {
 			// Get a new task from the queue, and execute it
 			TaskBundle nextTask;
-			bool success = taskScheduler->GetNextTask(&nextTask);
-			EmptyQueueBehavior behavior =
+			bool const success = taskScheduler->GetNextTask(&nextTask);
+			EmptyQueueBehavior const behavior =
 			    taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 
 			if (success) {
@@ -225,8 +225,8 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg, uint threadPoolSize,
-                        EmptyQueueBehavior behavior) {
+void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg,
+                        uint const threadPoolSize, EmptyQueueBehavior const behavior) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
 	m_quit.store(false, std::memory_order_release);
@@ -285,7 +285,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	// Start the main task
 
 	// Get a free fiber
-	std::size_t freeFiberIndex = GetNextFreeFiberIndex();
+	std::size_t const freeFiberIndex = GetNextFreeFiberIndex();
 	Fiber *freeFiber = &m_fibers[freeFiberIndex];
 
 	// Repurpose it as the main task fiber and switch to it
@@ -317,7 +317,7 @@ void TaskScheduler::Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTas
 	return;
 }
 
-void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
+void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
 	if (counter != nullptr) {
 		counter->Store(1);
 	}
@@ -340,7 +340,7 @@ void TaskScheduler::AddTask(Task task, AtomicCounter *counter) {
 	}
 }
 
-void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter) {
+void TaskScheduler::AddTasks(uint const numTasks, Task *const tasks, AtomicCounter *const counter) {
 	if (counter != nullptr) {
 		counter->Store(numTasks);
 	}
@@ -366,14 +366,14 @@ void TaskScheduler::AddTasks(uint numTasks, Task *tasks, AtomicCounter *counter)
 
 FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 #if defined(FTL_WIN32_THREADS)
-	DWORD threadId = GetCurrentThreadId();
+	DWORD const threadId = GetCurrentThreadId();
 	for (std::size_t i = 0; i < m_numThreads; ++i) {
 		if (m_threads[i].Id == threadId) {
 			return i;
 		}
 	}
 #elif defined(FTL_POSIX_THREADS)
-	pthread_t currentThread = pthread_self();
+	pthread_t const currentThread = pthread_self();
 	for (std::size_t i = 0; i < m_numThreads; ++i) {
 		if (pthread_equal(currentThread, m_threads[i])) {
 			return i;
@@ -385,7 +385,7 @@ FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 }
 
 bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
-	std::size_t currentThreadIndex = GetCurrentThreadIndex();
+	std::size_t const currentThreadIndex = GetCurrentThreadIndex();
 	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
 	// Try to pop from our own queue
@@ -410,7 +410,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
 	return false;
 }
 
-std::size_t TaskScheduler::GetNextFreeFiberIndex() {
+std::size_t TaskScheduler::GetNextFreeFiberIndex() const {
 	for (uint j = 0;; ++j) {
 		for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
 			// Double lock
@@ -501,8 +501,8 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fiberIndex,
-                                  std::atomic<bool> *fiberStoredFlag) {
+void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size_t fiberIndex,
+                                  std::atomic<bool> *const fiberStoredFlag) {
 	ThreadLocalStorage *tls;
 	if (pinnedThreadIndex == std::numeric_limits<std::size_t>::max()) {
 		tls = &m_tls[GetCurrentThreadIndex()];
@@ -537,14 +537,14 @@ void TaskScheduler::AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fib
 	}
 }
 
-void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinToCurrentThread) {
+void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint const value, bool const pinToCurrentThread) {
 	// Fast out
 	if (counter->Load(std::memory_order_relaxed) == value) {
 		return;
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-	std::size_t currentFiberIndex = tls.CurrentFiberIndex;
+	std::size_t const currentFiberIndex = tls.CurrentFiberIndex;
 
 	std::size_t pinnedThreadIndex;
 	if (pinToCurrentThread) {
@@ -553,7 +553,8 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 		pinnedThreadIndex = std::numeric_limits<std::size_t>::max();
 	}
 	std::atomic<bool> *fiberStoredFlag = new std::atomic<bool>(false);
-	bool alreadyDone = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
+	bool const alreadyDone =
+	    counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
 
 	// The counter finished while we were trying to put it in the waiting list
 	// Just clean up and trivially return
@@ -563,7 +564,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint value, bool pinT
 	}
 
 	// Get a free fiber
-	std::size_t freeFiberIndex = GetNextFreeFiberIndex();
+	std::size_t const freeFiberIndex = GetNextFreeFiberIndex();
 
 	// Fill in tls
 	tls.OldFiberIndex = currentFiberIndex;

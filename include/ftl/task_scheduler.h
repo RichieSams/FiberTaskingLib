@@ -98,7 +98,7 @@ private:
 	};
 
 	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(std::size_t fiberIndex, AtomicCounter *counter, uint targetValue)
+		PinnedWaitingFiberBundle(std::size_t const fiberIndex, AtomicCounter *const counter, uint const targetValue)
 		    : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
@@ -235,7 +235,7 @@ public:
 	 * @param behavior
 	 * @return
 	 */
-	void SetEmptyQueueBehavior(EmptyQueueBehavior behavior) {
+	void SetEmptyQueueBehavior(EmptyQueueBehavior const behavior) {
 		m_emptyQueueBehavior.store(behavior, std::memory_order_relaxed);
 	}
 
@@ -253,7 +253,7 @@ private:
 	 *
 	 * @return    The index of the next available fiber in the pool
 	 */
-	std::size_t GetNextFreeFiberIndex();
+	std::size_t GetNextFreeFiberIndex() const;
 	/**
 	 * If necessary, moves the old fiber to the fiber pool or the waiting list
 	 * The old fiber is the last fiber to run on the thread before the current fiber
