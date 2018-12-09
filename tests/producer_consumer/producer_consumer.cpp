@@ -31,13 +31,13 @@ constexpr static uint K_NUM_PRODUCER_TASKS = 100u;
 constexpr static uint K_NUM_CONSUMER_TASKS = 10000u;
 
 void Consumer(ftl::TaskScheduler *, void *arg) {
-	std::atomic_uint *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
+	auto *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
 
 	globalCounter->fetch_add(1);
 }
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
-	ftl::Task *tasks = new ftl::Task[K_NUM_CONSUMER_TASKS];
+	auto *tasks = new ftl::Task[K_NUM_CONSUMER_TASKS];
 	for (uint i = 0; i < K_NUM_CONSUMER_TASKS; ++i) {
 		tasks[i] = {Consumer, arg};
 	}

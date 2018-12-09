@@ -41,7 +41,7 @@ struct MultipleFiberArg {
 };
 
 void FirstLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 8;
 	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
@@ -64,7 +64,7 @@ void FirstLevelFiberStart(void *arg) {
 }
 
 void SecondLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 3;
 	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
@@ -82,7 +82,7 @@ void SecondLevelFiberStart(void *arg) {
 }
 
 void ThirdLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 7;
 	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
@@ -100,7 +100,7 @@ void ThirdLevelFiberStart(void *arg) {
 }
 
 void FourthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 6;
 	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
@@ -118,7 +118,7 @@ void FourthLevelFiberStart(void *arg) {
 }
 
 void FifthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter -= 9;
 	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
@@ -136,7 +136,7 @@ void FifthLevelFiberStart(void *arg) {
 }
 
 void SixthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 2;
 	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->FirstFiber);

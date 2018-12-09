@@ -37,7 +37,7 @@ void Consumer(ftl::TaskScheduler *, void *) {
 }
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
-	ftl::Task *tasks = new ftl::Task[K_NUM_CONSUMER_TASKS];
+	auto *tasks = new ftl::Task[K_NUM_CONSUMER_TASKS];
 	for (uint i = 0; i < K_NUM_CONSUMER_TASKS; ++i) {
 		tasks[i] = {Consumer, arg};
 	}
@@ -52,7 +52,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
 
-	ftl::Task *tasks = new ftl::Task[K_NUM_PRODUCER_TASKS];
+	auto *tasks = new ftl::Task[K_NUM_PRODUCER_TASKS];
 	for (uint i = 0; i < K_NUM_PRODUCER_TASKS; ++i) {
 		tasks[i] = {Producer, nullptr};
 	}
@@ -71,7 +71,7 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
-	ftl::TaskScheduler *taskScheduler = new ftl::TaskScheduler();
+	auto *taskScheduler = new ftl::TaskScheduler();
 	taskScheduler->Run(K_NUM_PRODUCER_TASKS + 20, ProducerConsumerMainTask, &meter);
 	delete taskScheduler;
 })
