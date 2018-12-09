@@ -86,14 +86,14 @@ private:
 		 */
 		std::atomic<bool> InUse;
 		/* The index of the fiber that is waiting on this counter */
-		std::size_t FiberIndex;
+		std::size_t FiberIndex{0};
 		/* The value the fiber is waiting for */
-		uint TargetValue;
+		uint TargetValue{0};
 		/**
 		 * A flag signaling if the fiber has been successfully switched out of and "cleaned up"
 		 * See TaskScheduler::CleanUpOldFiber()
 		 */
-		std::atomic<bool> *FiberStoredFlag;
+		std::atomic<bool> *FiberStoredFlag{nullptr};
 		/**
 		 * The index of the thread this fiber is pinned to
 		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<std::size_t>::max()

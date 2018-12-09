@@ -148,7 +148,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 			}
 		} else {
 			// Get a new task from the queue, and execute it
-			TaskBundle nextTask;
+			TaskBundle nextTask{};
 			bool const success = taskScheduler->GetNextTask(&nextTask);
 			EmptyQueueBehavior const behavior =
 			    taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
@@ -213,13 +213,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 	printf("Error: FiberStart should never return");
 }
 
-TaskScheduler::TaskScheduler()
-    : m_numThreads(0),
-      m_fiberPoolSize(0),
-      m_fibers(nullptr),
-      m_freeFibers(nullptr),
-      m_emptyQueueBehavior(EmptyQueueBehavior::Spin),
-      m_tls(nullptr) {
+TaskScheduler::TaskScheduler() {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_initialized, sizeof(m_initialized));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_quit, sizeof(m_quit));
 }
@@ -294,7 +288,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	Fiber *freeFiber = &m_fibers[freeFiberIndex];
 
 	// Repurpose it as the main task fiber and switch to it
-	MainFiberStartArgs mainFiberArgs;
+	MainFiberStartArgs mainFiberArgs{};
 	mainFiberArgs.Scheduler = this;
 	mainFiberArgs.MainTask = mainTask;
 	mainFiberArgs.Arg = mainTaskArg;
