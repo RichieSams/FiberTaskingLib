@@ -26,6 +26,7 @@
 
 #include <cstdint>
 
+// ReSharper disable CppInconsistentNaming
 typedef unsigned char byte;
 typedef std::int8_t int8;
 typedef std::uint8_t uint8;
@@ -41,3 +42,4 @@ typedef std::int64_t int64;
 typedef std::uint64_t uint64;
 
 typedef wchar_t wchar;
+// ReSharper restore CppInconsistentNaming

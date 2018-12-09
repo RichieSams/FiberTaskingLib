@@ -42,12 +42,16 @@ namespace ftl {
 class AtomicCounter;
 
 enum class EmptyQueueBehavior {
+	// Fixing this will break api.
+	// ReSharper disable CppInconsistentNaming
+
 	// Spin in a loop, actively searching for tasks
 	Spin,
 	// Same as spin, except yields to the OS after each round of searching
 	Yield,
 	// Puts the thread to sleep. Will be woken when more tasks are added to the remaining awake threads.
 	Sleep
+	// ReSharper restore CppInconsistentNaming
 };
 
 /**
@@ -62,7 +66,7 @@ public:
 	~TaskScheduler();
 
 private:
-	enum : size_t { FTL_INVALID_INDEX = UINT_MAX };
+	constexpr static std::size_t FTL_INVALID_INDEX = UINT_MAX;
 
 	std::size_t m_numThreads;
 	std::vector<ThreadType> m_threads;
@@ -83,9 +87,9 @@ private:
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior;
 
 	enum class FiberDestination {
-		None = 0,
-		ToPool = 1,
-		ToWaiting = 2,
+		none = 0,
+		toPool = 1,
+		toWaiting = 2,
 	};
 
 	/**
@@ -112,7 +116,7 @@ private:
 		    : ThreadFiber(),
 		      CurrentFiberIndex(FTL_INVALID_INDEX),
 		      OldFiberIndex(FTL_INVALID_INDEX),
-		      OldFiberDestination(FiberDestination::None),
+		      OldFiberDestination(FiberDestination::none),
 		      TaskQueue(),
 		      LastSuccessfulSteal(1),
 		      OldFiberStoredFlag(nullptr),

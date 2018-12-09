@@ -57,37 +57,37 @@ public:
 private:
 	class CircularArray {
 	public:
-		explicit CircularArray(std::size_t const n) : items(n) {
+		explicit CircularArray(std::size_t const n) : m_items(n) {
 			assert(!(n == 0) && !(n & (n - 1)) && "n must be a power of 2");
 		}
 
 	private:
-		std::vector<T> items;
-		std::unique_ptr<CircularArray> previous;
+		std::vector<T> m_items;
+		std::unique_ptr<CircularArray> m_previous;
 
 	public:
 		std::size_t Size() const {
-			return items.size();
+			return m_items.size();
 		}
 
 		T Get(std::size_t const index) {
-			return items[index & (Size() - 1)];
+			return m_items[index & (Size() - 1)];
 		}
 
 		void Put(std::size_t const index, T x) {
-			items[index & (Size() - 1)] = x;
+			m_items[index & (Size() - 1)] = x;
 		}
 
 		// Growing the array returns a new circular_array object and keeps a
 		// linked list of all previous arrays. This is done because other threads
 		// could still be accessing elements from the smaller arrays.
 		CircularArray *Grow(std::size_t const top, std::size_t const bottom) {
-			CircularArray *new_array = new CircularArray(Size() * 2);
-			new_array->previous.reset(this);
+			CircularArray *newArray = new CircularArray(Size() * 2);
+			newArray->m_previous.reset(this);
 			for (std::size_t i = top; i != bottom; i++) {
-				new_array->Put(i, Get(i));
+				newArray->Put(i, Get(i));
 			}
-			return new_array;
+			return newArray;
 		}
 	};
 
