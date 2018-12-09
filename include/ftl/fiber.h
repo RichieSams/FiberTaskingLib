@@ -72,7 +72,7 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(std::size_t const stackSize, FiberStartRoutine const startRoutine, void *arg) : m_arg(arg) {
+	Fiber(std::size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg) : m_arg(arg) {
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 		m_systemPageSize = SystemPageSize();
 #else
@@ -168,7 +168,7 @@ public:
 	 *
 	 * @return
 	 */
-	void Reset(FiberStartRoutine const startRoutine, void *arg) {
+	void Reset(FiberStartRoutine const startRoutine, void *const arg) {
 		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
 		m_arg = arg;
 	}

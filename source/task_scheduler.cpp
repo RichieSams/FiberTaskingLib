@@ -35,8 +35,8 @@ struct ThreadStartArgs {
 	uint ThreadIndex;
 };
 
-FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *arg) {
-	ThreadStartArgs *threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
+FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
+	ThreadStartArgs *const threadArgs = reinterpret_cast<ThreadStartArgs *const>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	uint const index = threadArgs->ThreadIndex;
 
@@ -69,7 +69,7 @@ struct MainFiberStartArgs {
 	TaskScheduler *Scheduler;
 };
 
-void TaskScheduler::MainFiberStart(void *arg) {
+void TaskScheduler::MainFiberStart(void *const arg) {
 	MainFiberStartArgs *mainFiberArgs = reinterpret_cast<MainFiberStartArgs *>(arg);
 	TaskScheduler *taskScheduler = mainFiberArgs->Scheduler;
 
@@ -98,8 +98,8 @@ void TaskScheduler::MainFiberStart(void *arg) {
 	printf("Error: FiberStart should never return");
 }
 
-void TaskScheduler::FiberStart(void *arg) {
-	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
+void TaskScheduler::FiberStart(void *const arg) {
+	TaskScheduler *const taskScheduler = reinterpret_cast<TaskScheduler *const>(arg);
 
 	// If we just started from the pool, we may need to clean up from another fiber
 	taskScheduler->CleanUpOldFiber();
@@ -281,7 +281,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 
 	// Create the remaining threads
 	for (uint i = 1; i < m_numThreads; ++i) {
-		ThreadStartArgs *threadArgs = new ThreadStartArgs();
+		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
 		threadArgs->ThreadIndex = i;
 
@@ -350,7 +350,7 @@ void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
 	}
 }
 
-void TaskScheduler::AddTasks(uint const numTasks, Task *const tasks, AtomicCounter *const counter) {
+void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, AtomicCounter *const counter) {
 	if (counter != nullptr) {
 		counter->Store(numTasks);
 	}
@@ -394,7 +394,7 @@ FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 	return FTL_INVALID_INDEX;
 }
 
-bool TaskScheduler::GetNextTask(TaskBundle *nextTask) {
+bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 	std::size_t const currentThreadIndex = GetCurrentThreadIndex();
 	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
@@ -547,7 +547,7 @@ void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size
 	}
 }
 
-void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint const value, bool const pinToCurrentThread) {
+void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const value, bool const pinToCurrentThread) {
 	// Fast out
 	if (counter->Load(std::memory_order_relaxed) == value) {
 		return;
@@ -562,7 +562,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *counter, uint const value, boo
 	} else {
 		pinnedThreadIndex = std::numeric_limits<std::size_t>::max();
 	}
-	std::atomic<bool> *fiberStoredFlag = new std::atomic<bool>(false);
+	auto *const fiberStoredFlag = new std::atomic<bool>(false);
 	bool const alreadyDone =
 	    counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
 

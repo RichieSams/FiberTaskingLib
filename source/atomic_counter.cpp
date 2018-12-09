@@ -113,7 +113,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 	// ReSharper disable once CppUnreachableCode
 	FTL_ASSERT("All the waiting fiber slots are full. Not able to add another wait.\nIncrease the value of fiberSlots "
 	           "in the constructor or modify your algorithm to use less waits on the same counter",
-		false);
+	           false);
 	return false;
 }
 
