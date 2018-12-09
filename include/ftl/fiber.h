@@ -55,7 +55,7 @@ inline void *AlignedAlloc(std::size_t size, std::size_t alignment);
 inline void AlignedFree(void *block);
 inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple);
 
-typedef void (*FiberStartRoutine)(void *arg);
+using FiberStartRoutine = void (*)(void *arg);
 
 class Fiber {
 public:
