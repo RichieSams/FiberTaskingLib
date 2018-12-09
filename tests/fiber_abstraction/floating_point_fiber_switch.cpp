@@ -40,7 +40,7 @@ struct MultipleFiberArg {
 };
 
 void FloatingPointFirstLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 8.0;
 	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
@@ -63,7 +63,7 @@ void FloatingPointFirstLevelFiberStart(void *arg) {
 }
 
 void FloatingPointSecondLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 3.0;
 	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
@@ -81,7 +81,7 @@ void FloatingPointSecondLevelFiberStart(void *arg) {
 }
 
 void FloatingPointThirdLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter += 7.0;
 	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
@@ -99,7 +99,7 @@ void FloatingPointThirdLevelFiberStart(void *arg) {
 }
 
 void FloatingPointFourthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 6.0;
 	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
@@ -117,7 +117,7 @@ void FloatingPointFourthLevelFiberStart(void *arg) {
 }
 
 void FloatingPointFifthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter -= 9.0;
 	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
@@ -135,7 +135,7 @@ void FloatingPointFifthLevelFiberStart(void *arg) {
 }
 
 void FloatingPointSixthLevelFiberStart(void *arg) {
-	MultipleFiberArg *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
 	singleFiberArg->Counter *= 2.0;
 	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->FirstFiber);

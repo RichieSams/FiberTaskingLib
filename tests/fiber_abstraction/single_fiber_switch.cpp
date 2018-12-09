@@ -35,7 +35,7 @@ struct SingleFiberArg {
 };
 
 void SingleFiberStart(void *arg) {
-	SingleFiberArg *singleFiberArg = reinterpret_cast<SingleFiberArg *>(arg);
+	auto *singleFiberArg = reinterpret_cast<SingleFiberArg *>(arg);
 
 	singleFiberArg->Counter.fetch_add(1);
 

@@ -35,7 +35,7 @@ struct NumberSubset {
 };
 
 void AddNumberSubset(ftl::TaskScheduler *, void *arg) {
-	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
+	auto *subset = reinterpret_cast<NumberSubset *>(arg);
 
 	subset->Total = 0;
 
@@ -65,9 +65,9 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
 
 	// Create the tasks
-	ftl::Task *tasks = new ftl::Task[numTasks];
+	auto *tasks = new ftl::Task[numTasks];
 	// We have to declare this on the heap so other threads can access it
-	NumberSubset *subsets = new NumberSubset[numTasks];
+	auto *subsets = new NumberSubset[numTasks];
 	uint64 nextNumber = 1ull;
 
 	for (uint64 i = 0ull; i < numTasks; ++i) {
