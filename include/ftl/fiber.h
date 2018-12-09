@@ -107,7 +107,7 @@ public:
 	 *
 	 * @return
 	 */
-	Fiber(Fiber &&other) : Fiber() {
+	Fiber(Fiber &&other) noexcept : Fiber() {
 		swap(*this, other);
 	}
 
@@ -117,7 +117,7 @@ public:
 	 *
 	 * @param other    The fiber to move
 	 */
-	Fiber &operator=(Fiber &&other) {
+	Fiber &operator=(Fiber &&other) noexcept {
 		swap(*this, other);
 
 		return *this;
