@@ -214,7 +214,12 @@ void TaskScheduler::FiberStart(void *arg) {
 }
 
 TaskScheduler::TaskScheduler()
-    : m_numThreads(0), m_fiberPoolSize(0), m_fibers(nullptr), m_freeFibers(nullptr), m_tls(nullptr) {
+    : m_numThreads(0),
+      m_fiberPoolSize(0),
+      m_fibers(nullptr),
+      m_freeFibers(nullptr),
+      m_emptyQueueBehavior(EmptyQueueBehavior::Spin),
+      m_tls(nullptr) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_initialized, sizeof(m_initialized));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_quit, sizeof(m_quit));
 }
@@ -320,8 +325,6 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	m_tls = nullptr;
 
 	m_threads.clear();
-
-	return;
 }
 
 void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
