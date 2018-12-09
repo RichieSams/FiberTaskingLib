@@ -72,23 +72,23 @@ public:
 private:
 	constexpr static std::size_t FTL_INVALID_INDEX = UINT_MAX;
 
-	std::size_t m_numThreads;
+	std::size_t m_numThreads{0};
 	std::vector<ThreadType> m_threads;
 
-	std::size_t m_fiberPoolSize;
+	std::size_t m_fiberPoolSize{0};
 	/* The backing storage for the fiber pool */
-	Fiber *m_fibers;
+	Fiber *m_fibers{nullptr};
 	/**
 	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
 	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
 	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
 	 */
-	std::atomic<bool> *m_freeFibers;
+	std::atomic<bool> *m_freeFibers{nullptr};
 
-	std::atomic<bool> m_initialized;
-	std::atomic<bool> m_quit;
+	std::atomic<bool> m_initialized{false};
+	std::atomic<bool> m_quit{false};
 
-	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior;
+	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
 
 	enum class FiberDestination {
 		none = 0,
@@ -170,7 +170,7 @@ private:
 	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index
 	 * into their storage using m_tls[GetCurrentThreadIndex()]
 	 */
-	ThreadLocalStorage *m_tls;
+	ThreadLocalStorage *m_tls{nullptr};
 
 	/**
 	 * We friend AtomicCounter so we can keep AddReadyFiber() private
