@@ -42,13 +42,13 @@ namespace ftl {
 template <typename T>
 class WaitFreeQueue {
 private:
-	constexpr static std::size_t STARTING_CIRCULAR_ARRAY_SIZE = 32;
+	constexpr static std::size_t kStartingCircularArraySize = 32;
 
 public:
 	WaitFreeQueue()
 	        : m_top(1),    // m_top and m_bottom must start at 1
 	          m_bottom(1), // Otherwise, the first Pop on an empty queue will underflow m_bottom
-	          m_array(new CircularArray(STARTING_CIRCULAR_ARRAY_SIZE)) {
+	          m_array(new CircularArray(kStartingCircularArraySize)) {
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_top, sizeof(m_top));
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_bottom, sizeof(m_bottom));
 		FTL_VALGRIND_HG_DISABLE_CHECKING(&m_array, sizeof(m_array));
