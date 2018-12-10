@@ -115,7 +115,7 @@ private:
 		uint TargetValue;
 	};
 
-	struct ThreadLocalStorage {
+	struct alignas(CACHE_LINE_SIZE) ThreadLocalStorage {
 		ThreadLocalStorage() : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
 		}
 
@@ -155,10 +155,6 @@ private:
 		 */
 		std::mutex FailedQueuePopLock;
 		std::condition_variable FailedQueuePopCV;
-
-	private:
-		/* Cache-line pad */
-		char pad[64];
 	};
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple
@@ -228,6 +224,24 @@ public:
 	 * @return    The index of the current thread
 	 */
 	FTL_NOINLINE_POSIX std::size_t GetCurrentThreadIndex();
+
+	/**
+	 * Gets the amount of backing threads.
+	 *
+	 * @return    Backing thread count
+	 */
+	std::size_t GetThreadCount() const noexcept {
+		return m_threads.size();
+	}
+
+	/**
+	 * Gets the amount of fibers in the fiber pool.
+	 *
+	 * @return    Fiber pool size
+	 */
+	std::size_t GetFiberCount() const noexcept {
+		return m_fiberPoolSize;
+	}
 
 	/**
 	 * Set the behavior for how worker threads handle an empty queue
