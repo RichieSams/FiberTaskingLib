@@ -51,7 +51,7 @@ constexpr static std::size_t kHalfMebibyte = 524288;
 TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
-	singleFiberArg.OtherFiber = std::move(ftl::Fiber(kHalfMebibyte, SingleFiberStart, &singleFiberArg));
+	singleFiberArg.OtherFiber = ftl::Fiber(kHalfMebibyte, SingleFiberStart, &singleFiberArg);
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 

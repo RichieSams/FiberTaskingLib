@@ -63,7 +63,8 @@ public:
 	}
 
 private:
-	ThreadLocalHandle(ThreadLocal<T> &parent, T &v) : m_parent{parent}, m_value{v} {};
+	ThreadLocalHandle(ThreadLocal<T> &parent, T &v) : m_parent{parent}, m_value{v} {
+	}
 
 	ThreadLocal<T> &m_parent;
 	T &m_value;
@@ -79,12 +80,12 @@ private:
 template <class T>
 class ThreadLocal {
 private:
-	template <class VP_T>
-	struct alignas(CACHE_LINE_SIZE) ValuePadder {
-		ValuePadder() : m_value() {
+	template <class VpT>
+	struct alignas(kCacheLineSize) ValuePadder {
+		ValuePadder() : Value() {
 		}
-		VP_T m_value;
-		bool m_inited = true;
+		VpT Value;
+		bool Initialized = true;
 	};
 
 public:
@@ -108,17 +109,19 @@ public:
 	/**
 	 * Construct all T's by calling a void factory function the first time you use your data.
 	 *
-	 * @tparam F      Type of the factory function
-	 * @param ts      The task scheduler to be thread local to
-	 * @param args    Factory function to initialize the values with.
+	 * @tparam F         Type of the factory function
+	 * @param ts         The task scheduler to be thread local to
+	 * @param factory    Factory function to initialize the values with.
 	 */
 	template <class F>
 	ThreadLocal(TaskScheduler *ts, F &&factory)
 	        : m_scheduler{ts},
 	          m_initializer{std::forward<F>(factory)},
-	          m_data(static_cast<ValuePadder<T> *>(::operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
+	          m_data(static_cast<ValuePadder<T> *>(operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
 		for (std::size_t i = 0; i < ts->GetThreadCount(); ++i) {
-			m_data[i].m_inited = false;
+			// That's not how placement new works...
+			// ReSharper disable once CppNonReclaimedResourceAcquisition
+			new (&m_data[i].Initialized) bool(false);
 		}
 	}
 
@@ -146,12 +149,12 @@ public:
 	T &operator*() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
-		return m_data[idx].m_value;
+		return m_data[idx].Value;
 	}
 	T *operator->() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
-		return &m_data[idx].m_value;
+		return &m_data[idx].Value;
 	}
 
 	/**
@@ -167,7 +170,7 @@ public:
 
 		for (std::size_t i = 0; i < threads; ++i) {
 			InitValue(i);
-			vec.emplace_back(m_data[i].m_value);
+			vec.emplace_back(m_data[i].Value);
 		}
 
 		return vec;
@@ -186,7 +189,7 @@ public:
 
 		for (std::size_t i = 0; i < threads; ++i) {
 			InitValue(i);
-			vec.emplace_back(std::ref(m_data[i].m_value));
+			vec.emplace_back(std::ref(m_data[i].Value));
 		}
 
 		return vec;
@@ -194,9 +197,17 @@ public:
 
 private:
 	void InitValue(std::size_t idx) {
-		if (!m_data[idx].m_inited) {
-			new (&m_data[idx].m_value) T(m_initializer());
-			m_data[idx].m_inited = true;
+		// I add this exception with careful consideration due to the scale of the warning. There is no way to get here
+		// without running into a operator new on this member, or on the parent object, setting the value.
+		// I _think_ it is complaining because I might not call operator new on the parent as I get the object
+		// from a generic operator new instance. There is a way to do this which avoids the problem but it isn't
+		// as space efficient.
+		// NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Branch)
+		if (!m_data[idx].Initialized) {
+			// That's not how placement new works...
+			// ReSharper disable once CppNonReclaimedResourceAcquisition
+			new (&m_data[idx].Value) T(m_initializer());
+			m_data[idx].Initialized = true;
 		}
 	}
 
@@ -209,8 +220,8 @@ private:
 template <class T>
 void ThreadLocalHandle<T>::ValidHandle(T &value) {
 	if (&*m_parent != &value) {
-		assert(!"Invalid ThreadLocalHandle");
-	};
+		FTL_ASSERT("Invalid ThreadLocalHandle", false);
+	}
 }
 #else
 template <class T>

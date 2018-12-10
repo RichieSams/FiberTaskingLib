@@ -73,6 +73,7 @@
 #	define FTL_NOINLINE
 #endif
 
+// ReSharper disable CppUnusedIncludeDirective
 #ifdef __has_include
 #	if __has_include(<version>)
 #		include <version>
@@ -82,11 +83,12 @@
 #else
 #	include <new>
 #endif
+// ReSharper restore CppUnusedIncludeDirective
 
 namespace ftl {
 #ifdef __cpp_lib_hardware_interference_size
-constexpr static std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size();
+constexpr static std::size_t kCacheLineSize = std::hardware_destructive_interference_size();
 #else
-constexpr static std::size_t CACHE_LINE_SIZE = 64;
+constexpr static std::size_t kCacheLineSize = 64;
 #endif
 } // namespace ftl

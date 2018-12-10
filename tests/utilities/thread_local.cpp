@@ -29,29 +29,29 @@
 #include <gtest/gtest.h>
 #include <numeric>
 
-namespace ThreadLocalTests {
+namespace threadLocalTests {
 ftl::ThreadLocal<std::size_t> &SingleInitSingleton(ftl::TaskScheduler *scheduler) {
 	static ftl::ThreadLocal<std::size_t> counter(scheduler);
 
 	return counter;
 }
 
-void SimpleInit(ftl::TaskScheduler *scheduler, void *) {
+void SimpleInit(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	*SingleInitSingleton(scheduler) += 1;
 }
 
-static std::atomic<std::size_t> sideEffectCount{0};
+static std::atomic<std::size_t> g_sideEffectCount{0};
 ftl::ThreadLocal<std::size_t> &SideEffectSingleton(ftl::TaskScheduler *scheduler) {
-	static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return sideEffectCount++; });
+	static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return g_sideEffectCount++; });
 
 	return counter;
 }
 
-void SideEffect(ftl::TaskScheduler *scheduler, void *) {
+void SideEffect(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	*SideEffectSingleton(scheduler);
 }
 
-void MainTask(ftl::TaskScheduler *scheduler, void *) {
+void MainTask(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	// Single Init
 	std::vector<ftl::Task> singleInitTask(scheduler->GetThreadCount(), ftl::Task{SimpleInit, nullptr});
 
@@ -73,14 +73,15 @@ void MainTask(ftl::TaskScheduler *scheduler, void *) {
 
 	// The initializer will only fire once per thread, so there must be less than the thread count
 	// in calls to it, but there should be at least one.
-	ASSERT_LE(sideEffectCount, scheduler->GetThreadCount());
-	ASSERT_GE(sideEffectCount, 1);
+	ASSERT_LE(g_sideEffectCount, scheduler->GetThreadCount());
+	ASSERT_GE(g_sideEffectCount, 1);
 	// The count minus one should be the greatest value within the TLS.
-	ASSERT_EQ(sideEffectCount - 1, *std::max_element(sideEffect.begin(), sideEffect.end()));
+	ASSERT_EQ(g_sideEffectCount - 1, *std::max_element(sideEffect.begin(), sideEffect.end()));
 }
-} // namespace ThreadLocalTests
+} // namespace threadLocalTests
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FunctionalTests, ThreadLocal) {
 	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Run(400, ThreadLocalTests::MainTask);
+	taskScheduler.Run(400, threadLocalTests::MainTask);
 }
