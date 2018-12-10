@@ -69,8 +69,7 @@ using ThreadStartRoutine = uint(__stdcall *)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
-                         ThreadType *const returnThread) {
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, ThreadType *const returnThread) {
 	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
@@ -89,10 +88,9 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
-                         size_t const coreAffinity, ThreadType *const returnThread) {
-	HANDLE const handle =
-	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, size_t const coreAffinity,
+                         ThreadType *const returnThread) {
+	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 
 	if (handle == nullptr) {
 		return false;
@@ -223,8 +221,7 @@ using ThreadStartRoutine = void *(*)(void *arg);
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
-                         ThreadType *const returnThread) {
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 
@@ -250,8 +247,8 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
  *
  * @return    True if thread creation succeeds, false if it fails
  */
-inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg,
-                         size_t const coreAffinity, ThreadType *const returnThread) {
+inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, size_t const coreAffinity,
+                         ThreadType *const returnThread) {
 	pthread_attr_t threadAttr;
 	pthread_attr_init(&threadAttr);
 

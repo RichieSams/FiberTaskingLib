@@ -52,14 +52,11 @@ AtomicCounter::~AtomicCounter() {
 	delete[] m_freeSlots;
 }
 
-AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
-    : InUse(true),
-      PinnedThreadIndex(std::numeric_limits<std::size_t>::max()) {
+AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThreadIndex(std::numeric_limits<std::size_t>::max()) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue,
-                                          std::atomic<bool> *const fiberStoredFlag,
+bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue, std::atomic<bool> *const fiberStoredFlag,
                                           std::size_t const pinnedThreadIndex) {
 	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
 		bool expected = true;
@@ -91,8 +88,8 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 		if (m_waitingFibers[i].TargetValue == value) {
 			expected = false;
 			// Try to acquire InUse
-			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true,
-			                                                  std::memory_order_seq_cst, std::memory_order_relaxed)) {
+			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst,
+			                                                  std::memory_order_relaxed)) {
 				// Failed the race. Another thread got to it first.
 				return false;
 			}
@@ -132,8 +129,8 @@ void AtomicCounter::CheckWaitingFibers(uint const value) {
 		if (m_waitingFibers[i].TargetValue == value) {
 			bool expected = false;
 			// Try to acquire InUse
-			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true,
-			                                                  std::memory_order_seq_cst, std::memory_order_relaxed)) {
+			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst,
+			                                                  std::memory_order_relaxed)) {
 				// Failed the race. Another thread got to it first
 				continue;
 			}

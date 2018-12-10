@@ -141,8 +141,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 			// And we're back
 			taskScheduler->CleanUpOldFiber();
 
-			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) ==
-			    EmptyQueueBehavior::Sleep) {
+			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
 				std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
 				tls.FailedQueuePopAttempts = 0;
 			}
@@ -150,8 +149,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 			// Get a new task from the queue, and execute it
 			TaskBundle nextTask{};
 			bool const success = taskScheduler->GetNextTask(&nextTask);
-			EmptyQueueBehavior const behavior =
-			    taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+			EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 
 			if (success) {
 				if (behavior == EmptyQueueBehavior::Sleep) {
@@ -224,8 +222,8 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg,
-                        uint const threadPoolSize, EmptyQueueBehavior const behavior) {
+void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, uint const threadPoolSize,
+                        EmptyQueueBehavior const behavior) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
 	m_quit.store(false, std::memory_order_release);
@@ -427,8 +425,8 @@ std::size_t TaskScheduler::GetNextFreeFiberIndex() const {
 			}
 
 			bool expected = true;
-			if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &expected, false,
-			                                               std::memory_order_release, std::memory_order_relaxed)) {
+			if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &expected, false, std::memory_order_release,
+			                                               std::memory_order_relaxed)) {
 				return i;
 			}
 		}
@@ -505,8 +503,7 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size_t fiberIndex,
-                                  std::atomic<bool> *const fiberStoredFlag) {
+void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size_t fiberIndex, std::atomic<bool> *const fiberStoredFlag) {
 	ThreadLocalStorage *tls;
 	if (pinnedThreadIndex == std::numeric_limits<std::size_t>::max()) {
 		tls = &m_tls[GetCurrentThreadIndex()];
@@ -557,8 +554,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const valu
 		pinnedThreadIndex = std::numeric_limits<std::size_t>::max();
 	}
 	auto *const fiberStoredFlag = new std::atomic<bool>(false);
-	bool const alreadyDone =
-	    counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
+	bool const alreadyDone = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
 
 	// The counter finished while we were trying to put it in the waiting list
 	// Just clean up and trivially return
