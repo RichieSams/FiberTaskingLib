@@ -99,9 +99,9 @@ private:
 		}
 	};
 
-	alignas(CACHE_LINE_SIZE) std::atomic<uint64> m_top;
-	alignas(CACHE_LINE_SIZE) std::atomic<uint64> m_bottom;
-	alignas(CACHE_LINE_SIZE) std::atomic<CircularArray *> m_array;
+	alignas(kCacheLineSize) std::atomic<uint64> m_top;
+	alignas(kCacheLineSize) std::atomic<uint64> m_bottom;
+	alignas(kCacheLineSize) std::atomic<CircularArray *> m_array;
 
 public:
 	void Push(T value) {

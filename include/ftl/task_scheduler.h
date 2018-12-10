@@ -115,7 +115,7 @@ private:
 		uint TargetValue;
 	};
 
-	struct alignas(CACHE_LINE_SIZE) ThreadLocalStorage {
+	struct alignas(kCacheLineSize) ThreadLocalStorage {
 		ThreadLocalStorage() : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
 		}
 
