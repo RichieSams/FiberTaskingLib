@@ -262,6 +262,8 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
 	CPU_ZERO(&cpuSet);
 	CPU_SET(coreAffinity, &cpuSet);
 	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
+#	else
+	(void)coreAffinity;
 #	endif
 
 	int success = pthread_create(returnThread, &threadAttr, startRoutine, arg);

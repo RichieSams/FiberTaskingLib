@@ -89,6 +89,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHE
 	Check_And_Add_Flag(-Wuseless-cast)
 	Check_And_Add_Flag(-Wno-unknown-pragmas)
 	Check_And_Add_Flag(-Wno-aligned-new)
+	if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0))
+		# Useless flag that hits a bunch of valid code
+		Check_And_Add_Flag(-Wno-missing-field-initializers)
+	endif()
 else()
 	Check_And_Add_Flag(/W4)
 	Check_And_Add_Flag(/wd4324)
