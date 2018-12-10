@@ -153,18 +153,18 @@ void SixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
-constexpr static std::size_t HALF_MEBIBYTE = 524288;
+constexpr static std::size_t kHalfMebibyte = 524288;
 
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0ULL;
-	singleFiberArg.FirstFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, FirstLevelFiberStart, &singleFiberArg));
-	singleFiberArg.SecondFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, SecondLevelFiberStart, &singleFiberArg));
-	singleFiberArg.ThirdFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, ThirdLevelFiberStart, &singleFiberArg));
-	singleFiberArg.FourthFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, FourthLevelFiberStart, &singleFiberArg));
-	singleFiberArg.FifthFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, FifthLevelFiberStart, &singleFiberArg));
-	singleFiberArg.SixthFiber = std::move(ftl::Fiber(HALF_MEBIBYTE, SixthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FirstFiber = std::move(ftl::Fiber(kHalfMebibyte, FirstLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SecondFiber = std::move(ftl::Fiber(kHalfMebibyte, SecondLevelFiberStart, &singleFiberArg));
+	singleFiberArg.ThirdFiber = std::move(ftl::Fiber(kHalfMebibyte, ThirdLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FourthFiber = std::move(ftl::Fiber(kHalfMebibyte, FourthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.FifthFiber = std::move(ftl::Fiber(kHalfMebibyte, FifthLevelFiberStart, &singleFiberArg));
+	singleFiberArg.SixthFiber = std::move(ftl::Fiber(kHalfMebibyte, SixthLevelFiberStart, &singleFiberArg));
 
 	// The order should be:
 	// 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1 -> 5 -> 1 -> 3 -> 2 -> 4 -> 6 -> 4 -> 2 -> 5 -> 3 -> 6 -> Main

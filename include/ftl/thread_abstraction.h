@@ -52,7 +52,7 @@ struct EventType {
 	HANDLE Event;
 	std::atomic_ulong CountWaiters;
 };
-constexpr static uint32 EVENTWAIT_INFINITE = INFINITE;
+constexpr static uint32 kEventwaitInfinite = INFINITE;
 
 using ThreadStartRoutine = uint(__stdcall *)(void *arg);
 #	define FTL_THREAD_FUNC_RETURN_TYPE uint
