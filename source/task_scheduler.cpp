@@ -36,7 +36,7 @@ struct ThreadStartArgs {
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
-	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *const>(arg);
+	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	uint const index = threadArgs->ThreadIndex;
 
@@ -70,7 +70,7 @@ struct MainFiberStartArgs {
 };
 
 void TaskScheduler::MainFiberStart(void *const arg) {
-	auto *const mainFiberArgs = reinterpret_cast<MainFiberStartArgs *const>(arg);
+	auto *const mainFiberArgs = reinterpret_cast<MainFiberStartArgs *>(arg);
 	TaskScheduler *taskScheduler = mainFiberArgs->Scheduler;
 
 	// Call the main task procedure
@@ -99,7 +99,7 @@ void TaskScheduler::MainFiberStart(void *const arg) {
 }
 
 void TaskScheduler::FiberStart(void *const arg) {
-	auto *const taskScheduler = reinterpret_cast<TaskScheduler *const>(arg);
+	auto *const taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
 	// If we just started from the pool, we may need to clean up from another fiber
 	taskScheduler->CleanUpOldFiber();
@@ -238,7 +238,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * fiberPoolSize);
 
 	for (uint i = 0; i < fiberPoolSize; ++i) {
-		m_fibers[i] = std::move(Fiber(512000, FiberStart, this));
+		m_fibers[i] = Fiber(512000, FiberStart, this);
 		m_freeFibers[i].store(true, std::memory_order_release);
 	}
 
@@ -277,7 +277,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	for (std::size_t i = 1; i < m_numThreads; ++i) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
-		threadArgs->ThreadIndex = i;
+		threadArgs->ThreadIndex = static_cast<uint>(i);
 
 		if (!CreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
 			printf("Error: Failed to create all the worker threads");
