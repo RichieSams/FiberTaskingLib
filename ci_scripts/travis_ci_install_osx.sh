@@ -36,5 +36,11 @@ clang++-3.9)
 	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
 	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
+clang++-6.0)
+	upgradeBrewFormula llvm@6.0
+	# 6.0 is keg-only, so we have to set the full file path
+	export MY_CC=/usr/local/opt/llvm@6.0/bin/clang
+	export MY_CXX=/usr/local/opt/llvm@6.0/bin/clang++
+	;;
 *) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac

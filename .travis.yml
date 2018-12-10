@@ -11,9 +11,11 @@ script:
     - export CXX="${MY_CXX}"
     - mkdir build
     - cd build
-    - cmake -DFTL_FIBER_STACK_GUARD_PAGES=1 ../
-    - make
-    - make test
+    - cmake -DFTL_FIBER_STACK_GUARD_PAGES=1 -DCMAKE_CXX_FLAGS=-Werror ../
+    - "if [ -z "$LINT" ]; then make; fi"
+    - "if [ -z "$LINT" ]; then make test; fi"
+    - "if [ ${LINT} = 'Yes' ]; then tools/lint-clang.bash; fi"
+    - 
 
 matrix:
   include:
@@ -147,10 +149,30 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.9
+            - llvm-toolchain-precise-6.0
             - george-edison55-precise-backports
           packages:
             - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
             - clang-3.9
+            - cmake
+            - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-3.9
+        - MY_CXX=clang++-3.9
+        - LINT=Yes
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
+            - llvm-toolchain-precise-6.0
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-3.9
+            - clang-tidy-6.0
             - cmake
             - cmake-data
     - os: osx
@@ -168,3 +190,9 @@ matrix:
       env: 
         - MY_CC=clang-3.9
         - MY_CXX=clang++-3.9
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-6.0
+        - MY_CXX=clang++-6.0
+        - LINT=Yes
