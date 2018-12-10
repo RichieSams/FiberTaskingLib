@@ -30,7 +30,7 @@
 namespace ftl {
 
 AtomicCounter::AtomicCounter(TaskScheduler *const taskScheduler, uint const initialValue, uint const fiberSlots)
-    : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_waitingFibers(fiberSlots) {
+        : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_waitingFibers(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
 
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
