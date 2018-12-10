@@ -12,8 +12,8 @@ script:
     - mkdir build
     - cd build
     - cmake -DFTL_FIBER_STACK_GUARD_PAGES=1 -DCMAKE_CXX_FLAGS=-Werror ../
-    - "if [ -z "$LINT" ]; then make; fi"
-    - "if [ -z "$LINT" ]; then make test; fi"
+    - "if [ -z '$LINT' ]; then make; fi"
+    - "if [ -z '$LINT' ]; then make test; fi"
     - "if [ ${LINT} = 'Yes' ]; then tools/lint-clang.bash; fi"
 
 matrix:
