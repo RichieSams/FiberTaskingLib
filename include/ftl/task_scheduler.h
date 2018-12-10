@@ -107,7 +107,7 @@ private:
 
 	struct PinnedWaitingFiberBundle {
 		PinnedWaitingFiberBundle(std::size_t const fiberIndex, AtomicCounter *const counter, uint const targetValue)
-		    : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
+		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
 		std::size_t FiberIndex;
