@@ -169,8 +169,7 @@ public:
 			/* Non-empty queue. */
 			CircularArray *const array = m_array.load(std::memory_order_consume);
 			*value = array->Get(t);
-			return std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst,
-			                                                    std::memory_order_relaxed);
+			return std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed);
 		}
 
 		return false;

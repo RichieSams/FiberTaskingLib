@@ -82,11 +82,9 @@ public:
 		m_stackSize = RoundUp(stackSize, m_systemPageSize);
 		// We add a guard page both the top and the bottom of the stack
 		m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
-		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize,
-		                                         startRoutine);
+		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
 
-		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize,
-		                      static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
+		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 		MemoryGuard(static_cast<char *>(m_stack), m_systemPageSize);
 		MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, m_systemPageSize);

@@ -43,7 +43,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeColon
 BreakStringLiterals: true
-ColumnLimit:     120
+ColumnLimit:     140
 CommentPragmas: '^ ?@'  # Javadoc
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
