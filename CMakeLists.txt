@@ -91,6 +91,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHE
 	Check_And_Add_Flag(-Wno-aligned-new)
 else()
 	Check_And_Add_Flag(/W4)
+	Check_And_Add_Flag(/wd4324)
 endif()
 
 # Build FiberTaskingLib
