@@ -70,7 +70,7 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static std::size_t FTL_INVALID_INDEX = UINT_MAX;
+	constexpr static std::size_t kFTLInvalidIndex = UINT_MAX;
 
 	std::size_t m_numThreads{0};
 	std::vector<ThreadType> m_threads;
@@ -91,9 +91,9 @@ private:
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
 
 	enum class FiberDestination {
-		none = 0,
-		toPool = 1,
-		toWaiting = 2,
+		None = 0,
+		ToPool = 1,
+		ToWaiting = 2,
 	};
 
 	/**
@@ -141,7 +141,7 @@ private:
 		/* The index of the previously executed fiber in m_fibers */
 		std::size_t OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
-		FiberDestination OldFiberDestination{FiberDestination::none};
+		FiberDestination OldFiberDestination{FiberDestination::None};
 		/* The queue of waiting tasks */
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
