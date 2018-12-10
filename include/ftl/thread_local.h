@@ -25,7 +25,7 @@
 #pragma once
 
 #ifndef FTL_THREAD_LOCAL_HANDLE_DEBUG
-	#define FTL_THREAD_LOCAL_HANDLE_DEBUG FTL_DEBUG
+#	define FTL_THREAD_LOCAL_HANDLE_DEBUG FTL_DEBUG
 #endif
 
 #include "ftl/task_scheduler.h"
@@ -34,17 +34,18 @@
 
 namespace ftl {
 
-template<class T>
+template <class T>
 class ThreadLocal;
 
 /**
  * A handle to your thread's T. You must be careful that you don't jump to another thread in the mean time, but this will allow
- * you to prevent calls to ftl::TaskScheduler::GetCurrentThreadIndex() every single time you want to modify the object (similar to TLS optimization).
- * This is the recommended way of doing that over getting a reference as it allows instrumentation and debugging within the library.
+ * you to prevent calls to ftl::TaskScheduler::GetCurrentThreadIndex() every single time you want to modify the object (similar to TLS
+ * optimization). This is the recommended way of doing that over getting a reference as it allows instrumentation and debugging within the
+ * library.
  *
  * @tparam T    Type stored in thread local storage.
  */
-template<class T>
+template <class T>
 class ThreadLocalHandle {
 private:
 	friend ThreadLocal<T>;
@@ -52,35 +53,36 @@ private:
 	void ValidHandle(T &value);
 
 public:
-	T& operator*() {
+	T &operator*() {
 		ValidHandle(m_value);
 		return m_value;
 	}
-	T* operator->() {
+	T *operator->() {
 		ValidHandle(m_value);
 		return &m_value;
 	}
-private:
-	ThreadLocalHandle(ThreadLocal<T>& parent, T& v) : m_parent{parent}, m_value {v} {};
 
-	ThreadLocal<T>& m_parent;
-	T& m_value;
+private:
+	ThreadLocalHandle(ThreadLocal<T> &parent, T &v) : m_parent{parent}, m_value{v} {};
+
+	ThreadLocal<T> &m_parent;
+	T &m_value;
 };
 
-
-	/**
+/**
  * Fiber compatible version of the thread_local keyword. Acts like a pointer. Think of this as you would the thread_local keyword,
  * not something you put in containers, but a specification of a variable itself. Non-copyable and non-movable.
  * For proper semantics, all variables that are ThreadLocal<> must be static.
  *
  * @tparam T    Object type to store.
  */
-template<class T>
+template <class T>
 class ThreadLocal {
 private:
-	template<class VP_T>
+	template <class VP_T>
 	struct alignas(CACHE_LINE_SIZE) ValuePadder {
-		ValuePadder() : m_value() {}
+		ValuePadder() : m_value() {
+		}
 		VP_T m_value;
 		bool m_inited = true;
 	};
@@ -93,15 +95,14 @@ public:
 	 */
 
 #ifdef _MSC_VER
-	#pragma warning(push)
-	#pragma warning(disable: 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
-#endif // _MSC_VER
-	explicit ThreadLocal(TaskScheduler* ts)
-		: m_scheduler{ts},
-		  m_initializer{},
-		  m_data{new ValuePadder<T>[ts->GetThreadCount()]} {}
+#	pragma warning(push)
+#	pragma warning(                                                                                                                       \
+	    disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
+#endif                  // _MSC_VER
+	explicit ThreadLocal(TaskScheduler *ts) : m_scheduler{ts}, m_initializer{}, m_data{new ValuePadder<T>[ts->GetThreadCount()]} {
+	}
 #ifdef _MSC_VER
-	#pragma warning(pop)
+#	pragma warning(pop)
 #endif // _MSC_VER
 
 	/**
@@ -111,20 +112,20 @@ public:
 	 * @param ts      The task scheduler to be thread local to
 	 * @param args    Factory function to initialize the values with.
 	 */
-	template<class F>
-	ThreadLocal(TaskScheduler* ts, F&& factory)
-	  : m_scheduler{ts},
-	    m_initializer{std::forward<F>(factory)},
-	    m_data(static_cast<ValuePadder<T>*>(::operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
-        for (std::size_t i = 0; i < ts->GetThreadCount(); ++i) {
-            m_data[i].m_inited = false;
-        }
-    }
+	template <class F>
+	ThreadLocal(TaskScheduler *ts, F &&factory)
+	        : m_scheduler{ts},
+	          m_initializer{std::forward<F>(factory)},
+	          m_data(static_cast<ValuePadder<T> *>(::operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
+		for (std::size_t i = 0; i < ts->GetThreadCount(); ++i) {
+			m_data[i].m_inited = false;
+		}
+	}
 
-	ThreadLocal(ThreadLocal const& other) = delete;
-	ThreadLocal(ThreadLocal&& other) noexcept = delete;
-	ThreadLocal& operator=(ThreadLocal const& other) = delete;
-	ThreadLocal& operator=(ThreadLocal&& other) noexcept = delete;
+	ThreadLocal(ThreadLocal const &other) = delete;
+	ThreadLocal(ThreadLocal &&other) noexcept = delete;
+	ThreadLocal &operator=(ThreadLocal const &other) = delete;
+	ThreadLocal &operator=(ThreadLocal &&other) noexcept = delete;
 
 	~ThreadLocal() {
 		delete[] m_data;
@@ -132,8 +133,9 @@ public:
 
 	/**
 	 * Get a handle to your thread's T. You must be careful that you don't jump to another thread in the mean time, but this will allow
-	 * you to prevent calls to ftl::TaskScheduler::GetCurrentThreadIndex() every single time you want to modify the object (similar to TLS optimization).
-	 * This is the recommended way of doing that over getting a reference as it allows instrumentation and debugging within the library.
+	 * you to prevent calls to ftl::TaskScheduler::GetCurrentThreadIndex() every single time you want to modify the object (similar to TLS
+	 * optimization). This is the recommended way of doing that over getting a reference as it allows instrumentation and debugging within
+	 * the library.
 	 *
 	 * @return    Handle to the thread's version of T.
 	 */
@@ -141,12 +143,12 @@ public:
 		return ThreadLocalHandle<T>{*this, **this};
 	}
 
-	T& operator*() {
+	T &operator*() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
 		return m_data[idx].m_value;
 	}
-	T* operator->() {
+	T *operator->() {
 		std::size_t idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
 		return &m_data[idx].m_value;
@@ -189,33 +191,36 @@ public:
 
 		return vec;
 	}
+
 private:
 	void InitValue(std::size_t idx) {
 		if (!m_data[idx].m_inited) {
-			new(&m_data[idx].m_value) T(m_initializer());
+			new (&m_data[idx].m_value) T(m_initializer());
 			m_data[idx].m_inited = true;
 		}
 	}
 
-	TaskScheduler* m_scheduler;
+	TaskScheduler *m_scheduler;
 	std::function<T()> m_initializer;
-	ValuePadder<T>* m_data;
+	ValuePadder<T> *m_data;
 };
 
 #if FTL_THREAD_LOCAL_HANDLE_DEBUG
-template<class T>
+template <class T>
 void ThreadLocalHandle<T>::ValidHandle(T &value) {
 	if (&*m_parent != &value) {
 		assert(!"Invalid ThreadLocalHandle");
 	};
 }
 #else
-template<class T>
-void ThreadLocalHandle<T>::ValidHandle(T& value) {}
+template <class T>
+void ThreadLocalHandle<T>::ValidHandle(T &value) {
+}
 #endif
 
 // C++17 deduction guide
 #ifdef __cpp_deduction_guides
-template<class T> ThreadLocal(TaskScheduler*, T) -> ThreadLocal<T>;
+template <class T>
+ThreadLocal(TaskScheduler *, T)->ThreadLocal<T>;
 #endif
-}
+} // namespace ftl

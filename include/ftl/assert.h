@@ -10,7 +10,7 @@
 #	define FTL_ASSERT(msg, expr)                                                                                                          \
 		if (!(expr)) {                                                                                                                     \
 			std::fputs("FTL Assertion Failure: " FTL_STR(msg) ". Expr: " FTL_STR(expr) "\n", stderr);                                      \
-			std::fputs("Source File: " __FILE__ ":" FTL_STR(__LINE__) "\n", stderr);                                                               \
+			std::fputs("Source File: " __FILE__ ":" FTL_STR(__LINE__) "\n", stderr);                                                       \
 			std::abort();                                                                                                                  \
 		}
 #else
