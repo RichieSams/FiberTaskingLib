@@ -115,14 +115,8 @@ private:
 		uint TargetValue;
 	};
 
-	struct alignas(CACHE_LINE_SIZE) ThreadLocalStorage {
-		ThreadLocalStorage()
-		    : CurrentFiberIndex(FTL_INVALID_INDEX),
-		      OldFiberIndex(FTL_INVALID_INDEX),
-		      OldFiberDestination(FiberDestination::none),
-		      LastSuccessfulSteal(1),
-		      OldFiberStoredFlag(nullptr),
-		      FailedQueuePopAttempts(0) {
+	struct alignas(kCacheLineSize) ThreadLocalStorage {
+		ThreadLocalStorage() : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
 		}
 
 	public:
