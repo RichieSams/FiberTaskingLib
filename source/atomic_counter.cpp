@@ -118,7 +118,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 }
 
 void AtomicCounter::CheckWaitingFibers(uint const value) {
-	std::vector<uint> readyFiberIndices(m_waitingFibers.size(), 0);
+	std::vector<std::size_t> readyFiberIndices(m_waitingFibers.size(), 0);
 	uint nextIndex = 0;
 
 	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
@@ -153,7 +153,7 @@ void AtomicCounter::CheckWaitingFibers(uint const value) {
 
 		for (uint i = 0; i < nextIndex; ++i) {
 			// Add the fiber to the TaskScheduler's ready list
-			const uint index = readyFiberIndices[i];
+			const std::size_t index = readyFiberIndices[i];
 			m_taskScheduler->AddReadyFiber(m_waitingFibers[index].PinnedThreadIndex, m_waitingFibers[index].FiberIndex,
 			                               m_waitingFibers[index].FiberStoredFlag);
 			// Signal that the slot is free

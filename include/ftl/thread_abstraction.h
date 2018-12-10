@@ -206,7 +206,7 @@ struct EventType {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 };
-constexpr static uint32 EVENTWAIT_INFINITE = -1;
+constexpr static uint32 EVENTWAIT_INFINITE = std::numeric_limits<uint32>::max();
 
 using ThreadStartRoutine = void *(*)(void *arg);
 #	define FTL_THREAD_FUNC_RETURN_TYPE void *
@@ -328,7 +328,7 @@ inline void CreateEvent(EventType *const event) {
  *
  * @param eventId    The event to close
  */
-inline void CloseEvent(EventType const eventId) {
+inline void CloseEvent(EventType const /*eventId*/) {
 	// No op
 }
 
@@ -339,10 +339,10 @@ inline void CloseEvent(EventType const eventId) {
  * @param eventId         The event to wait on
  * @param milliseconds    The maximum amount of time to wait for the event. Use EVENTWAIT_INFINITE to wait infinitely
  */
-inline void WaitForEvent(EventType &eventId, uint32 milliseconds) {
+inline void WaitForEvent(EventType &eventId, int64 milliseconds) {
 	pthread_mutex_lock(&eventId.mutex);
 
-	constexpr uint32 mills_in_sec = 1000;
+	constexpr int64 mills_in_sec = 1000;
 
 	if (milliseconds == EVENTWAIT_INFINITE) {
 		pthread_cond_wait(&eventId.cond, &eventId.mutex);
