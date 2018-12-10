@@ -54,9 +54,6 @@ AtomicCounter::~AtomicCounter() {
 
 AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
     : InUse(true),
-      FiberIndex(0),
-      TargetValue(0),
-      FiberStoredFlag(nullptr),
       PinnedThreadIndex(std::numeric_limits<std::size_t>::max()) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
