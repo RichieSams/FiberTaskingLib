@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,*,-fuchsia*,-hicpp*,-llvm-header-guard,-google-readability-todo,-google-runtime-references,-cert-err58-cpp,hicpp-exception-baseclass,hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory,-*-non-private-member-variables-in-classes,-cppcoreguidelines-no-malloc,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-macro-usage,-*-magic-numbers'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,*,-fuchsia*,-hicpp*,-llvm-header-guard,-google-readability-todo,-google-runtime-references,-cert-err58-cpp,hicpp-exception-baseclass,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory,-*-non-private-member-variables-in-classes,-cppcoreguidelines-no-malloc,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-macro-usage,-*-magic-numbers'
 WarningsAsErrors: ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     none

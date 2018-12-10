@@ -198,17 +198,17 @@ inline void MemoryGuard(void *const memory, size_t bytes) {
 	FTL_ASSERT("mprotect", !result);
 }
 
-inline void MemoryGuardRelease(void *const memory, size_t bytes) {
-	int result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
+inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
+	int const result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
 	FTL_ASSERT("mprotect", !result);
 }
 
 inline std::size_t SystemPageSize() {
-	int const pageSize = getpagesize();
+	auto const pageSize = static_cast<std::size_t>(getpagesize());
 	return pageSize;
 }
 
-inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
 	void *returnPtr;
 	posix_memalign(&returnPtr, alignment, size);
 
@@ -219,17 +219,17 @@ inline void AlignedFree(void *const block) {
 	free(block);
 }
 #	elif defined(FTL_OS_WINDOWS)
-inline void MemoryGuard(void *const memory, size_t bytes) {
+inline void MemoryGuard(void *const memory, size_t const bytes) {
 	DWORD ignored;
 
-	BOOL result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
+	BOOL const result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
 	FTL_ASSERT("VirtualProtect", result);
 }
 
-inline void MemoryGuardRelease(void *const memory, size_t bytes) {
+inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	DWORD ignored;
 
-	BOOL result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
+	BOOL const result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
 	FTL_ASSERT("VirtualProtect", result);
 }
 
@@ -239,7 +239,7 @@ inline std::size_t SystemPageSize() {
 	return sysInfo.dwPageSize;
 }
 
-inline void *AlignedAlloc(std::size_t size, std::size_t alignment) {
+inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
 	return _aligned_malloc(size, alignment);
 }
 
