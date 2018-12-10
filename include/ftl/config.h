@@ -25,9 +25,9 @@
 #pragma once
 
 #ifndef FTL_DEBUG
-	#ifndef NDEBUG 
-		#define FTL_DEBUG 1
-	#endif
+#	ifndef NDEBUG
+#		define FTL_DEBUG 1
+#	endif
 #endif
 
 // Determine the OS
@@ -74,20 +74,19 @@
 #endif
 
 #ifdef __has_include
-	#if __has_include(<version>)
-		#include <version>
-	#else
-		#include <new>
-	#endif
+#	if __has_include(<version>)
+#		include <version>
+#	else
+#		include <new>
+#	endif
 #else
-	#include <new>
+#	include <new>
 #endif
 
 namespace ftl {
 #ifdef __cpp_lib_hardware_interference_size
-	constexpr static std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size();
+constexpr static std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size();
 #else
-	constexpr static std::size_t CACHE_LINE_SIZE = 64;
+constexpr static std::size_t CACHE_LINE_SIZE = 64;
 #endif
-}
-
+} // namespace ftl
