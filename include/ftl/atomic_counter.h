@@ -44,7 +44,13 @@ class AtomicCounter {
 /**
  * This value defines how many fibers can simultaneously wait on a counter
  * If a user tries to have more fibers wait on a counter, the fiber will not be tracked,
- * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang
+ * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang.
+ * 
+ * Do NOT set this by definition either in your build or before you include the header.
+ * This macro must be the same value throughout the whole build. Update the value within
+ * cmake using the following:
+ * 
+ * set(FTL_NUM_WAITING_FIBER_SLOTS <value> CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait" FORCE)
  */
 #ifndef NUM_WAITING_FIBER_SLOTS
 #	define NUM_WAITING_FIBER_SLOTS 4

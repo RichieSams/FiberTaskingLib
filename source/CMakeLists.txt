@@ -94,8 +94,9 @@ set(FIBER_TASKING_LIB_SRC
 )
 
 add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
-target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
+target_compile_options(ftl PUBLIC -DNUM_WAITING_FIBER_SLOTS=${FTL_NUM_WAITING_FIBER_SLOTS})
 target_include_directories(ftl PUBLIC ../include)
+target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
 
 # Remove the prefix
 set_target_properties(ftl PROPERTIES PREFIX "")
