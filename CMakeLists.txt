@@ -61,6 +61,7 @@ add_subdirectory(third_party)
 # Warning flags
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckAndAddFlag.cmake)
 
+option(FTL_WERROR "Promote compiler warnings to errors." OFF)
 if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
 	Check_And_Add_Flag(-fdiagnostics-color=always)
 	Check_And_Add_Flag(-Wall)
@@ -95,9 +96,15 @@ if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHE
 		# Useless flag that hits a bunch of valid code
 		Check_And_Add_Flag(-Wno-missing-field-initializers)
 	endif()
+	if(FTL_WERROR)
+		Check_And_Add_Flag(-Werror)
+	endif()
 else()
 	Check_And_Add_Flag(/W4)
 	Check_And_Add_Flag(/wd4324)
+	if(FTL_WERROR)
+		Check_And_Add_Flag(/WX)
+	endif()
 endif()
 
 # Build FiberTaskingLib
