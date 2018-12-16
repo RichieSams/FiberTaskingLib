@@ -24,17 +24,16 @@
 
 #pragma once
 
-#include "task_scheduler.h"
 #include "atomic_counter.h"
+#include "task_scheduler.h"
 #include <cassert>
-#include <system_error>
 #include <mutex>
-
+#include <system_error>
 
 namespace ftl {
 // Pull std helpers into ftl namespace
-using std::defer_lock;
 using std::adopt_lock;
+using std::defer_lock;
 using std::try_to_lock;
 
 /**
@@ -48,16 +47,18 @@ public:
 	 *
 	 * @param taskScheduler    ftl::TaskScheduler that will be using this mutex.
 	 */
-	explicit Fibtex(ftl::TaskScheduler *taskScheduler)
-		: m_ableToSpin(taskScheduler->GetThreadCount() > 1),
-		  m_taskScheduler(taskScheduler),
-		  m_atomicCounter(taskScheduler, 0) {}
+	explicit Fibtex(TaskScheduler *taskScheduler)
+	        : m_ableToSpin(taskScheduler->GetThreadCount() > 1), m_taskScheduler(taskScheduler), m_atomicCounter(taskScheduler, 0) {
+	}
 
-	Fibtex(const Fibtex&) = delete;
-	Fibtex(Fibtex&& that) = delete;
-	Fibtex& operator=(const Fibtex&) = delete;
-	Fibtex& operator=(Fibtex&& that) = delete;
+	Fibtex(const Fibtex &) = delete;
+	Fibtex(Fibtex &&that) = delete;
+	Fibtex &operator=(const Fibtex &) = delete;
+	Fibtex &operator=(Fibtex &&that) = delete;
 
+	~Fibtex() = default;
+
+	// ReSharper disable once CppInconsistentNaming
 	/**
 	 * Lock mutex in traditional way, yielding immediately.
 	 */
@@ -77,6 +78,7 @@ public:
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param iterations     Amount of iterations to spin before yielding.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock_spin(bool const pinToThread = false, uint const iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
@@ -100,6 +102,7 @@ public:
 	/**
 	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock_spin_infinite(bool const pinToThread = false) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
@@ -121,6 +124,7 @@ public:
 	 *
 	 * @return    If lock successful.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	bool try_lock() {
 		return m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel);
 	}
@@ -128,17 +132,17 @@ public:
 	/**
 	 * Unlock the mutex.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void unlock() {
 		if (!m_atomicCounter.CompareExchange(1, 0, std::memory_order_acq_rel)) {
-			printf("Error: Mutex was unlocked by another fiber or was double unlocked.\n");
-			assert(false);
+			FTL_ASSERT("Error: Mutex was unlocked by another fiber or was double unlocked.", false);
 		}
 	}
 
 private:
 	bool m_ableToSpin;
-	ftl::TaskScheduler *m_taskScheduler;
-	ftl::AtomicCounter m_atomicCounter;
+	TaskScheduler *m_taskScheduler;
+	AtomicCounter m_atomicCounter;
 };
 
 /**
@@ -146,7 +150,7 @@ private:
  *
  * @tparam M    Mutex type
  */
-template<class M>
+template <class M>
 class LockGuard {
 public:
 	/**
@@ -155,7 +159,7 @@ public:
 	 * @param mutex          Mutex to acquire.
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
-	explicit LockGuard(M& mutex, bool pinToThread = false) : m_mutex(mutex) {
+	explicit LockGuard(M &mutex, bool pinToThread = false) : m_mutex(mutex) {
 		m_mutex.lock(pinToThread);
 	}
 	/**
@@ -164,19 +168,21 @@ public:
 	 * @param mutex     Mutex to adopt ownership of.
 	 * @param al        ftl::adopt_lock. Value unused.
 	 */
-	LockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
+	LockGuard(M &mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
-		(void) al;
+		(void)al;
 	}
-	LockGuard(const LockGuard&) = delete;
-	LockGuard& operator=(const LockGuard&) = delete;
+	LockGuard(const LockGuard &) = delete;
+	LockGuard(LockGuard &&) noexcept = delete;
+	LockGuard &operator=(const LockGuard &) = delete;
+	LockGuard &operator=(LockGuard &&) noexcept = delete;
 
 	~LockGuard() {
 		m_mutex.unlock();
 	}
 
 private:
-	M& m_mutex;
+	M &m_mutex;
 };
 
 /**
@@ -184,7 +190,7 @@ private:
  *
  * @tparam M    Mutex type
  */
-template<class M>
+template <class M>
 class SpinLockGuard {
 public:
 	/**
@@ -194,7 +200,7 @@ public:
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param iterations     Amount of iterations to spin before yielding.
 	 */
-	explicit SpinLockGuard(M& mutex, bool pinToThread = false, uint iterations = 1000) : m_mutex(mutex) {
+	explicit SpinLockGuard(M &mutex, bool pinToThread = false, uint iterations = 1000) : m_mutex(mutex) {
 		m_mutex.lock_spin(pinToThread, iterations);
 	}
 	/**
@@ -203,19 +209,21 @@ public:
 	 * @param mutex    Mutex to adopt ownership of.
 	 * @param al       ftl::adopt_lock. Value unused.
 	 */
-	SpinLockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
+	SpinLockGuard(M &mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
-		(void) al;
+		(void)al;
 	}
-	SpinLockGuard(const SpinLockGuard&) = delete;
-	SpinLockGuard& operator=(const SpinLockGuard&) = delete;
+	SpinLockGuard(const SpinLockGuard &) = delete;
+	SpinLockGuard(SpinLockGuard &&) noexcept = delete;
+	SpinLockGuard &operator=(const SpinLockGuard &) = delete;
+	SpinLockGuard &operator=(SpinLockGuard &&) noexcept = delete;
 
 	~SpinLockGuard() {
 		m_mutex.unlock();
 	}
 
-  private:
-	M& m_mutex;
+private:
+	M &m_mutex;
 };
 
 /**
@@ -223,7 +231,7 @@ public:
  *
  * @tparam M    Mutex type
  */
-template<class M>
+template <class M>
 class InfiniteSpinLockGuard {
 public:
 	/**
@@ -232,7 +240,7 @@ public:
 	 * @param mutex          Mutex to acquire.
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
-	explicit InfiniteSpinLockGuard(M& mutex, bool pinToThread = false) : m_mutex(mutex) {
+	explicit InfiniteSpinLockGuard(M &mutex, bool pinToThread = false) : m_mutex(mutex) {
 		m_mutex.lock_spin_infinite(pinToThread);
 	}
 	/**
@@ -241,34 +249,36 @@ public:
 	 * @param mutex     Mutex to adopt ownership of.
 	 * @param al        ftl::adopt_lock. Value unused.
 	 */
-	InfiniteSpinLockGuard(M& mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
+	InfiniteSpinLockGuard(M &mutex, std::adopt_lock_t al) noexcept : m_mutex(mutex) {
 		// Do not lock mutex
-		(void) al;
+		(void)al;
 	}
-	InfiniteSpinLockGuard(const InfiniteSpinLockGuard&) = delete;
-	InfiniteSpinLockGuard& operator=(const InfiniteSpinLockGuard&) = delete;
+	InfiniteSpinLockGuard(const InfiniteSpinLockGuard &) = delete;
+	InfiniteSpinLockGuard(InfiniteSpinLockGuard &&other) noexcept = delete;
+	InfiniteSpinLockGuard &operator=(const InfiniteSpinLockGuard &) = delete;
+	InfiniteSpinLockGuard &operator=(InfiniteSpinLockGuard &&other) noexcept = delete;
 
 	~InfiniteSpinLockGuard() {
 		m_mutex.unlock();
 	}
 
 private:
-	M& m_mutex;
+	M &m_mutex;
 };
 
 /**
  * A UniqueLock that is aware of pinToThread and all possible ftl::Fibtex locking methods
- * 
+ *
  * @tparam M    Type of mutex to lock over.
  */
-template<class M>
+template <class M>
 class UniqueLock {
 public:
 	UniqueLock() noexcept = default;
-	UniqueLock(UniqueLock const& other) = delete;
-	UniqueLock(UniqueLock&& other) noexcept = default;
-	UniqueLock& operator=(UniqueLock const& other) = delete;
-	UniqueLock& operator=(UniqueLock&& other) noexcept = default;
+	UniqueLock(UniqueLock const &other) = delete;
+	UniqueLock(UniqueLock &&other) noexcept = default;
+	UniqueLock &operator=(UniqueLock const &other) = delete;
+	UniqueLock &operator=(UniqueLock &&other) noexcept = default;
 
 	/**
 	 * Points UniqueLock at mutex and locks the lock using .lock().
@@ -276,23 +286,23 @@ public:
 	 * @param m              Mutex to hold
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
-	explicit UniqueLock(M& m, bool pinToThread = false) {
+	explicit UniqueLock(M &m, bool pinToThread = false) {
 		m_mutex = &m;
 		m_mutex->lock(pinToThread);
 		m_hasMutex = true;
 	}
-	
+
 	/**
 	 * Points UniqueLock at mutex but does not actually lock the lock.
 	 *
 	 * @param mutex     Mutex to hold
 	 * @param dl        ftl::defer_lock. Unused.
 	 */
-	UniqueLock(M& mutex, std::defer_lock_t dl) noexcept {
+	UniqueLock(M &mutex, std::defer_lock_t dl) noexcept {
 		// Don't actually lock mutex
 		m_mutex = &mutex;
 		m_hasMutex = false;
-		(void) dl;
+		(void)dl;
 	}
 	/**
 	 * Points UniqueLock at mutex and tries to lock the lock.
@@ -301,11 +311,11 @@ public:
 	 * @param tl             ftl::try_to_lock. Unused.
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
-	UniqueLock(M& m, std::try_to_lock_t tl, bool pinToThread = false) {
+	UniqueLock(M &m, std::try_to_lock_t tl, bool pinToThread = false) {
 		// Only attempt to lock mutex
 		m_mutex = &m;
 		m_hasMutex = m_mutex->try_lock(pinToThread);
-		(void) tl;
+		(void)tl;
 	}
 	/**
 	 * Points UniqueLock at mutex, assuming it is already held. Does not lock the lock.
@@ -313,11 +323,11 @@ public:
 	 * @param m     Mutex to hold
 	 * @param al    ftl::``adopt_lock. Unused.
 	 */
-	UniqueLock(M& m, std::adopt_lock_t al) noexcept {
+	UniqueLock(M &m, std::adopt_lock_t al) noexcept {
 		// Don't actually lock mutex
 		m_mutex = &m;
 		m_hasMutex = true;
-		(void) al;
+		(void)al;
 	}
 
 	/**
@@ -325,17 +335,16 @@ public:
 	 *
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock(bool pinToThread = false) {
-		if(m_mutex) {
+		if (m_mutex) {
 			if (!m_hasMutex) {
 				m_mutex->lock(pinToThread);
 				m_hasMutex = true;
-			}
-			else {
+			} else {
 				throw std::system_error(EDEADLK, std::system_category());
 			}
-		}
-		else {
+		} else {
 			throw std::system_error(EPERM, std::system_category());
 		}
 	}
@@ -346,17 +355,16 @@ public:
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param iterations     Amount of iterations to spin for.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock_spin(bool pinToThread = false, uint iterations = 1000) {
-		if(m_mutex) {
+		if (m_mutex) {
 			if (!m_hasMutex) {
 				m_mutex->lock_spin(pinToThread, iterations);
 				m_hasMutex = true;
-			}
-			else {
+			} else {
 				throw std::system_error(EDEADLK, std::system_category());
 			}
-		}
-		else {
+		} else {
 			throw std::system_error(EPERM, std::system_category());
 		}
 	}
@@ -366,17 +374,16 @@ public:
 	 *
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock_spin_infinite(bool pinToThread = false) {
-		if(m_mutex) {
+		if (m_mutex) {
 			if (!m_hasMutex) {
 				m_mutex->lock_spin_infinite(pinToThread);
 				m_hasMutex = true;
-			}
-			else {
+			} else {
 				throw std::system_error(EDEADLK, std::system_category());
 			}
-		}
-		else {
+		} else {
 			throw std::system_error(EPERM, std::system_category());
 		}
 	}
@@ -387,6 +394,7 @@ public:
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @return               True if the lock was locked.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	bool try_lock(bool pinToThread = false) {
 		if (m_mutex) {
 			if (!m_hasMutex) {
@@ -400,8 +408,9 @@ public:
 	/**
 	 * Unlocks mutex. Safe to call if you do not own the mutex.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void unlock() {
-		if(m_mutex && m_hasMutex) {
+		if (m_mutex && m_hasMutex) {
 			m_mutex->unlock();
 			m_hasMutex = false;
 		}
@@ -413,7 +422,8 @@ public:
 	 * @param lhs    UniqueLock 1
 	 * @param rhs    UniqueLock 2
 	 */
-	friend void swap(UniqueLock& lhs, UniqueLock& rhs) noexcept {
+	// ReSharper disable once CppInconsistentNaming
+	friend void swap(UniqueLock &lhs, UniqueLock &rhs) noexcept {
 		using std::swap;
 
 		swap(lhs.m_mutex, rhs.m_mutex);
@@ -425,7 +435,8 @@ public:
 	 *
 	 * @param that    Other lock to swap with.
 	 */
-	void swap(UniqueLock& that) noexcept {
+	// ReSharper disable once CppInconsistentNaming
+	void swap(UniqueLock &that) noexcept {
 		using std::swap;
 
 		swap(*this, that);
@@ -436,11 +447,12 @@ public:
 	 *
 	 * @return    Pointer to owned mutex.
 	 */
-	M* release() noexcept {
-		M* ret_val = m_mutex;
+	// ReSharper disable once CppInconsistentNaming
+	M *release() noexcept {
+		M *retVal = m_mutex;
 		m_mutex = nullptr;
 		m_hasMutex = false;
-		return ret_val;
+		return retVal;
 	}
 
 	/**
@@ -448,7 +460,8 @@ public:
 	 *
 	 * @return    Pointer to mutex. Can be nullptr.
 	 */
-	M* mutex() const noexcept {
+	// ReSharper disable once CppInconsistentNaming
+	M *mutex() const noexcept {
 		return m_mutex;
 	}
 
@@ -457,6 +470,7 @@ public:
 	 *
 	 * @return    If mutex is currently held.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	bool owns_lock() const noexcept {
 		return m_hasMutex;
 	}
@@ -475,28 +489,31 @@ public:
 			}
 		}
 	}
+
 private:
-	M* m_mutex = nullptr;
+	M *m_mutex = nullptr;
 	bool m_hasMutex = false;
 };
 
-namespace detail{
+namespace detail {
 /**
  * A little wrapper class that allows pinToThread to be respected when passed to std::lock.
  *
  * @tparam M    Mutex type
  */
-template<class M>
+template <class M>
 class LockWrapper {
 public:
 	/**
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param mutex          Mutex to wrap around.
 	 */
-	LockWrapper(bool const pinToThread, M& mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {}
+	LockWrapper(bool const pinToThread, M &mutex) : m_mutex(mutex), m_pinToThread(pinToThread) {
+	}
 	/**
 	 * Locks mutex
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void lock() {
 		m_mutex.lock(m_pinToThread);
 	}
@@ -505,12 +522,14 @@ public:
 	 *
 	 * @return    If mutex successfully locked.
 	 */
-	bool try_lock() {
+	// ReSharper disable once CppInconsistentNaming
+	bool try_lock() const {
 		return m_mutex.try_lock();
 	}
 	/**
 	 * Unlocks mutex.
 	 */
+	// ReSharper disable once CppInconsistentNaming
 	void unlock() const {
 		m_mutex.unlock();
 	}
@@ -518,11 +537,12 @@ public:
 	/*
 	 * Gets lvalue from this value.
 	 */
-	LockWrapper& get_lvalue() {
+	LockWrapper &GetLvalue() {
 		return *this;
 	}
+
 private:
-	M& m_mutex;
+	M &m_mutex;
 	bool m_pinToThread;
 };
 
@@ -532,8 +552,8 @@ private:
  * @tparam M       Mutex Type
  * @param mutex    Mutex to unlock
  */
-template<class M>
-void unlock_helper(M& mutex) {
+template <class M>
+void UnlockHelper(M &mutex) {
 	mutex.unlock();
 }
 
@@ -541,26 +561,26 @@ void unlock_helper(M& mutex) {
  * Backport of std::index_sequence
  */
 template <size_t... I>
-struct index_sequence {};
+struct IndexSequence {};
 
 /**
-* Backport of std::make_index_sequence
-*/
+ * Backport of std::make_index_sequence
+ */
 template <size_t N, size_t... I>
-struct make_index_sequence : make_index_sequence<N - 1, N - 1, I...> {};
+struct MakeIndexSequence : MakeIndexSequence<N - 1, N - 1, I...> {};
 
 template <size_t... I>
-struct make_index_sequence<0, I...> : index_sequence<I...> {};
+struct MakeIndexSequence<0, I...> : IndexSequence<I...> {};
 
 /**
  * Abuses std::tie and the comma operator in order to run unlock_helper on all members of a tuple.
  *
  * @param ts    Tuple of mutexes to unlock.
  */
-template<typename... T, size_t... I>
-void tuple_unlock_helper(std::tuple<T...> &ts, index_sequence<I...>) {
-	void* filler; // need lvalue for std::tie
-	std::tie((unlock_helper(std::get<I>(ts)), filler)...);
+template <typename... T, size_t... I>
+void TupleUnlockHelper(std::tuple<T...> &ts, IndexSequence<I...> /*unused*/) {
+	void *filler; // need lvalue for std::tie
+	std::tie((UnlockHelper(std::get<I>(ts)), filler)...);
 }
 
 /**
@@ -569,10 +589,10 @@ void tuple_unlock_helper(std::tuple<T...> &ts, index_sequence<I...>) {
  * @param ts    Tuple of mutexes to unlock.
  */
 template <typename... T>
-void tuple_unlock(std::tuple<T...> &ts) {
-	return tuple_unlock_helper(ts, make_index_sequence<sizeof...(T)>());
+void TupleUnlock(std::tuple<T...> &ts) {
+	return TupleUnlockHelper(ts, MakeIndexSequence<sizeof...(T)>());
 }
-}
+} // namespace detail
 
 /**
  * pinToThread aware std::lock
@@ -585,17 +605,17 @@ void tuple_unlock(std::tuple<T...> &ts) {
  * @param l2             Second lock to lock
  * @param locks          Variadic locks to lock
  */
-template<class Lock1, class Lock2, class... Locks>
-void lock(bool pinToThread, Lock1& l1, Lock2& l2, Locks&... locks) {
+// ReSharper disable once CppInconsistentNaming
+template <class Lock1, class Lock2, class... Locks>
+void lock(bool pinToThread, Lock1 &l1, Lock2 &l2, Locks &... locks) {
 	// This looks crazy and dangerous, because it is. This cast from lvalue to rvalue would normally result
 	// in the lvalue reference pointing to a dead object. However, the temporaries are all destroyed at the semicolon
 	// and all the lock wrappers are all no longer in use once the semicolon rolls around. If this were to be used
 	// in any other way except as an argument to a pure(ish) function, this would be an issue. In this case it isn't.
 	// Because std::lock needs lvalues and I have to use variadic expansion, this is by far the cleanest solution.
 	// All others would require some other magic to work properly.
-	std::lock(detail::LockWrapper<Lock1>(pinToThread, l1).get_lvalue(),
-		      detail::LockWrapper<Lock2>(pinToThread, l2).get_lvalue(),
-			  detail::LockWrapper<Locks>(pinToThread, locks).get_lvalue()...);
+	std::lock(detail::LockWrapper<Lock1>(pinToThread, l1).GetLvalue(), detail::LockWrapper<Lock2>(pinToThread, l2).GetLvalue(),
+	          detail::LockWrapper<Locks>(pinToThread, locks).GetLvalue()...);
 }
 
 /**
@@ -603,7 +623,7 @@ void lock(bool pinToThread, Lock1& l1, Lock2& l2, Locks&... locks) {
  *
  * @tparam M    Variadic types of all mutexes.
  */
-template<class... M>
+template <class... M>
 class ScopedLock {
 public:
 	/**
@@ -612,7 +632,7 @@ public:
 	 * @param m              Mutexes to acquire.
 	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
 	 */
-	explicit ScopedLock(bool pinToThread, M&... m) : m_mutexes(m...) {
+	explicit ScopedLock(bool pinToThread, M &... m) : m_mutexes(m...) {
 		lock(pinToThread, m...);
 	}
 
@@ -622,42 +642,20 @@ public:
 	 * @param al   std::adopt_lock. Value unused.
 	 * @param m    Mutexes to adopt ownership of.
 	 */
-	explicit ScopedLock(std::adopt_lock_t al, M&... m) noexcept : m_mutexes(m...) {
+	explicit ScopedLock(std::adopt_lock_t al, M &... m) noexcept : m_mutexes(m...) {
 		// Do not lock mutexes
-		(void) al;
+		(void)al;
 	}
-	ScopedLock(const ScopedLock&) = delete;
-	ScopedLock& operator=(const ScopedLock&) = delete;
-	ScopedLock(ScopedLock&&) = default;
-	ScopedLock& operator=(ScopedLock&&) = default;
+	ScopedLock(const ScopedLock &) = delete;
+	ScopedLock &operator=(const ScopedLock &) = delete;
+	ScopedLock(ScopedLock &&) noexcept = delete;
+	ScopedLock &operator=(ScopedLock &&) noexcept = delete;
 
 	~ScopedLock() {
-		detail::tuple_unlock(m_mutexes);
+		detail::TupleUnlock(m_mutexes);
 	}
 
-  private:
-	std::tuple<M&...> m_mutexes;
+private:
+	std::tuple<M &...> m_mutexes;
 };
-
-/**
- * Acquires the mutexes with pinToThread settings. Calls m.lock(pinToThread) and m.unlock().
- *
- * @param m              Mutexes to acquire.
- * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
- */
-template<class... M>
-auto make_scoped_lock(bool pinToThread, M&... m) -> ScopedLock<M...> {
-	return ScopedLock<M...>(pinToThread, m...);
-}
-
-/**
- * Gets ownership of the mutexes without locking it. Must be passed locked mutexes.
- *
- * @param al   std::adopt_lock. Value unused.
- * @param m    Mutexes to adopt ownership of.
- */
-template<class... M>
-auto make_scoped_lock(std::adopt_lock_t al, M&... m) -> ScopedLock<M...> {
-	return ScopedLock<M...>(al, m...);
-}
-}
+} // namespace ftl

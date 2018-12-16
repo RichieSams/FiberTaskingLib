@@ -310,7 +310,7 @@ inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
 	CPU_SET(coreAffinity, &cpuSet);
 
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
-#   else
+#	else
 	(void)coreAffinity;
 #	endif
 }
