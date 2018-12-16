@@ -31,6 +31,7 @@ option(FTL_BUILD_BENCHMARKS "Build FiberTaskingLib benchmarks" ON)
 option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
 option(FTL_CPP_17 "Enable C++17 features" OFF)
+set(FTL_NUM_WAITING_FIBER_SLOTS 4 CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait")
 
 # Include Valgrind
 if (FTL_VALGRIND)
