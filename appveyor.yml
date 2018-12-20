@@ -1,0 +1,15 @@
+version: 1.0.{build}
+build_script:
+  - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+
+  - mkdir build
+  - cd build
+  - cmake -G "Visual Studio 14 Win64" ../
+
+  - msbuild FiberTaskingLib.sln /p:configuration=debug /p:platform=x64 /v:m /nologo
+  - msbuild FiberTaskingLib.sln /p:configuration=release /p:platform=x64 /v:m /nologo
+
+  - cd ../
+test_script:
+  - build\tests\Debug\ftl-test.exe
+  - build\tests\Release\ftl-test.exe
