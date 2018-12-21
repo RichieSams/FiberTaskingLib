@@ -46,7 +46,7 @@ BreakStringLiterals: true
 ColumnLimit:     140
 CommentPragmas: '^ ?@'  # Javadoc
 CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 8
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
