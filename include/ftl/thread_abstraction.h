@@ -52,6 +52,7 @@ struct EventType {
 	HANDLE Event;
 	std::atomic_ulong CountWaiters;
 };
+
 constexpr static uint32 kEventwaitInfinite = INFINITE;
 
 using ThreadStartRoutine = uint(__stdcall *)(void *arg);
@@ -70,7 +71,7 @@ using ThreadStartRoutine = uint(__stdcall *)(void *arg);
  * @return    True if thread creation succeeds, false if it fails
  */
 inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, ThreadType *const returnThread) {
-	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0u, nullptr));
+	auto const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, 0U, nullptr));
 	returnThread->Handle = handle;
 	returnThread->Id = GetThreadId(handle);
 
@@ -90,13 +91,13 @@ inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRou
  */
 inline bool CreateThread(uint const stackSize, ThreadStartRoutine const startRoutine, void *const arg, size_t const coreAffinity,
                          ThreadType *const returnThread) {
-	HANDLE const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
+	auto const handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 
 	if (handle == nullptr) {
 		return false;
 	}
 
-	DWORD_PTR const mask = 1ull << coreAffinity;
+	DWORD_PTR const mask = 1ULL << coreAffinity;
 	SetThreadAffinityMask(handle, mask);
 
 	returnThread->Handle = handle;
@@ -137,7 +138,7 @@ inline ThreadType GetCurrentThread() {
  * @param coreAffinity    The requested core affinity
  */
 inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
-	SetThreadAffinityMask(::GetCurrentThread(), 1ull << coreAffinity);
+	SetThreadAffinityMask(::GetCurrentThread(), 1ULL << coreAffinity);
 }
 
 /**
@@ -169,9 +170,9 @@ inline void CloseEvent(EventType const eventId) {
 #	pragma warning(push)
 #	pragma warning(disable : 4189)
 inline void WaitForEvent(EventType &eventId, uint32 const milliseconds) {
-	eventId.CountWaiters.fetch_add(1u);
+	eventId.CountWaiters.fetch_add(1U);
 	DWORD const retval = WaitForSingleObject(eventId.Event, milliseconds);
-	uint const prev = eventId.CountWaiters.fetch_sub(1u);
+	uint const prev = eventId.CountWaiters.fetch_sub(1U);
 	if (1 == prev) {
 		// we were the last to awaken, so reset event.
 		ResetEvent(eventId.Event);
@@ -310,7 +311,7 @@ inline void SetCurrentThreadAffinity(size_t const coreAffinity) {
 	CPU_SET(coreAffinity, &cpuSet);
 
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
-#   else
+#	else
 	(void)coreAffinity;
 #	endif
 }
