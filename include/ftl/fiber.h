@@ -111,7 +111,7 @@ public:
 	 * @return
 	 */
 	Fiber(Fiber &&other) noexcept : Fiber() {
-		swap(*this, other);
+		Swap(*this, other);
 	}
 
 	/**
@@ -121,7 +121,7 @@ public:
 	 * @param other    The fiber to move
 	 */
 	Fiber &operator=(Fiber &&other) noexcept {
-		swap(*this, other);
+		Swap(*this, other);
 
 		return *this;
 	}
@@ -179,8 +179,7 @@ private:
 	 * @param first     The first fiber
 	 * @param second    The second fiber
 	 */
-	// ReSharper disable once CppInconsistentNaming
-	friend void swap(Fiber &first, Fiber &second) noexcept {
+	static void Swap(Fiber &first, Fiber &second) noexcept {
 		using std::swap;
 
 		swap(first.m_stack, second.m_stack);
