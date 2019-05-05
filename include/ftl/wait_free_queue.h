@@ -99,9 +99,12 @@ private:
 		}
 	};
 
+#pragma warning( push )
+#pragma warning( disable : 4324 ) // MSVC warning C4324: structure was padded due to alignment specifier
 	alignas(kCacheLineSize) std::atomic<uint64> m_top;
 	alignas(kCacheLineSize) std::atomic<uint64> m_bottom;
 	alignas(kCacheLineSize) std::atomic<CircularArray *> m_array;
+#pragma warning( pop )
 
 public:
 	void Push(T value) {
