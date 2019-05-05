@@ -57,7 +57,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 add_subdirectory(third_party)
 
 # Warning flags
-include(${CMAKE_SOURCE_DIR}/cmake/CheckAndAddFlag.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckAndAddFlag.cmake)
 
 if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
 	Check_And_Add_Flag(-fdiagnostics-color=always)
