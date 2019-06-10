@@ -74,35 +74,31 @@ matrix:
             - cmake
             - cmake-data
     - os: linux
-      compiler: clang
+      compiler: gcc
       env: 
-        - MY_CC=clang-3.5
-        - MY_CXX=clang++-3.5
+        - MY_CC=gcc-7
+        - MY_CXX=g++-7
       addons:
         apt:
-          sources:
+          sources: 
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
             - george-edison55-precise-backports
           packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-3.5
+            - g++-7
             - cmake
             - cmake-data
     - os: linux
-      compiler: clang
+      compiler: gcc
       env: 
-        - MY_CC=clang-3.6
-        - MY_CXX=clang++-3.6
+        - MY_CC=gcc-8
+        - MY_CXX=g++-8
       addons:
         apt:
-          sources:
+          sources: 
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
             - george-edison55-precise-backports
           packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-3.6
+            - g++-8
             - cmake
             - cmake-data
     - os: linux
@@ -153,6 +149,70 @@ matrix:
             - clang-3.9
             - cmake
             - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-4
+        - MY_CXX=clang++-4
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-4
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-4
+            - cmake
+            - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-5
+        - MY_CXX=clang++-5
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-5
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-5
+            - cmake
+            - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-6
+        - MY_CXX=clang++-6
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-6
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-6
+            - cmake
+            - cmake-data
+    - os: linux
+      compiler: clang
+      env: 
+        - MY_CC=clang-7
+        - MY_CXX=clang++-7
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-7
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
+            - clang-7
+            - cmake
+            - cmake-data
     - os: osx
       compiler: gcc
       env: 
@@ -161,10 +221,40 @@ matrix:
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-5
-        - MY_CXX=g++-5
+        - MY_CC=gcc-6
+        - MY_CXX=g++-6
+    - os: osx
+      compiler: gcc
+      env: 
+        - MY_CC=gcc-7
+        - MY_CXX=g++-7
+    - os: osx
+      compiler: gcc
+      env: 
+        - MY_CC=gcc-8
+        - MY_CXX=g++-8
     - os: osx
       compiler: clang
       env: 
         - MY_CC=clang-3.9
         - MY_CXX=clang++-3.9
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-4
+        - MY_CXX=clang++-4
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-5
+        - MY_CXX=clang++-5
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-6
+        - MY_CXX=clang++-6
+    - os: osx
+      compiler: clang
+      env: 
+        - MY_CC=clang-7
+        - MY_CXX=clang++-7
