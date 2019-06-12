@@ -27,6 +27,9 @@ gcc-6)
 gcc-7)
 	upgradeBrewFormula gcc@7
 	;;
+gcc-8)
+	upgradeBrewFormula gcc@7
+	;;
 clang-3.7)
 	upgradeBrewFormula llvm@3.7
 	;;
