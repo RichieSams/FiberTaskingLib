@@ -1,260 +1,125 @@
 sudo: false
 language: cpp
 
+services:
+    - docker
+
 install:
-    - export CC="${MY_CC}"
-    - export CXX="${MY_CXX}"
     - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then source ci_scripts/travis_ci_install_osx.sh; fi"
 
 script: 
-    - export CC="${MY_CC}"
-    - export CXX="${MY_CXX}"
-    - mkdir build
-    - cd build
-    - cmake -DFTL_FIBER_STACK_GUARD_PAGES=1 ../
-    - make
-    - make test
+    - "if [ ${TRAVIS_OS_NAME} = 'linux' ]; then make generate_linux build_linux test_linux; fi"
+    - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then make generate_osx build_osx test_osx; fi"
 
 matrix:
   include:
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-4.8
-        - MY_CXX=g++-4.8
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=4.9
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-4.9
-        - MY_CXX=g++-4.9
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.9
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=5
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-5
-        - MY_CXX=g++-5
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-5
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=6
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-6
-        - MY_CXX=g++-6
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-6
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=7
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-7
-        - MY_CXX=g++-7
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-7
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=8
     - os: linux
       compiler: gcc
       env: 
-        - MY_CC=gcc-8
-        - MY_CXX=g++-8
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - g++-8
-            - cmake
-            - cmake-data
+        - COMPILER=gcc
+        - VERSION=9
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-3.7
-        - MY_CXX=clang++-3.7
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-3.7
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=3.7
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-3.8
-        - MY_CXX=clang++-3.8
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-3.8
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=3.8
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-3.9
-        - MY_CXX=clang++-3.9
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-3.9
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=3.9
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-4
-        - MY_CXX=clang++-4
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-4
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-4
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=4
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-5
-        - MY_CXX=clang++-5
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-5
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-5
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=5
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-6
-        - MY_CXX=clang++-6
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-6
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-6
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=6
     - os: linux
       compiler: clang
       env: 
-        - MY_CC=clang-7
-        - MY_CXX=clang++-7
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-7
-            - george-edison55-precise-backports
-          packages:
-            - g++-4.8 # Always install latest GCC 4.8 to avoid bugs in old STL when compiling with Clang
-            - clang-7
-            - cmake
-            - cmake-data
+        - COMPILER=clang
+        - VERSION=7
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-4.9
-        - MY_CXX=g++-4.9
+        - COMPILER=gcc
+        - VERSION=4.9
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-6
-        - MY_CXX=g++-6
+        - COMPILER=gcc
+        - VERSION=6
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-7
-        - MY_CXX=g++-7
+        - COMPILER=gcc
+        - VERSION=7
     - os: osx
       compiler: gcc
       env: 
-        - MY_CC=gcc-8
-        - MY_CXX=g++-8
+        - COMPILER=gcc
+        - VERSION=8
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-3.9
-        - MY_CXX=clang++-3.9
+        - COMPILER=clang
+        - VERSION=3.9
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-4
-        - MY_CXX=clang++-4
+        - COMPILER=clang
+        - VERSION=4
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-5
-        - MY_CXX=clang++-5
+        - COMPILER=clang
+        - VERSION=5
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-6
-        - MY_CXX=clang++-6
+        - COMPILER=clang
+        - VERSION=6
     - os: osx
       compiler: clang
       env: 
-        - MY_CC=clang-7
-        - MY_CXX=clang++-7
+        - COMPILER=clang
+        - VERSION=7

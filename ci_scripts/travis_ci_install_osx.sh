@@ -14,54 +14,54 @@ upgradeBrewFormula () {
 }
 
 
-case "${CXX}" in
-g++-4.9)
+case "${COMPILER}-${VERSION}" in
+gcc-4.9)
 	upgradeBrewFormula gcc@4.9
 	;;
-g++-5)
+gcc-5)
 	upgradeBrewFormula gcc@5
 	;;
-g++-6)
+gcc-6)
 	upgradeBrewFormula gcc@6
 	;;
-g++-7)
+gcc-7)
 	upgradeBrewFormula gcc@7
 	;;
-clang++-3.7)
+clang-3.7)
 	upgradeBrewFormula llvm@3.7
 	;;
-clang++-3.8)
+clang-3.8)
 	upgradeBrewFormula llvm@3.8
 	;;
-clang++-3.9)
+clang-3.9)
 	upgradeBrewFormula llvm@3.9
 	# 3.9 is keg-only, so we have to set the full file path
-	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
-	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	export CC=/usr/local/opt/llvm@3.9/bin/clang
+	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
-clang++-4)
+clang-4)
 	upgradeBrewFormula llvm@4
 	# 3.9 is keg-only, so we have to set the full file path
-	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
-	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	export CC=/usr/local/opt/llvm@3.9/bin/clang
+	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
-clang++-5)
+clang-5)
 	upgradeBrewFormula llvm@5
 	# 3.9 is keg-only, so we have to set the full file path
-	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
-	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	export CC=/usr/local/opt/llvm@3.9/bin/clang
+	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
-clang++-6)
+clang-6)
 	upgradeBrewFormula llvm@6
 	# 3.9 is keg-only, so we have to set the full file path
-	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
-	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	export CC=/usr/local/opt/llvm@3.9/bin/clang
+	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
-clang++-7)
+clang-7)
 	upgradeBrewFormula llvm@7
 	# 3.9 is keg-only, so we have to set the full file path
-	export MY_CC=/usr/local/opt/llvm@3.9/bin/clang
-	export MY_CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	export CC=/usr/local/opt/llvm@3.9/bin/clang
+	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
 	;;
-*) echo "Compiler not supported: ${CXX}. See travis_ci_install_osx.sh"; exit 1 ;;
+*) echo "Compiler not supported: ${COMPILER}-${VERSION}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac
