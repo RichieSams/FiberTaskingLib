@@ -99,3 +99,11 @@ target_include_directories(ftl PUBLIC ../include)
 
 # Remove the prefix
 set_target_properties(ftl PROPERTIES PREFIX "")
+
+# Set the c++ std
+if (FTL_CPP_17)
+	target_compile_features(ftl PUBLIC cxx_std_17)
+else()
+	target_compile_features(ftl PUBLIC cxx_std_11)
+endif()
+
