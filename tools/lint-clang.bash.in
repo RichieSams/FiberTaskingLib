@@ -1,2 +1,0 @@
-#!/bin/bash
-`type -p clang-tidy{-8,-7,-6.0,} | head -n 1` `find "@CMAKE_SOURCE_DIR@"/{benchmarks,source,include/ftl,tests} -type f -iname '*.cpp'` -p "@CMAKE_BINARY_DIR@" "-header-filter=`echo '@CMAKE_SOURCE_DIR@/source/../include/.*' | sed 's/\\//\\\\\//g'`"
