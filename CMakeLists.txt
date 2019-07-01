@@ -121,8 +121,3 @@ endif()
 if (FTL_BUILD_BENCHMARKS)
 	add_subdirectory(benchmarks)
 endif()
-
-# Linter scripts
-set(CMAKE_EXPORT_COMPILE_COMMANDS True CACHE BOOL "Export Compile Commands for Linting" FORCE)
-configure_file(tools/lint-clang.bash.in tools/lint-clang.bash @ONLY)
-configure_file(tools/format.bash.in tools/format.bash @ONLY)
