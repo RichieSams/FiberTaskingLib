@@ -74,3 +74,6 @@ clean_osx:
 
 format:
 	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:8 /bin/bash tools/format.sh
+
+lint:
+	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:latest /bin/bash tools/lint-clang.sh
