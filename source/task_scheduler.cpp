@@ -33,12 +33,19 @@ constexpr static std::size_t kFailedPopAttemptsHeuristic = 5;
 struct ThreadStartArgs {
 	TaskScheduler *Scheduler;
 	uint ThreadIndex;
+	ThreadStartCallback ThreadStartCb;
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
 	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	uint const index = threadArgs->ThreadIndex;
+
+	const ThreadStartCallback threadStartCb = threadArgs->ThreadStartCb;
+	if (threadStartCb)
+	{
+		(*threadStartCb)(index);
+	}
 
 	// Clean up
 	delete threadArgs;
@@ -223,7 +230,7 @@ TaskScheduler::~TaskScheduler() {
 }
 
 void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, uint const threadPoolSize,
-                        EmptyQueueBehavior const behavior) {
+                        EmptyQueueBehavior const behavior, ThreadStartCallback threadStartCb /*= nullptr*/) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
 	m_quit.store(false, std::memory_order_release);
@@ -277,6 +284,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
 		threadArgs->ThreadIndex = static_cast<uint>(i);
+		threadArgs->ThreadStartCb = threadStartCb;
 
 		if (!CreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
 			printf("Error: Failed to create all the worker threads");

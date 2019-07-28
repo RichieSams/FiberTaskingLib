@@ -53,6 +53,8 @@ enum class EmptyQueueBehavior {
 	// ReSharper restore CppInconsistentNaming
 };
 
+using ThreadStartCallback = void(*)(const uint threadIndex);
+
 /**
  * A class that enables task-based multithreading.
  *
@@ -186,9 +188,10 @@ public:
 	 * @param mainTaskArg       The argument to pass to 'mainTask'
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 * @param behavior          The behavior of the threads after they have no work to do.
+	 * @param threadStartCb     An optional callback executed whenever an FTL worker thread starts.
 	 */
 	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0,
-	         EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
+	         EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin, ThreadStartCallback threadStartCb = nullptr);
 
 	/**
 	 * Adds a task to the internal queue.
