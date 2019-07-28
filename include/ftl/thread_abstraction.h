@@ -33,7 +33,9 @@
 #if defined(FTL_WIN32_THREADS)
 
 #	define WIN32_LEAN_AND_MEAN
-#	define NOMINMAX
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif // #ifndef NOMINMAX
 #	include <Windows.h>
 
 #	include <atomic>
