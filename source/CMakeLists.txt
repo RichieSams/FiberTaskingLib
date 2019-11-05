@@ -86,13 +86,22 @@ SetSourceGroup(NAME Util
 				 ../include/ftl/ftl_valgrind.h
 )
 
+SetSourceGroup(NAME Contrib
+	PREFIX FTL
+	SOURCE_FILES ../include/ftl/contrib/trampoline.h
+)
+
 # Link all the sources into one
 set(FIBER_TASKING_LIB_SRC
 	${FTL_CORE}
 	${FTL_UTIL}
 )
 
-add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
+set(FIBER_TASKING_LIB_CONTRIB_SRC
+	${FTL_CONTRIB}
+)
+
+add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC} ${FIBER_TASKING_LIB_CONTRIB_SRC})
 target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(ftl PUBLIC ../include)
 

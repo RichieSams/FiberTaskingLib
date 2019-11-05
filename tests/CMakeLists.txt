@@ -57,6 +57,22 @@ set(FIBER_TASKING_LIB_TESTS_SRC
 	${FTL_TEST_UTILITIES}
 )
 
+if(FTL_BUILD_CONTRIB_TESTS)
+	SetSourceGroup(NAME "Trampoline"
+		PREFIX FTL_TEST_CONTRIB
+		SOURCE_FILES contrib/trampoline.cpp
+	)
+
+	# Link all the sources into one
+	set(FIBER_TASKING_LIB_TESTS_CONTRIB_SRC
+		${FTL_TEST_CONTRIB_TRAMPOLINE}
+	)
+
+	set(FIBER_TASKING_LIB_TESTS_SRC
+		${FIBER_TASKING_LIB_TESTS_SRC}
+		${FIBER_TASKING_LIB_TESTS_CONTRIB_SRC}
+	)
+endif()
 
 add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
 target_link_libraries(ftl-test gtest gtest_main ftl)
