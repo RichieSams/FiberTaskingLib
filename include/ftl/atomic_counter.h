@@ -130,7 +130,7 @@ public:
 	 * @return               The current value of the counter
 	 */
 	uint Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
-		this->m_lock.fetch_add(1U, std::memory_order_seq_cst);
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
 		uint ret = m_value.load(memoryOrder);
 
