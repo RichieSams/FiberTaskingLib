@@ -30,12 +30,14 @@
 namespace ftl {
 
 AtomicCounter::AtomicCounter(TaskScheduler *const taskScheduler, uint const initialValue, uint const fiberSlots)
-        : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_waitingFibers(fiberSlots) {
+        : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_fiberSlots(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
+	m_waitingFibers = new WaitingFiberBundle[fiberSlots];
 
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_lock, sizeof(m_lock));
-	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeSlots, sizeof(m_freeSlots[0]) * m_waitingFibers.size());
+	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeSlots, sizeof(m_freeSlots[0]) * fiberSlots);
+	FTL_VALGRIND_HG_DISABLE_CHECKING(m_waitingFibers, sizeof(m_waitingFibers[0]) * fiberSlots);
 
 	for (uint i = 0; i < fiberSlots; ++i) {
 		m_freeSlots[i].store(true);
@@ -49,7 +51,13 @@ AtomicCounter::AtomicCounter(TaskScheduler *const taskScheduler, uint const init
 }
 
 AtomicCounter::~AtomicCounter() {
+	// We can't destroy the counter until all other threads have left the member functions
+	while (m_lock.load(std::memory_order_relaxed) > 0) {
+		std::this_thread::yield();
+	}
+
 	delete[] m_freeSlots;
+	delete[] m_waitingFibers;
 }
 
 AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThreadIndex(std::numeric_limits<std::size_t>::max()) {
@@ -58,9 +66,7 @@ AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThr
 
 bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue, std::atomic<bool> *const fiberStoredFlag,
                                           std::size_t const pinnedThreadIndex) {
-
-	m_lock.fetch_add(1u, std::memory_order_seq_cst);
-	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
+	for (std::size_t i = 0; i < m_fiberSlots; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst,
@@ -84,7 +90,6 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 		// everything
 		uint const value = m_value.load(std::memory_order_relaxed);
 		if (m_waitingFibers[i].InUse.load(std::memory_order_acquire)) {
-			m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 			return false;
 		}
 
@@ -94,23 +99,15 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 			if (!std::atomic_compare_exchange_strong_explicit(&m_waitingFibers[i].InUse, &expected, true, std::memory_order_seq_cst,
 			                                                  std::memory_order_relaxed)) {
 				// Failed the race. Another thread got to it first.
-				m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 				return false;
 			}
 			// Signal that the slot is now free
 			// Leave IneUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
 
-			
-			m_lock.fetch_sub(1u, std::memory_order_seq_cst);
-
-			// wait for threads to drain from counter logic, otherwise we might continue too early
-			while (m_lock.load() > 0) {
-			}
 			return true;
 		}
 
-		m_lock.fetch_sub(1u, std::memory_order_seq_cst);
 		return false;
 	}
 
@@ -123,10 +120,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 }
 
 void AtomicCounter::CheckWaitingFibers(uint const value) {
-	std::vector<std::size_t> readyFiberIndices(m_waitingFibers.size(), 0);
-	uint nextIndex = 0;
-
-	for (std::size_t i = 0; i < m_waitingFibers.size(); ++i) {
+	for (std::size_t i = 0; i < m_fiberSlots; ++i) {
 		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;
@@ -145,22 +139,9 @@ void AtomicCounter::CheckWaitingFibers(uint const value) {
 				// Failed the race. Another thread got to it first
 				continue;
 			}
-			readyFiberIndices[nextIndex++] = i;
-		}
-	}
-	// Exit shared section
-	m_lock.fetch_sub(1U, std::memory_order_seq_cst);
-	// Wait for all threads to exit the shared section if there are fibers to ready
-	if (nextIndex > 0) {
-		while (m_lock.load() > 0) {
-			// Spin
-		}
 
-		for (uint i = 0; i < nextIndex; ++i) {
-			// Add the fiber to the TaskScheduler's ready list
-			const std::size_t index = readyFiberIndices[i];
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[index].PinnedThreadIndex, m_waitingFibers[index].FiberIndex,
-			                               m_waitingFibers[index].FiberStoredFlag);
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, m_waitingFibers[i].FiberIndex,
+			                               m_waitingFibers[i].FiberStoredFlag);
 			// Signal that the slot is free
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);

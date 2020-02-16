@@ -28,6 +28,7 @@
 
 #include <atomic>
 #include <limits>
+#include <thread>
 #include <vector>
 
 namespace ftl {
@@ -64,9 +65,10 @@ private:
 	TaskScheduler *m_taskScheduler;
 	/* The atomic counter holding our data */
 	std::atomic_uint m_value;
-	/* An atomic counter to ensure threads don't race in readying the fibers */
+	/* An atomic counter to ensure the instance can't be destroyed while other threads are still inside a function */
 	std::atomic_uint m_lock;
-	/* An array that signals which slots in m_waitingFibers are free to be used
+	/**
+	 * An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
 	 * False: Full
 	 *
@@ -99,7 +101,18 @@ private:
 		 */
 		std::size_t PinnedThreadIndex;
 	};
-	std::vector<WaitingFiberBundle> m_waitingFibers;
+	/**
+	 * The storage for the fibers waiting on this counter
+	 *
+	 * We again can't use a vector because WaitingFiberBundle contains a std::atomic<t>, which is is non-copyable and
+	 * non-moveable. std::vector constructor, push_back, and emplace_back all use either copy or move
+	 */
+	WaitingFiberBundle *m_waitingFibers;
+
+	/**
+	 * The number of elements in m_freeSlots and m_waitingFibers
+	 */
+	uint m_fiberSlots;
 
 	/**
 	 * We friend TaskScheduler so we can keep AddFiberToWaitingList() private
@@ -116,8 +129,13 @@ public:
 	 * @param memoryOrder    The memory order to use for the load
 	 * @return               The current value of the counter
 	 */
-	uint Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) const noexcept {
-		return m_value.load(memoryOrder);
+	uint Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+		this->m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
+		uint ret = m_value.load(memoryOrder);
+
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+		return ret;
 	}
 	/**
 	 * A wrapper over std::atomic_uint::store()
@@ -128,10 +146,12 @@ public:
 	 * @param memoryOrder    The memory order to use for the store
 	 */
 	void Store(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
-		// Enter shared section
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
 		m_value.store(x, memoryOrder);
 		CheckWaitingFibers(x);
+
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 	}
 	/**
 	 * A wrapper over std::atomic_uint::fetch_add()
@@ -143,11 +163,12 @@ public:
 	 * @return               The value of the counter before the addition
 	 */
 	uint FetchAdd(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
-		// Enter shared section
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
 		const uint prev = m_value.fetch_add(x, memoryOrder);
 		CheckWaitingFibers(prev + x);
 
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 		return prev;
 	}
 	/**
@@ -160,11 +181,12 @@ public:
 	 * @return               The value of the counter before the subtraction
 	 */
 	uint FetchSub(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
-		// Enter shared section
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
 		const uint prev = m_value.fetch_sub(x, memoryOrder);
 		CheckWaitingFibers(prev - x);
 
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 		return prev;
 	}
 
