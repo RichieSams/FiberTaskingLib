@@ -109,24 +109,20 @@ void TaskScheduler::FiberStart(void *const arg) {
 		std::size_t waitingFiberIndex = kFTLInvalidIndex;
 		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
-		// Lock
-		while (tls.ReadFibersLock.test_and_set(std::memory_order_acquire)) {
-			// Spin
-		}
+		{
+			std::lock_guard<std::mutex> guard(tls.ReadyFibersLock);
 
-		for (auto iter = tls.ReadyFibers.begin(); iter != tls.ReadyFibers.end(); ++iter) {
-			if (!iter->second->load(std::memory_order_relaxed)) {
-				continue;
+			for (auto iter = tls.ReadyFibers.begin(); iter != tls.ReadyFibers.end(); ++iter) {
+				if (!iter->second->load(std::memory_order_relaxed)) {
+					continue;
+				}
+
+				waitingFiberIndex = iter->first;
+				delete iter->second;
+				tls.ReadyFibers.erase(iter);
+				break;
 			}
-
-			waitingFiberIndex = iter->first;
-			delete iter->second;
-			tls.ReadyFibers.erase(iter);
-			break;
 		}
-
-		// Unlock
-		tls.ReadFibersLock.clear(std::memory_order_release);
 
 		if (waitingFiberIndex != kFTLInvalidIndex) {
 			// Found a waiting task that is ready to continue
@@ -173,18 +169,14 @@ void TaskScheduler::FiberStart(void *const arg) {
 					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
 
 					// Check if we have a ready fiber
-					// Lock
-					while (tls.ReadFibersLock.test_and_set(std::memory_order_acquire)) {
-						// Spin
-					}
-					// Prevent sleepy-time if we have ready fibers
-					if (tls.ReadyFibers.empty()) {
-						++tls.FailedQueuePopAttempts;
-					}
+					{
+						std::lock_guard<std::mutex> guard(tls.ReadyFibersLock);
 
-					// Unlock
-					tls.ReadFibersLock.clear(std::memory_order_release);
-
+						// Prevent sleepy-time if we have ready fibers
+						if (tls.ReadyFibers.empty()) {
+							++tls.FailedQueuePopAttempts;
+						}
+					}
 					// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
 					while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 						tls.FailedQueuePopCV.wait(lock);
@@ -255,10 +247,6 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	    disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
 #endif                  // _MSC_VER
 	m_tls = new ThreadLocalStorage[m_numThreads];
-	// Initialize all the locks before we start the other threads
-	for (std::size_t i = 0; i < m_numThreads; ++i) {
-		m_tls[i].ReadFibersLock.clear();
-	}
 #ifdef _MSC_VER
 #	pragma warning(pop)
 #endif // _MSC_VER
@@ -512,15 +500,10 @@ void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size
 		tls = &m_tls[pinnedThreadIndex];
 	}
 
-	// Lock
-	while (tls->ReadFibersLock.test_and_set(std::memory_order_acquire)) {
-		// Spin
+	{
+		std::lock_guard<std::mutex> guard(tls->ReadyFibersLock);
+		tls->ReadyFibers.emplace_back(fiberIndex, fiberStoredFlag);
 	}
-
-	tls->ReadyFibers.emplace_back(fiberIndex, fiberStoredFlag);
-
-	// Unlock
-	tls->ReadFibersLock.clear(std::memory_order_release);
 
 	// If the Task is pinned, we add the Task to the pinned thread's ReadyFibers queue, instead
 	// of our own. Normally, this works fine; the other thread will pick it up next time it
