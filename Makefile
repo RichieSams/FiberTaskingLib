@@ -1,3 +1,10 @@
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+	export SHELL=cmd
+else
+	detected_OS := $(shell uname -s)
+endif
+
 
 export COMPILER?=gcc
 export VERSION?=6
@@ -33,10 +40,12 @@ else
 CPP_17_CMAKE_ARGS=
 endif
 
+CMAKE_GEN_NAME?=Visual Studio 15 2017 Win64
+CMAKE_ARCH_ARG?=
 
 DOCKER_IMAGE=richiesams/docker_$(COMPILER):$(VERSION)
 
-.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx
+.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows
 
 pull_image:
 	docker pull $(DOCKER_IMAGE)
@@ -70,6 +79,22 @@ test_osx:
 
 clean_osx:
 	rm -rf build_osx
+
+
+generate_windows:
+	if not exist build_windows mkdir build_windows
+	cmake -G "$(CMAKE_GEN_NAME)" $(CMAKE_ARCH_ARG) -Bbuild_windows .
+
+build_windows:
+	cmake --build build_windows --config Debug -- /v:m /m
+	cmake --build build_windows --config Release -- /v:m /m
+
+test_windows:
+	cd build_windows\tests\Debug & ftl-test.exe
+	cd build_windows\tests\Release & ftl-test.exe
+
+clean_windows:
+	if exist rmdir /s /q build_windows
 
 
 format:

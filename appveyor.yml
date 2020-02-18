@@ -1,15 +1,26 @@
 version: 1.0.{build}
+
+environment:
+  MSBUILD_FLAGS: /v:m
+  matrix:
+  - job_name: vs_2015
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    CMAKE_GEN_NAME: Visual Studio 14 2015 Win64
+    CMAKE_ARCH_ARG: ""
+  - job_name: vs_2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    CMAKE_GEN_NAME: Visual Studio 15 2017 Win64
+    CMAKE_ARCH_ARG: ""
+  - job_name: vs_2019
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    CMAKE_GEN_NAME: Visual Studio 16 2019
+    CMAKE_ARCH_ARG: "-A x64"
+
+install:
+  - choco install make
+
 build_script:
-  - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - make generate_windows build_windows
 
-  - mkdir build
-  - cd build
-  - cmake -G "Visual Studio 14 Win64" ../
-
-  - msbuild FiberTaskingLib.sln /p:configuration=debug /p:platform=x64 /v:m /nologo
-  - msbuild FiberTaskingLib.sln /p:configuration=release /p:platform=x64 /v:m /nologo
-
-  - cd ../
 test_script:
-  - build\tests\Debug\ftl-test.exe
-  - build\tests\Release\ftl-test.exe
+  - make test_windows
