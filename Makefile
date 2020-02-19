@@ -55,6 +55,7 @@ generate_linux:
 
 generate_linux_native:
 	mkdir -p build_linux
+	cmake --version
 	(cd build_linux && exec cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -FTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) ../)
 
 build_linux:
@@ -69,6 +70,7 @@ clean_linux:
 
 generate_osx:
 	mkdir -p build_osx
+	cmake --version
 	(cd build_osx && exec cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -FTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) ../)
 
 build_osx:
@@ -83,6 +85,7 @@ clean_osx:
 
 generate_windows:
 	if not exist build_windows mkdir build_windows
+	cmake --version
 	cmake -G "$(CMAKE_GEN_NAME)" $(CMAKE_ARCH_ARG) -Bbuild_windows .
 
 build_windows:
