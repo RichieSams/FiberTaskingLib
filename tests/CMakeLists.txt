@@ -22,7 +22,6 @@
  # limitations under the License.
  ##
 
-include(GTestAddTests)
 include(SetSourceGroup)
 
 
@@ -66,5 +65,3 @@ set(FIBER_TASKING_LIB_TESTS_SRC
 
 add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
 target_link_libraries(ftl-test gtest gtest_main ftl)
-
-GTEST_ADD_TESTS(ftl-test "" ${FIBER_TASKING_LIB_TESTS_SRC})
