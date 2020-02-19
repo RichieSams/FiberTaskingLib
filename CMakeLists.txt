@@ -31,6 +31,8 @@ option(FTL_BUILD_BENCHMARKS "Build FiberTaskingLib benchmarks" ON)
 option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
 option(FTL_CPP_17 "Enable C++17 features" OFF)
+option(FTL_WERROR "Promote compiler warnings to errors." OFF)
+
 set(FTL_NUM_WAITING_FIBER_SLOTS 4 CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait")
 
 # Include Valgrind
@@ -38,7 +40,7 @@ if (FTL_VALGRIND)
 	add_definitions(-DFTL_VALGRIND=1)
 endif()
 
-# Define the guard page size
+# Add guard pages
 if (FTL_FIBER_STACK_GUARD_PAGES)
 	add_definitions(-DFTL_FIBER_STACK_GUARD_PAGES=1)
 endif()
@@ -62,7 +64,6 @@ add_subdirectory(third_party)
 # Warning flags
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckAndAddFlag.cmake)
 
-option(FTL_WERROR "Promote compiler warnings to errors." OFF)
 if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
 	Check_And_Add_Flag(-fdiagnostics-color=always)
 	Check_And_Add_Flag(-Wall)
