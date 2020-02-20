@@ -105,7 +105,7 @@ Then, the project CMakeLists.txt could be as follows:
 
 [source,cmake]
 ----
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.8)
 project(MyProject)
 
 # You can use the FTL_BUILD_TESTS variable to enable / disable test building
