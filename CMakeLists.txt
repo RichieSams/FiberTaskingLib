@@ -22,7 +22,7 @@
  # limitations under the License.
  ##
 
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.8)
 project(FiberTaskingLib)
 
 # Options
