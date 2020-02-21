@@ -220,6 +220,9 @@ public:
 	 * Gets the 0-based index of the current thread
 	 * This is useful for m_tls[GetCurrentThreadIndex()]
 	 *
+	 * We force no-inline because inlining seems to cause some tls-type caching on max optimization levels
+	 * Discovered by @cwfitzgerald. Documented in issue #57
+	 *
 	 * @return    The index of the current thread
 	 */
 	FTL_NOINLINE size_t GetCurrentThreadIndex();
