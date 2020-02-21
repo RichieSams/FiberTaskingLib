@@ -28,7 +28,7 @@
 
 namespace ftl {
 
-constexpr static std::size_t kFailedPopAttemptsHeuristic = 5;
+constexpr static size_t kFailedPopAttemptsHeuristic = 5;
 
 struct ThreadStartArgs {
 	TaskScheduler *Scheduler;
@@ -50,7 +50,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
 	}
 
 	// Get a free fiber to switch to
-	std::size_t const freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
+	size_t const freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
 
 	// Initialize tls
 	taskScheduler->m_tls[index].CurrentFiberIndex = freeFiberIndex;
@@ -82,7 +82,7 @@ void TaskScheduler::MainFiberStart(void *const arg) {
 
 	// Signal any waiting threads so they can finish
 	if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
-		for (std::size_t i = 0; i < taskScheduler->m_numThreads; ++i) {
+		for (size_t i = 0; i < taskScheduler->m_numThreads; ++i) {
 			{
 				std::unique_lock<std::mutex> lock(taskScheduler->m_tls[i].FailedQueuePopLock);
 				taskScheduler->m_tls[i].FailedQueuePopAttempts = 0;
@@ -107,7 +107,7 @@ void TaskScheduler::FiberStart(void *const arg) {
 
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
 		// Check if there are any ready fibers
-		std::size_t waitingFiberIndex = kFTLInvalidIndex;
+		size_t waitingFiberIndex = kFTLInvalidIndex;
 		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
 		{
@@ -262,12 +262,15 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 #endif
 
 	// Create the remaining threads
-	for (std::size_t i = 1; i < m_numThreads; ++i) {
+	for (size_t i = 1; i < m_numThreads; ++i) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
 		threadArgs->ThreadIndex = static_cast<uint>(i);
 
-		if (!CreateThread(524288, ThreadStart, threadArgs, i, &m_threads[i])) {
+		char threadName[256];
+		snprintf(threadName, sizeof(threadName), "FTL Worker Thread %zu", i);
+
+		if (!CreateThread(524288, ThreadStart, threadArgs, threadName, &m_threads[i])) {
 			printf("Error: Failed to create all the worker threads");
 			return;
 		}
@@ -279,7 +282,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	// Start the main task
 
 	// Get a free fiber
-	std::size_t const freeFiberIndex = GetNextFreeFiberIndex();
+	size_t const freeFiberIndex = GetNextFreeFiberIndex();
 	Fiber *freeFiber = &m_fibers[freeFiberIndex];
 
 	// Repurpose it as the main task fiber and switch to it
@@ -294,7 +297,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 
 	// And we're back
 	// Wait for the worker threads to finish
-	for (std::size_t i = 1; i < m_numThreads; ++i) {
+	for (size_t i = 1; i < m_numThreads; ++i) {
 		JoinThread(m_threads[i]);
 	}
 
@@ -320,7 +323,7 @@ void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Find a thread that is sleeping and wake it
-		for (std::size_t i = 0; i < m_numThreads; ++i) {
+		for (size_t i = 0; i < m_numThreads; ++i) {
 			std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
 			if (m_tls[i].FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 				m_tls[i].FailedQueuePopAttempts = 0;
@@ -346,7 +349,7 @@ void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, Atomi
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Wake all the threads
-		for (std::size_t i = 0; i < m_numThreads; ++i) {
+		for (size_t i = 0; i < m_numThreads; ++i) {
 			{
 				std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
 				m_tls[i].FailedQueuePopAttempts = 0;
@@ -356,17 +359,17 @@ void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, Atomi
 	}
 }
 
-FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
+FTL_NOINLINE_POSIX size_t TaskScheduler::GetCurrentThreadIndex() {
 #if defined(FTL_WIN32_THREADS)
 	DWORD const threadId = GetCurrentThreadId();
-	for (std::size_t i = 0; i < m_numThreads; ++i) {
+	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (m_threads[i].Id == threadId) {
 			return i;
 		}
 	}
 #elif defined(FTL_POSIX_THREADS)
 	pthread_t const currentThread = pthread_self();
-	for (std::size_t i = 0; i < m_numThreads; ++i) {
+	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (pthread_equal(currentThread, m_threads[i]) != 0) {
 			return i;
 		}
@@ -377,7 +380,7 @@ FTL_NOINLINE_POSIX std::size_t TaskScheduler::GetCurrentThreadIndex() {
 }
 
 bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
-	std::size_t const currentThreadIndex = GetCurrentThreadIndex();
+	size_t const currentThreadIndex = GetCurrentThreadIndex();
 	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
 	// Try to pop from our own queue
@@ -386,9 +389,9 @@ bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 	}
 
 	// Ours is empty, try to steal from the others'
-	const std::size_t threadIndex = tls.LastSuccessfulSteal;
-	for (std::size_t i = 0; i < m_numThreads; ++i) {
-		const std::size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
+	const size_t threadIndex = tls.LastSuccessfulSteal;
+	for (size_t i = 0; i < m_numThreads; ++i) {
+		const size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
 		if (threadIndexToStealFrom == currentThreadIndex) {
 			continue;
 		}
@@ -402,9 +405,9 @@ bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 	return false;
 }
 
-std::size_t TaskScheduler::GetNextFreeFiberIndex() const {
+size_t TaskScheduler::GetNextFreeFiberIndex() const {
 	for (uint j = 0;; ++j) {
-		for (std::size_t i = 0; i < m_fiberPoolSize; ++i) {
+		for (size_t i = 0; i < m_fiberPoolSize; ++i) {
 			// Double lock
 			if (!m_freeFibers[i].load(std::memory_order_relaxed)) {
 				continue;
@@ -493,9 +496,9 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(std::size_t const pinnedThreadIndex, std::size_t fiberIndex, std::atomic<bool> *const fiberStoredFlag) {
+void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, size_t fiberIndex, std::atomic<bool> *const fiberStoredFlag) {
 	ThreadLocalStorage *tls;
-	if (pinnedThreadIndex == std::numeric_limits<std::size_t>::max()) {
+	if (pinnedThreadIndex == std::numeric_limits<size_t>::max()) {
 		tls = &m_tls[GetCurrentThreadIndex()];
 	} else {
 		tls = &m_tls[pinnedThreadIndex];
@@ -533,13 +536,13 @@ void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const valu
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-	std::size_t const currentFiberIndex = tls.CurrentFiberIndex;
+	size_t const currentFiberIndex = tls.CurrentFiberIndex;
 
-	std::size_t pinnedThreadIndex;
+	size_t pinnedThreadIndex;
 	if (pinToCurrentThread) {
 		pinnedThreadIndex = GetCurrentThreadIndex();
 	} else {
-		pinnedThreadIndex = std::numeric_limits<std::size_t>::max();
+		pinnedThreadIndex = std::numeric_limits<size_t>::max();
 	}
 	auto *const fiberStoredFlag = new std::atomic<bool>(false);
 	bool const alreadyDone = counter->AddFiberToWaitingList(tls.CurrentFiberIndex, value, fiberStoredFlag, pinnedThreadIndex);
@@ -552,7 +555,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const valu
 	}
 
 	// Get a free fiber
-	std::size_t const freeFiberIndex = GetNextFreeFiberIndex();
+	size_t const freeFiberIndex = GetNextFreeFiberIndex();
 
 	// Fill in tls
 	tls.OldFiberIndex = currentFiberIndex;

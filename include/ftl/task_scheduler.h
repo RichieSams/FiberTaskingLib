@@ -70,12 +70,12 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static std::size_t kFTLInvalidIndex = UINT_MAX;
+	constexpr static size_t kFTLInvalidIndex = UINT_MAX;
 
-	std::size_t m_numThreads{0};
+	size_t m_numThreads{0};
 	std::vector<ThreadType> m_threads;
 
-	std::size_t m_fiberPoolSize{0};
+	size_t m_fiberPoolSize{0};
 	/* The backing storage for the fiber pool */
 	Fiber *m_fibers{nullptr};
 	/**
@@ -106,11 +106,11 @@ private:
 	};
 
 	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(std::size_t const fiberIndex, AtomicCounter *const counter, uint const targetValue)
+		PinnedWaitingFiberBundle(size_t const fiberIndex, AtomicCounter *const counter, uint const targetValue)
 		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
-		std::size_t FiberIndex;
+		size_t FiberIndex;
 		AtomicCounter *Counter;
 		uint TargetValue;
 	};
@@ -131,17 +131,17 @@ private:
 		 */
 		Fiber ThreadFiber;
 		/* The index of the current fiber in m_fibers */
-		std::size_t CurrentFiberIndex;
+		size_t CurrentFiberIndex;
 		/* The index of the previously executed fiber in m_fibers */
-		std::size_t OldFiberIndex;
+		size_t OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
 		FiberDestination OldFiberDestination{FiberDestination::None};
 		/* The queue of waiting tasks */
 		WaitFreeQueue<TaskBundle> TaskQueue;
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
-		std::size_t LastSuccessfulSteal{1};
+		size_t LastSuccessfulSteal{1};
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
-		std::vector<std::pair<std::size_t, std::atomic<bool> *>> ReadyFibers;
+		std::vector<std::pair<size_t, std::atomic<bool> *>> ReadyFibers;
 		std::mutex ReadyFibersLock;
 		uint32 FailedQueuePopAttempts{0};
 		/**
@@ -223,14 +223,14 @@ public:
 	 *
 	 * @return    The index of the current thread
 	 */
-	FTL_NOINLINE_POSIX std::size_t GetCurrentThreadIndex();
+	FTL_NOINLINE_POSIX size_t GetCurrentThreadIndex();
 
 	/**
 	 * Gets the amount of backing threads.
 	 *
 	 * @return    Backing thread count
 	 */
-	std::size_t GetThreadCount() const noexcept {
+	size_t GetThreadCount() const noexcept {
 		return m_threads.size();
 	}
 
@@ -239,7 +239,7 @@ public:
 	 *
 	 * @return    Fiber pool size
 	 */
-	std::size_t GetFiberCount() const noexcept {
+	size_t GetFiberCount() const noexcept {
 		return m_fiberPoolSize;
 	}
 
@@ -267,7 +267,7 @@ private:
 	 *
 	 * @return    The index of the next available fiber in the pool
 	 */
-	std::size_t GetNextFreeFiberIndex() const;
+	size_t GetNextFreeFiberIndex() const;
 	/**
 	 * If necessary, moves the old fiber to the fiber pool or the waiting list
 	 * The old fiber is the last fiber to run on the thread before the current fiber
@@ -279,12 +279,12 @@ private:
 	 * for a new task
 	 *
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal
-	 * std::numeric_limits<std::size_t>::max()
+	 * std::numeric_limits<size_t>::max()
 	 * @param fiberIndex           The index of the fiber to add
 	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
 	 * up"
 	 */
-	void AddReadyFiber(std::size_t pinnedThreadIndex, std::size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
+	void AddReadyFiber(size_t pinnedThreadIndex, size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
 
 	/**
 	 * The threadProc function for all worker threads

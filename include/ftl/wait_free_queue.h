@@ -42,7 +42,7 @@ namespace ftl {
 template <typename T>
 class WaitFreeQueue {
 private:
-	constexpr static std::size_t kStartingCircularArraySize = 32;
+	constexpr static size_t kStartingCircularArraySize = 32;
 
 public:
 	WaitFreeQueue()
@@ -65,7 +65,7 @@ public:
 private:
 	class CircularArray {
 	public:
-		explicit CircularArray(std::size_t const n) : m_items(n) {
+		explicit CircularArray(size_t const n) : m_items(n) {
 			FTL_ASSERT("n must be a power of 2", !(n == 0) && !(n & (n - 1)));
 		}
 
@@ -74,37 +74,37 @@ private:
 		std::unique_ptr<CircularArray> m_previous;
 
 	public:
-		std::size_t Size() const {
+		size_t Size() const {
 			return m_items.size();
 		}
 
-		T Get(std::size_t const index) {
+		T Get(size_t const index) {
 			return m_items[index & (Size() - 1)];
 		}
 
-		void Put(std::size_t const index, T x) {
+		void Put(size_t const index, T x) {
 			m_items[index & (Size() - 1)] = x;
 		}
 
 		// Growing the array returns a new circular_array object and keeps a
 		// linked list of all previous arrays. This is done because other threads
 		// could still be accessing elements from the smaller arrays.
-		CircularArray *Grow(std::size_t const top, std::size_t const bottom) {
+		CircularArray *Grow(size_t const top, size_t const bottom) {
 			auto *const newArray = new CircularArray(Size() * 2);
 			newArray->m_previous.reset(this);
-			for (std::size_t i = top; i != bottom; i++) {
+			for (size_t i = top; i != bottom; i++) {
 				newArray->Put(i, Get(i));
 			}
 			return newArray;
 		}
 	};
 
-#pragma warning( push )
-#pragma warning( disable : 4324 ) // MSVC warning C4324: structure was padded due to alignment specifier
+#pragma warning(push)
+#pragma warning(disable : 4324) // MSVC warning C4324: structure was padded due to alignment specifier
 	alignas(kCacheLineSize) std::atomic<uint64> m_top;
 	alignas(kCacheLineSize) std::atomic<uint64> m_bottom;
 	alignas(kCacheLineSize) std::atomic<CircularArray *> m_array;
-#pragma warning( pop )
+#pragma warning(pop)
 
 public:
 	void Push(T value) {

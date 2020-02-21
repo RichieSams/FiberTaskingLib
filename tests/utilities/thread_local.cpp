@@ -30,8 +30,8 @@
 #include <numeric>
 
 namespace threadLocalTests {
-ftl::ThreadLocal<std::size_t> &SingleInitSingleton(ftl::TaskScheduler *scheduler) {
-	static ftl::ThreadLocal<std::size_t> counter(scheduler);
+ftl::ThreadLocal<size_t> &SingleInitSingleton(ftl::TaskScheduler *scheduler) {
+	static ftl::ThreadLocal<size_t> counter(scheduler);
 
 	return counter;
 }
@@ -40,9 +40,9 @@ void SimpleInit(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	*SingleInitSingleton(scheduler) += 1;
 }
 
-static std::atomic<std::size_t> g_sideEffectCount{0};
-ftl::ThreadLocal<std::size_t> &SideEffectSingleton(ftl::TaskScheduler *scheduler) {
-	static ftl::ThreadLocal<std::size_t> counter(scheduler, []() { return g_sideEffectCount++; });
+static std::atomic<size_t> g_sideEffectCount{0};
+ftl::ThreadLocal<size_t> &SideEffectSingleton(ftl::TaskScheduler *scheduler) {
+	static ftl::ThreadLocal<size_t> counter(scheduler, []() { return g_sideEffectCount++; });
 
 	return counter;
 }
@@ -61,7 +61,7 @@ void MainTask(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 
 	auto singleInitVals = SingleInitSingleton(scheduler).GetAllValues();
 
-	ASSERT_EQ(scheduler->GetThreadCount(), std::accumulate(singleInitVals.begin(), singleInitVals.end(), std::size_t{0}));
+	ASSERT_EQ(scheduler->GetThreadCount(), std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
 
 	// Side Effects
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, nullptr});

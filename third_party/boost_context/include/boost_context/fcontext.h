@@ -8,8 +8,6 @@
 // FiberTaskingLib is the legal property of Adrian Astley
 // Copyright Adrian Astley 2015 - 2018
 
-
-
 #pragma once
 
 #include <cstdint>
@@ -23,7 +21,7 @@ namespace boost_context {
 using fcontext_t = void *;
 
 extern "C" void jump_fcontext(fcontext_t *from, fcontext_t to, void *arg);
-extern "C" fcontext_t make_fcontext(void * sp, std::size_t size, void(*func)(void *));
+extern "C" fcontext_t make_fcontext(void *sp, size_t size, void (*func)(void *));
 // sp is the pointer to the _top_ of the stack (ie &stack_buffer[size]).
 
 } // End of namespace boost_context
