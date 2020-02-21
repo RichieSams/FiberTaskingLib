@@ -82,6 +82,7 @@ SetSourceGroup(NAME Util
 	             ../include/ftl/fiber.h
 	             ../include/ftl/fibtex.h
 	             ../include/ftl/thread_abstraction.h
+	             thread_abstraction.cpp
 	             ../include/ftl/thread_local.h
 	             ../include/ftl/wait_free_queue.h
 				 ../include/ftl/ftl_valgrind.h

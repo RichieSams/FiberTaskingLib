@@ -26,6 +26,18 @@
 
 #include "ftl/atomic_counter.h"
 
+#if defined(FTL_WIN32_THREADS)
+#	ifndef WIN32_LEAN_AND_MEAN
+#		define WIN32_LEAN_AND_MEAN
+#	endif
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	include <windows.h>
+#elif defined(FTL_POSIX_THREADS)
+#	include <pthread.h>
+#endif
+
 namespace ftl {
 
 constexpr static size_t kFailedPopAttemptsHeuristic = 5;
@@ -244,9 +256,8 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	m_threads.resize(m_numThreads);
 #ifdef _MSC_VER
 #	pragma warning(push)
-#	pragma warning(                                                                                                                       \
-	    disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
-#endif                  // _MSC_VER
+#	pragma warning(disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
+#endif                              // _MSC_VER
 	m_tls = new ThreadLocalStorage[m_numThreads];
 #ifdef _MSC_VER
 #	pragma warning(pop)
@@ -359,25 +370,33 @@ void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, Atomi
 	}
 }
 
-FTL_NOINLINE_POSIX size_t TaskScheduler::GetCurrentThreadIndex() {
 #if defined(FTL_WIN32_THREADS)
-	DWORD const threadId = GetCurrentThreadId();
+
+size_t TaskScheduler::GetCurrentThreadIndex() {
+	DWORD const threadId = ::GetCurrentThreadId();
 	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (m_threads[i].Id == threadId) {
 			return i;
 		}
 	}
+
+	return kFTLInvalidIndex;
+}
+
 #elif defined(FTL_POSIX_THREADS)
+
+FTL_NOINLINE_POSIX size_t TaskScheduler::GetCurrentThreadIndex() {
 	pthread_t const currentThread = pthread_self();
 	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (pthread_equal(currentThread, m_threads[i]) != 0) {
 			return i;
 		}
 	}
-#endif
 
 	return kFTLInvalidIndex;
 }
+
+#endif
 
 bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 	size_t const currentThreadIndex = GetCurrentThreadIndex();

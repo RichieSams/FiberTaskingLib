@@ -34,6 +34,7 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #	define FTL_OS_WINDOWS
 #elif defined(__APPLE__)
+#	define FTL_OS_APPLE
 #	include "TargetConditionals.h"
 
 #	if defined(TARGET_OS_MAC)
