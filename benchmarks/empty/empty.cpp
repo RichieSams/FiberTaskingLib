@@ -28,8 +28,8 @@
 #include <nonius/nonius.hpp>
 
 // Constants
-constexpr static uint kNumTasks = 65000;
-constexpr static uint kNumIterations = 1;
+constexpr static unsigned kNumTasks = 65000;
+constexpr static unsigned kNumIterations = 1;
 
 void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 	// No-Op
@@ -39,12 +39,12 @@ void EmptyBenchmarkMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
 
 	auto *tasks = new ftl::Task[kNumTasks];
-	for (uint i = 0; i < kNumTasks; ++i) {
+	for (unsigned i = 0; i < kNumTasks; ++i) {
 		tasks[i] = {EmptyBenchmarkTask, nullptr};
 	}
 
 	meter.measure([=] {
-		for (uint i = 0; i < kNumIterations; ++i) {
+		for (unsigned i = 0; i < kNumIterations; ++i) {
 			ftl::AtomicCounter counter(taskScheduler);
 			taskScheduler->AddTasks(kNumTasks, tasks, &counter);
 

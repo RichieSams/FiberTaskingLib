@@ -71,7 +71,6 @@ SetSourceGroup(NAME Core
 	             ../include/ftl/atomic_counter.h
 	             atomic_counter.cpp
 	             ../include/ftl/task_scheduler.h
-				 ../include/ftl/typedefs.h
 	             task_scheduler.cpp
 )
 

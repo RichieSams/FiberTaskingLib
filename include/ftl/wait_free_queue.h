@@ -31,10 +31,11 @@
 #pragma once
 
 #include "ftl/assert.h"
-#include "ftl/typedefs.h"
 
 #include <atomic>
 #include <memory>
+#include <stddef.h>
+#include <stdint.h>
 #include <vector>
 
 namespace ftl {
@@ -101,15 +102,15 @@ private:
 
 #pragma warning(push)
 #pragma warning(disable : 4324) // MSVC warning C4324: structure was padded due to alignment specifier
-	alignas(kCacheLineSize) std::atomic<uint64> m_top;
-	alignas(kCacheLineSize) std::atomic<uint64> m_bottom;
+	alignas(kCacheLineSize) std::atomic<uint64_t> m_top;
+	alignas(kCacheLineSize) std::atomic<uint64_t> m_bottom;
 	alignas(kCacheLineSize) std::atomic<CircularArray *> m_array;
 #pragma warning(pop)
 
 public:
 	void Push(T value) {
-		uint64 b = m_bottom.load(std::memory_order_relaxed);
-		uint64 t = m_top.load(std::memory_order_acquire);
+		uint64_t b = m_bottom.load(std::memory_order_relaxed);
+		uint64_t t = m_top.load(std::memory_order_acquire);
 		CircularArray *array = m_array.load(std::memory_order_relaxed);
 
 		if (b - t > array->Size() - 1) {
@@ -129,13 +130,13 @@ public:
 	}
 
 	bool Pop(T *value) {
-		uint64 b = m_bottom.load(std::memory_order_relaxed) - 1;
+		uint64_t b = m_bottom.load(std::memory_order_relaxed) - 1;
 		CircularArray *const array = m_array.load(std::memory_order_relaxed);
 		m_bottom.store(b, std::memory_order_relaxed);
 
 		std::atomic_thread_fence(std::memory_order_seq_cst);
 
-		uint64 t = m_top.load(std::memory_order_relaxed);
+		uint64_t t = m_top.load(std::memory_order_relaxed);
 		bool result = true;
 		if (t <= b) {
 			/* Non-empty queue. */
@@ -159,7 +160,7 @@ public:
 	}
 
 	bool Steal(T *const value) {
-		uint64 t = m_top.load(std::memory_order_acquire);
+		uint64_t t = m_top.load(std::memory_order_acquire);
 
 #if defined(FTL_STRONG_MEMORY_MODEL)
 		std::atomic_signal_fence(std::memory_order_seq_cst);
@@ -167,7 +168,7 @@ public:
 		std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
 
-		uint64 const b = m_bottom.load(std::memory_order_acquire);
+		uint64_t const b = m_bottom.load(std::memory_order_acquire);
 		if (t < b) {
 			/* Non-empty queue. */
 			CircularArray *const array = m_array.load(std::memory_order_consume);

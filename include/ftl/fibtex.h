@@ -48,7 +48,7 @@ public:
 	 * @param taskScheduler    ftl::TaskScheduler that will be using this mutex.
 	 * @param fiberSlots       How many fibers can simultaneously wait on the mutex
 	 */
-	explicit Fibtex(TaskScheduler *taskScheduler, uint fiberSlots = NUM_WAITING_FIBER_SLOTS)
+	explicit Fibtex(TaskScheduler *taskScheduler, unsigned fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : m_ableToSpin(taskScheduler->GetThreadCount() > 1), m_taskScheduler(taskScheduler),
 	          m_atomicCounter(taskScheduler, 0, fiberSlots) {
 	}
@@ -81,7 +81,7 @@ public:
 	 * @param iterations     Amount of iterations to spin before yielding.
 	 */
 	// ReSharper disable once CppInconsistentNaming
-	void lock_spin(bool const pinToThread = false, uint const iterations = 1000) {
+	void lock_spin(bool const pinToThread = false, unsigned const iterations = 1000) {
 		// Don't spin if there is only one thread and spinning is pointless
 		if (!m_ableToSpin) {
 			lock(pinToThread);
@@ -89,7 +89,7 @@ public:
 		}
 
 		// Spin for a bit
-		for (uint i = 0; i < iterations; ++i) {
+		for (unsigned i = 0; i < iterations; ++i) {
 			// Spin
 			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
 				return;
@@ -164,7 +164,7 @@ public:
 	 * @param pinToThread       If the fiber should resume on the same thread as it started on pre-lock.
 	 * @param spinIterations    If behavior == Spin, this gives the amount of iterations to spin before yielding. Ignored otherwise.
 	 */
-	LockWrapper(Fibtex &mutex, FibtexLockBehavior behavior, bool pinToThread = false, uint spinIterations = 1000)
+	LockWrapper(Fibtex &mutex, FibtexLockBehavior behavior, bool pinToThread = false, unsigned spinIterations = 1000)
 	        : m_mutex(mutex), m_pinToThread(pinToThread), m_behavior(behavior), m_spinIterations(spinIterations) {
 	}
 	/**
@@ -202,7 +202,7 @@ private:
 	Fibtex &m_mutex;
 	bool m_pinToThread;
 	FibtexLockBehavior m_behavior;
-	uint m_spinIterations;
+	unsigned m_spinIterations;
 };
 
 } // namespace ftl

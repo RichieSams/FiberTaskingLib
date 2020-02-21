@@ -25,7 +25,8 @@
 #pragma once
 
 #include "ftl/config.h"
-#include "ftl/typedefs.h"
+
+#include <stddef.h>
 
 // Forward declare the platform types so we don't have to include their heavy header files
 #if defined(FTL_WIN32_THREADS)
@@ -140,6 +141,6 @@ void YieldThread();
  *
  * @return    The number of hardware threads
  */
-uint GetNumHardwareThreads();
+unsigned GetNumHardwareThreads();
 
 } // namespace ftl

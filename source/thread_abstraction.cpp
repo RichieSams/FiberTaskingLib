@@ -217,7 +217,7 @@ bool SetCurrentThreadAffinity(size_t coreAffinity) {
 }
 
 void SleepThread(int msDuration) {
-	usleep(static_cast<uint>(msDuration) * 1000);
+	usleep(static_cast<unsigned>(msDuration) * 1000);
 }
 
 void YieldThread() {
@@ -236,7 +236,7 @@ void YieldThread() {
 
 namespace ftl {
 
-uint GetNumHardwareThreads() {
+unsigned GetNumHardwareThreads() {
 	return std::thread::hardware_concurrency();
 }
 

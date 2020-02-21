@@ -44,13 +44,13 @@ constexpr static size_t kFailedPopAttemptsHeuristic = 5;
 
 struct ThreadStartArgs {
 	TaskScheduler *Scheduler;
-	uint ThreadIndex;
+	unsigned ThreadIndex;
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStart(void *const arg) {
 	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
-	uint const index = threadArgs->ThreadIndex;
+	unsigned const index = threadArgs->ThreadIndex;
 
 	// Clean up
 	delete threadArgs;
@@ -227,7 +227,7 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, uint const threadPoolSize,
+void TaskScheduler::Run(unsigned const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, unsigned const threadPoolSize,
                         EmptyQueueBehavior const behavior) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
@@ -240,7 +240,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	m_freeFibers = new std::atomic<bool>[fiberPoolSize];
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * fiberPoolSize);
 
-	for (uint i = 0; i < fiberPoolSize; ++i) {
+	for (unsigned i = 0; i < fiberPoolSize; ++i) {
 		m_fibers[i] = Fiber(512000, FiberStart, this);
 		m_freeFibers[i].store(true, std::memory_order_release);
 	}
@@ -276,7 +276,7 @@ void TaskScheduler::Run(uint const fiberPoolSize, TaskFunction const mainTask, v
 	for (size_t i = 1; i < m_numThreads; ++i) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
-		threadArgs->ThreadIndex = static_cast<uint>(i);
+		threadArgs->ThreadIndex = static_cast<unsigned>(i);
 
 		char threadName[256];
 		snprintf(threadName, sizeof(threadName), "FTL Worker Thread %zu", i);
@@ -346,13 +346,13 @@ void TaskScheduler::AddTask(Task const task, AtomicCounter *const counter) {
 	}
 }
 
-void TaskScheduler::AddTasks(uint const numTasks, Task const *const tasks, AtomicCounter *const counter) {
+void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, AtomicCounter *const counter) {
 	if (counter != nullptr) {
 		counter->FetchAdd(numTasks);
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-	for (uint i = 0; i < numTasks; ++i) {
+	for (unsigned i = 0; i < numTasks; ++i) {
 		const TaskBundle bundle = {tasks[i], counter};
 		tls.TaskQueue.Push(bundle);
 	}
@@ -425,7 +425,7 @@ bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 }
 
 size_t TaskScheduler::GetNextFreeFiberIndex() const {
-	for (uint j = 0;; ++j) {
+	for (unsigned j = 0;; ++j) {
 		for (size_t i = 0; i < m_fiberPoolSize; ++i) {
 			// Double lock
 			if (!m_freeFibers[i].load(std::memory_order_relaxed)) {
@@ -545,7 +545,7 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, size_t fiberIn
 	}
 }
 
-void TaskScheduler::WaitForCounter(AtomicCounter *const counter, uint const value, bool const pinToCurrentThread) {
+void TaskScheduler::WaitForCounter(AtomicCounter *const counter, unsigned const value, bool const pinToCurrentThread) {
 	// Fast out
 	if (counter->Load(std::memory_order_relaxed) == value) {
 		// wait for threads to drain from counter logic, otherwise we might continue too early

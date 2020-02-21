@@ -26,7 +26,8 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <numeric>
 
 namespace threadLocalTests {
@@ -56,7 +57,7 @@ void MainTask(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	std::vector<ftl::Task> singleInitTask(scheduler->GetThreadCount(), ftl::Task{SimpleInit, nullptr});
 
 	ftl::AtomicCounter ac(scheduler);
-	scheduler->AddTasks(static_cast<uint>(singleInitTask.size()), singleInitTask.data(), &ac);
+	scheduler->AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), &ac);
 	scheduler->WaitForCounter(&ac, 0);
 
 	auto singleInitVals = SingleInitSingleton(scheduler).GetAllValues();
@@ -66,7 +67,7 @@ void MainTask(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	// Side Effects
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, nullptr});
 
-	scheduler->AddTasks(static_cast<uint>(sideEffectTask.size()), sideEffectTask.data(), &ac);
+	scheduler->AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), &ac);
 	scheduler->WaitForCounter(&ac, 0);
 
 	auto sideEffect = SideEffectSingleton(scheduler).GetAllValues();
