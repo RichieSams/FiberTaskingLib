@@ -95,8 +95,8 @@
 
 namespace ftl {
 #ifdef __cpp_lib_hardware_interference_size
-constexpr static std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+constexpr static size_t kCacheLineSize = std::hardware_destructive_interference_size;
 #else
-constexpr static std::size_t kCacheLineSize = 64;
+constexpr static size_t kCacheLineSize = 64;
 #endif
 } // namespace ftl

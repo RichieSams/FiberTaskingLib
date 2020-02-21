@@ -46,11 +46,11 @@ class AtomicCounter {
  * This value defines how many fibers can simultaneously wait on a counter
  * If a user tries to have more fibers wait on a counter, the fiber will not be tracked,
  * which will cause WaitForCounter() to infinitely sleep. This will probably cause a hang.
- * 
+ *
  * Do NOT set this by definition either in your build or before you include the header.
  * This macro must be the same value throughout the whole build. Update the value within
  * cmake using the following:
- * 
+ *
  * set(FTL_NUM_WAITING_FIBER_SLOTS <value> CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait" FORCE)
  */
 #ifndef NUM_WAITING_FIBER_SLOTS
@@ -93,7 +93,7 @@ private:
 		 */
 		std::atomic<bool> InUse;
 		/* The index of the fiber that is waiting on this counter */
-		std::size_t FiberIndex{0};
+		size_t FiberIndex{0};
 		/* The value the fiber is waiting for */
 		uint TargetValue{0};
 		/**
@@ -103,9 +103,9 @@ private:
 		std::atomic<bool> *FiberStoredFlag{nullptr};
 		/**
 		 * The index of the thread this fiber is pinned to
-		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<std::size_t>::max()
+		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<size_t>::max()
 		 */
-		std::size_t PinnedThreadIndex;
+		size_t PinnedThreadIndex;
 	};
 	/**
 	 * The storage for the fibers waiting on this counter
@@ -232,11 +232,11 @@ private:
 	 * @param fiberIndex           The index of the fiber that is waiting
 	 * @param targetValue          The target value the fiber is waiting for
 	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
-	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<std::size_t>::max(), the fiber can be resumed on any thread
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(std::size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag,
-	                           std::size_t pinnedThreadIndex = std::numeric_limits<std::size_t>::max());
+	bool AddFiberToWaitingList(size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag,
+	                           size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue

@@ -65,8 +65,8 @@ void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 
 	ftl::AtomicCounter c(taskScheduler);
 
-	constexpr std::size_t iterations = 20000;
-	for (std::size_t i = 0; i < iterations; ++i) {
+	constexpr size_t iterations = 20000;
+	for (size_t i = 0; i < iterations; ++i) {
 		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
 		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
 		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);

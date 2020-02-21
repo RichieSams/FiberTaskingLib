@@ -50,10 +50,10 @@ namespace ftl {
 
 inline void MemoryGuard(void *memory, size_t bytes);
 inline void MemoryGuardRelease(void *memory, size_t bytes);
-inline std::size_t SystemPageSize();
-inline void *AlignedAlloc(std::size_t size, std::size_t alignment);
+inline size_t SystemPageSize();
+inline void *AlignedAlloc(size_t size, size_t alignment);
 inline void AlignedFree(void *block);
-inline std::size_t RoundUp(std::size_t numToRound, std::size_t multiple);
+inline size_t RoundUp(size_t numToRound, size_t multiple);
 
 using FiberStartRoutine = void (*)(void *arg);
 
@@ -72,7 +72,7 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(std::size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg) : m_arg(arg) {
+	Fiber(size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg) : m_arg(arg) {
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 		m_systemPageSize = SystemPageSize();
 #else
@@ -139,8 +139,8 @@ public:
 
 private:
 	void *m_stack{nullptr};
-	std::size_t m_systemPageSize{0};
-	std::size_t m_stackSize{0};
+	size_t m_systemPageSize{0};
+	size_t m_stackSize{0};
 	boost_context::fcontext_t m_context{nullptr};
 	void *m_arg{nullptr};
 	FTL_VALGRIND_ID
@@ -202,12 +202,12 @@ inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	FTL_ASSERT("mprotect", !result);
 }
 
-inline std::size_t SystemPageSize() {
-	auto const pageSize = static_cast<std::size_t>(getpagesize());
+inline size_t SystemPageSize() {
+	auto const pageSize = static_cast<size_t>(getpagesize());
 	return pageSize;
 }
 
-inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
+inline void *AlignedAlloc(size_t const size, size_t const alignment) {
 	void *returnPtr;
 	posix_memalign(&returnPtr, alignment, size);
 
@@ -232,13 +232,13 @@ inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	FTL_ASSERT("VirtualProtect", result);
 }
 
-inline std::size_t SystemPageSize() {
+inline size_t SystemPageSize() {
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
 	return sysInfo.dwPageSize;
 }
 
-inline void *AlignedAlloc(std::size_t const size, std::size_t const alignment) {
+inline void *AlignedAlloc(size_t const size, size_t const alignment) {
 	return _aligned_malloc(size, alignment);
 }
 
@@ -259,11 +259,11 @@ inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	(void)bytes;
 }
 
-inline std::size_t SystemPageSize() {
+inline size_t SystemPageSize() {
 	return 0;
 }
 
-inline void *AlignedAlloc(std::size_t const size, std::size_t const /*alignment*/) {
+inline void *AlignedAlloc(size_t const size, size_t const /*alignment*/) {
 	return malloc(size);
 }
 
@@ -272,12 +272,12 @@ inline void AlignedFree(void *const block) {
 }
 #endif
 
-inline std::size_t RoundUp(std::size_t const numToRound, std::size_t const multiple) {
+inline size_t RoundUp(size_t const numToRound, size_t const multiple) {
 	if (multiple == 0) {
 		return numToRound;
 	}
 
-	std::size_t const remainder = numToRound % multiple;
+	size_t const remainder = numToRound % multiple;
 	if (remainder == 0) {
 		return numToRound;
 	}

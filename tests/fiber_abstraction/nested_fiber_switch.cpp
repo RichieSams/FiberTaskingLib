@@ -153,7 +153,7 @@ void SixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
-constexpr static std::size_t kHalfMebibyte = 524288;
+constexpr static size_t kHalfMebibyte = 524288;
 
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 TEST(FiberAbstraction, NestedFiberSwitch) {

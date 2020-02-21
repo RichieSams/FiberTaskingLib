@@ -60,13 +60,13 @@ AtomicCounter::~AtomicCounter() {
 	delete[] m_waitingFibers;
 }
 
-AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThreadIndex(std::numeric_limits<std::size_t>::max()) {
+AtomicCounter::WaitingFiberBundle::WaitingFiberBundle() : InUse(true), PinnedThreadIndex(std::numeric_limits<size_t>::max()) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint const targetValue, std::atomic<bool> *const fiberStoredFlag,
-                                          std::size_t const pinnedThreadIndex) {
-	for (std::size_t i = 0; i < m_fiberSlots; ++i) {
+bool AtomicCounter::AddFiberToWaitingList(size_t const fiberIndex, uint const targetValue, std::atomic<bool> *const fiberStoredFlag,
+                                          size_t const pinnedThreadIndex) {
+	for (size_t i = 0; i < m_fiberSlots; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst,
@@ -120,7 +120,7 @@ bool AtomicCounter::AddFiberToWaitingList(std::size_t const fiberIndex, uint con
 }
 
 void AtomicCounter::CheckWaitingFibers(uint const value) {
-	for (std::size_t i = 0; i < m_fiberSlots; ++i) {
+	for (size_t i = 0; i < m_fiberSlots; ++i) {
 		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;
