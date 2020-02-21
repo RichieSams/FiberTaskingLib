@@ -25,16 +25,17 @@
 #include "ftl/fibtex.h"
 #include "ftl/task_scheduler.h"
 
+#include "gtest/gtest.h"
+
 #include <atomic>
-#include <gtest/gtest.h>
 
 struct MutexData {
 	MutexData(ftl::TaskScheduler *scheduler) : Lock(scheduler, 6), Counter(0) {
 	}
 
 	ftl::Fibtex Lock;
-	uint Counter;
-	std::vector<uint> Queue;
+	unsigned Counter;
+	std::vector<unsigned> Queue;
 };
 
 void LockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
@@ -79,7 +80,7 @@ void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 
 	GTEST_ASSERT_EQ(md.Counter, 6 * iterations);
 	GTEST_ASSERT_EQ(md.Queue.size(), 6 * iterations);
-	for (uint i = 0; i < md.Counter; ++i) {
+	for (unsigned i = 0; i < md.Counter; ++i) {
 		GTEST_ASSERT_EQ(md.Queue[i], i);
 	}
 }

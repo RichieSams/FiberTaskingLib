@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include "ftl/typedefs.h"
-
 #include <atomic>
 #include <limits>
 #include <thread>
@@ -36,7 +34,7 @@ namespace ftl {
 class TaskScheduler;
 
 /**
- * AtomicCounter is a wrapper over a C++11 atomic_uint
+ * AtomicCounter is a wrapper over a C++11 atomic_unsigned
  * In FiberTaskingLib, AtomicCounter is used to create dependencies between Tasks, and
  * is how you wait for a set of Tasks to finish.
  */
@@ -58,7 +56,8 @@ class AtomicCounter {
 #endif
 
 public:
-	explicit AtomicCounter(TaskScheduler *taskScheduler, uint initialValue = 0, uint fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	explicit AtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0,
+	                       size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 	AtomicCounter(AtomicCounter const &) = delete;
 	AtomicCounter(AtomicCounter &&) noexcept = delete;
@@ -70,9 +69,9 @@ private:
 	/* The TaskScheduler this counter is associated with */
 	TaskScheduler *m_taskScheduler;
 	/* The atomic counter holding our data */
-	std::atomic_uint m_value;
+	std::atomic<unsigned> m_value;
 	/* An atomic counter to ensure the instance can't be destroyed while other threads are still inside a function */
-	std::atomic_uint m_lock;
+	std::atomic<unsigned> m_lock;
 	/**
 	 * An array that signals which slots in m_waitingFibers are free to be used
 	 * True: Free
@@ -95,7 +94,7 @@ private:
 		/* The index of the fiber that is waiting on this counter */
 		size_t FiberIndex{0};
 		/* The value the fiber is waiting for */
-		uint TargetValue{0};
+		unsigned TargetValue{0};
 		/**
 		 * A flag signaling if the fiber has been successfully switched out of and "cleaned up"
 		 * See TaskScheduler::CleanUpOldFiber()
@@ -118,7 +117,7 @@ private:
 	/**
 	 * The number of elements in m_freeSlots and m_waitingFibers
 	 */
-	uint m_fiberSlots;
+	size_t m_fiberSlots;
 
 	/**
 	 * We friend TaskScheduler so we can keep AddFiberToWaitingList() private
@@ -128,30 +127,30 @@ private:
 
 public:
 	/**
-	 * A wrapper over std::atomic_uint::load()
+	 * A wrapper over std::atomic_unsigned::load()
 	 *
 	 * The load *will* be atomic, but this function as a whole is *not* atomic
 	 *
 	 * @param memoryOrder    The memory order to use for the load
 	 * @return               The current value of the counter
 	 */
-	uint Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+	unsigned Load(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
-		uint ret = m_value.load(memoryOrder);
+		unsigned ret = m_value.load(memoryOrder);
 
 		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 		return ret;
 	}
 	/**
-	 * A wrapper over std::atomic_uint::store()
+	 * A wrapper over std::atomic_unsigned::store()
 	 *
 	 * The store *will* be atomic, but this function as a whole is *not* atomic
 	 *
 	 * @param x              The value to load into the counter
 	 * @param memoryOrder    The memory order to use for the store
 	 */
-	void Store(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+	void Store(unsigned const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
 		m_value.store(x, memoryOrder);
@@ -160,7 +159,7 @@ public:
 		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 	}
 	/**
-	 * A wrapper over std::atomic_uint::fetch_add()
+	 * A wrapper over std::atomic_unsigned::fetch_add()
 	 *
 	 * The fetch_add *will* be atomic, but this function as a whole is *not* atomic
 	 *
@@ -168,17 +167,17 @@ public:
 	 * @param memoryOrder    The memory order to use for the fetch_add
 	 * @return               The value of the counter before the addition
 	 */
-	uint FetchAdd(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+	unsigned FetchAdd(unsigned const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
-		const uint prev = m_value.fetch_add(x, memoryOrder);
+		const unsigned prev = m_value.fetch_add(x, memoryOrder);
 		CheckWaitingFibers(prev + x);
 
 		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
 		return prev;
 	}
 	/**
-	 * A wrapper over std::atomic_uint::fetch_sub()
+	 * A wrapper over std::atomic_unsigned::fetch_sub()
 	 *
 	 * The fetch_sub *will* be atomic, but this function as a whole is *not* atomic
 	 *
@@ -186,10 +185,10 @@ public:
 	 * @param memoryOrder    The memory order to use for the fetch_sub
 	 * @return               The value of the counter before the subtraction
 	 */
-	uint FetchSub(uint const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+	unsigned FetchSub(unsigned const x, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
-		const uint prev = m_value.fetch_sub(x, memoryOrder);
+		const unsigned prev = m_value.fetch_sub(x, memoryOrder);
 		CheckWaitingFibers(prev - x);
 
 		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
@@ -197,7 +196,7 @@ public:
 	}
 
 	/**
-	 * A wrapper over std::atomic_uint::compare_exchange_strong()
+	 * A wrapper over std::atomic_unsigned::compare_exchange_strong()
 	 *
 	 * The compare_exchange_strong *will* be atomic, but this function as a whole is *not* atomic
 	 *
@@ -206,7 +205,7 @@ public:
 	 * @param memoryOrder      The memory order to use for the compare_exchange_strong
 	 * @return                 If the compare_exchange_strong succeeded
 	 */
-	bool CompareExchange(uint expectedValue, uint const newValue, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+	bool CompareExchange(unsigned expectedValue, unsigned const newValue, std::memory_order const memoryOrder = std::memory_order_seq_cst) {
 		m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
 		bool const success = m_value.compare_exchange_strong(expectedValue, newValue, memoryOrder);
@@ -235,7 +234,7 @@ private:
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(size_t fiberIndex, uint targetValue, std::atomic<bool> *fiberStoredFlag,
+	bool AddFiberToWaitingList(size_t fiberIndex, unsigned targetValue, std::atomic<bool> *fiberStoredFlag,
 	                           size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
 
 	/**
@@ -245,7 +244,7 @@ private:
 	 *
 	 * @param value    The value to check
 	 */
-	void CheckWaitingFibers(uint value);
+	void CheckWaitingFibers(unsigned value);
 };
 
 } // End of namespace ftl

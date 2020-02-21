@@ -28,9 +28,9 @@
 #include <nonius/nonius.hpp>
 
 // Constants
-constexpr static uint kNumProducerTasks = 100U;
-constexpr static uint kNumConsumerTasks = 1000U;
-constexpr static uint kNumIterations = 1;
+constexpr static unsigned kNumProducerTasks = 100U;
+constexpr static unsigned kNumConsumerTasks = 1000U;
+constexpr static unsigned kNumIterations = 1;
 
 void Consumer(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 	// No-Op
@@ -38,7 +38,7 @@ void Consumer(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto *tasks = new ftl::Task[kNumConsumerTasks];
-	for (uint i = 0; i < kNumConsumerTasks; ++i) {
+	for (unsigned i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = {Consumer, arg};
 	}
 
@@ -53,12 +53,12 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
 
 	auto *tasks = new ftl::Task[kNumProducerTasks];
-	for (uint i = 0; i < kNumProducerTasks; ++i) {
+	for (unsigned i = 0; i < kNumProducerTasks; ++i) {
 		tasks[i] = {Producer, nullptr};
 	}
 
 	meter.measure([=] {
-		for (uint i = 0; i < kNumIterations; ++i) {
+		for (unsigned i = 0; i < kNumIterations; ++i) {
 			ftl::AtomicCounter counter(taskScheduler);
 			taskScheduler->AddTasks(kNumProducerTasks, tasks, &counter);
 

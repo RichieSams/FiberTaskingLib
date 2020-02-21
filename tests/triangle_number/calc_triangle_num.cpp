@@ -25,13 +25,13 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 struct NumberSubset {
-	uint64 Start;
-	uint64 End;
+	uint64_t Start;
+	uint64_t End;
 
-	uint64 Total;
+	uint64_t Total;
 };
 
 void AddNumberSubset(ftl::TaskScheduler * /*scheduler*/, void *arg) {
@@ -60,17 +60,17 @@ void AddNumberSubset(ftl::TaskScheduler * /*scheduler*/, void *arg) {
  */
 void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
 	// Define the constants to test
-	const uint64 triangleNum = 47593243ULL;
-	const uint64 numAdditionsPerTask = 10000ULL;
-	const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ULL) / numAdditionsPerTask;
+	const uint64_t triangleNum = 47593243ULL;
+	const uint64_t numAdditionsPerTask = 10000ULL;
+	const uint64_t numTasks = (triangleNum + numAdditionsPerTask - 1ULL) / numAdditionsPerTask;
 
 	// Create the tasks
 	auto *tasks = new ftl::Task[numTasks];
 	// We have to declare this on the heap so other threads can access it
 	auto *subsets = new NumberSubset[numTasks];
-	uint64 nextNumber = 1ULL;
+	uint64_t nextNumber = 1ULL;
 
-	for (uint64 i = 0ULL; i < numTasks; ++i) {
+	for (uint64_t i = 0ULL; i < numTasks; ++i) {
 		NumberSubset *subset = &subsets[i];
 
 		subset->Start = nextNumber;
@@ -92,8 +92,8 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
 	taskScheduler->WaitForCounter(&counter, 0);
 
 	// Add the results
-	uint64 result = 0ULL;
-	for (uint64 i = 0; i < numTasks; ++i) {
+	uint64_t result = 0ULL;
+	for (uint64_t i = 0; i < numTasks; ++i) {
 		result += subsets[i].Total;
 	}
 

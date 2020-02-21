@@ -24,9 +24,9 @@
 
 #include "ftl/fiber.h"
 
-#include <atomic>
+#include "gtest/gtest.h"
 
-#include <gtest/gtest.h>
+#include <atomic>
 
 struct MultipleFiberArg {
 	double Counter{0};

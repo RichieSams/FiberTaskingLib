@@ -23,14 +23,14 @@
  */
 
 #include "ftl/fiber.h"
-#include "ftl/typedefs.h"
+
+#include "gtest/gtest.h"
 
 #include <atomic>
-
-#include <gtest/gtest.h>
+#include <stdint.h>
 
 struct MultipleFiberArg {
-	uint64 Counter{0};
+	uint64_t Counter{0};
 	ftl::Fiber MainFiber;
 	ftl::Fiber FirstFiber;
 	ftl::Fiber SecondFiber;

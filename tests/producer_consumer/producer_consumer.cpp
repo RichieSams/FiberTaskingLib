@@ -25,21 +25,22 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include <array>
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
-constexpr static uint kNumProducerTasks = 100U;
-constexpr static uint kNumConsumerTasks = 10000U;
+#include <array>
+
+constexpr static unsigned kNumProducerTasks = 100U;
+constexpr static unsigned kNumConsumerTasks = 10000U;
 
 void Consumer(ftl::TaskScheduler * /*scheduler*/, void *arg) {
-	auto *globalCounter = reinterpret_cast<std::atomic_uint *>(arg);
+	auto *globalCounter = reinterpret_cast<std::atomic<unsigned> *>(arg);
 
 	globalCounter->fetch_add(1);
 }
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto *tasks = new ftl::Task[kNumConsumerTasks];
-	for (uint i = 0; i < kNumConsumerTasks; ++i) {
+	for (unsigned i = 0; i < kNumConsumerTasks; ++i) {
 		tasks[i] = {Consumer, arg};
 	}
 
@@ -51,7 +52,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
-	std::atomic_uint globalCounter(0U);
+	std::atomic<unsigned> globalCounter(0U);
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
 	std::array<ftl::Task, kNumProducerTasks> tasks{};

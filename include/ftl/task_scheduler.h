@@ -27,7 +27,6 @@
 #include "ftl/fiber.h"
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
-#include "ftl/typedefs.h"
 #include "ftl/wait_free_queue.h"
 
 #include <atomic>
@@ -70,7 +69,7 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static size_t kFTLInvalidIndex = UINT_MAX;
+	constexpr static size_t kFTLInvalidIndex = std::numeric_limits<size_t>::max();
 
 	size_t m_numThreads{0};
 	std::vector<ThreadType> m_threads;
@@ -106,13 +105,13 @@ private:
 	};
 
 	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(size_t const fiberIndex, AtomicCounter *const counter, uint const targetValue)
+		PinnedWaitingFiberBundle(size_t const fiberIndex, AtomicCounter *const counter, unsigned const targetValue)
 		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
 		size_t FiberIndex;
 		AtomicCounter *Counter;
-		uint TargetValue;
+		unsigned TargetValue;
 	};
 
 	struct alignas(kCacheLineSize) ThreadLocalStorage {
@@ -143,7 +142,7 @@ private:
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
 		std::vector<std::pair<size_t, std::atomic<bool> *>> ReadyFibers;
 		std::mutex ReadyFibersLock;
-		uint32 FailedQueuePopAttempts{0};
+		unsigned FailedQueuePopAttempts{0};
 		/**
 		 * This lock is used with the CV below to put threads to sleep when there
 		 * is no work to do. It also protects accesses to FailedQueuePopAttempts.
@@ -187,7 +186,7 @@ public:
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 * @param behavior          The behavior of the threads after they have no work to do.
 	 */
-	void Run(uint fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, uint threadPoolSize = 0,
+	void Run(unsigned fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, unsigned threadPoolSize = 0,
 	         EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
 
 	/**
@@ -206,7 +205,7 @@ public:
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to
 	 * numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(uint numTasks, Task const *tasks, AtomicCounter *counter = nullptr);
+	void AddTasks(unsigned numTasks, Task const *tasks, AtomicCounter *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -215,7 +214,7 @@ public:
 	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(AtomicCounter *counter, uint value, bool pinToCurrentThread = false);
+	void WaitForCounter(AtomicCounter *counter, unsigned value, bool pinToCurrentThread = false);
 
 	/**
 	 * Gets the 0-based index of the current thread

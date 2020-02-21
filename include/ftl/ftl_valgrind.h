@@ -28,7 +28,7 @@
 #	include <valgrind/helgrind.h>
 #	include <valgrind/valgrind.h>
 
-#	define FTL_VALGRIND_ID uint m_stackId
+#	define FTL_VALGRIND_ID unsigned m_stackId
 #	define FTL_VALGRIND_REGISTER(s, e) m_stackId = VALGRIND_STACK_REGISTER(s, e)
 #	define FTL_VALGRIND_DEREGISTER() VALGRIND_STACK_DEREGISTER(m_stackId)
 
