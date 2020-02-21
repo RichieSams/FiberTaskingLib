@@ -101,7 +101,7 @@ clean_windows:
 
 
 format:
-	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:8 /bin/bash tools/format.sh
+	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:latest /bin/bash tools/format.sh
 
 lint:
 	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:latest /bin/bash tools/lint-clang.sh

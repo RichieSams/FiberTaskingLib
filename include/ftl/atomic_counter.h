@@ -56,8 +56,7 @@ class AtomicCounter {
 #endif
 
 public:
-	explicit AtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0,
-	                       size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	explicit AtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 	AtomicCounter(AtomicCounter const &) = delete;
 	AtomicCounter(AtomicCounter &&) noexcept = delete;
@@ -234,8 +233,7 @@ private:
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(size_t fiberIndex, unsigned targetValue, std::atomic<bool> *fiberStoredFlag,
-	                           size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
+	bool AddFiberToWaitingList(size_t fiberIndex, unsigned targetValue, std::atomic<bool> *fiberStoredFlag, size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue

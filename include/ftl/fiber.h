@@ -72,7 +72,8 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg) : m_arg(arg) {
+	Fiber(size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg)
+	        : m_arg(arg) {
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 		m_systemPageSize = SystemPageSize();
 #else
@@ -110,7 +111,8 @@ public:
 	 *
 	 * @return
 	 */
-	Fiber(Fiber &&other) noexcept : Fiber() {
+	Fiber(Fiber &&other) noexcept
+	        : Fiber() {
 		Swap(*this, other);
 	}
 

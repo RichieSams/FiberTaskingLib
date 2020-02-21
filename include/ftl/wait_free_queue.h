@@ -66,7 +66,8 @@ public:
 private:
 	class CircularArray {
 	public:
-		explicit CircularArray(size_t const n) : m_items(n) {
+		explicit CircularArray(size_t const n)
+		        : m_items(n) {
 			FTL_ASSERT("n must be a power of 2", !(n == 0) && !(n & (n - 1)));
 		}
 
@@ -143,8 +144,7 @@ public:
 			*value = array->Get(b);
 			if (t == b) {
 				/* Single last element in queue. */
-				if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst,
-				                                                  std::memory_order_relaxed)) {
+				if (!std::atomic_compare_exchange_strong_explicit(&m_top, &t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed)) {
 					/* Failed race. */
 					result = false;
 				}

@@ -30,7 +30,8 @@
 #include <atomic>
 
 struct MutexData {
-	MutexData(ftl::TaskScheduler *scheduler) : Lock(scheduler, 6), Counter(0) {
+	MutexData(ftl::TaskScheduler *scheduler)
+	        : Lock(scheduler, 6), Counter(0) {
 	}
 
 	ftl::Fibtex Lock;

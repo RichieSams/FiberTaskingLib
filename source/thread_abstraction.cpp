@@ -76,8 +76,7 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
 	return returnThread != nullptr;
 }
 
-bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity,
-                  ThreadType *returnThread) {
+bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity, ThreadType *returnThread) {
 	returnThread->Handle =
 	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, (unsigned)stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 	SetThreadName(returnThread->Handle, name);
@@ -158,8 +157,7 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
 	return success == 0;
 }
 
-bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity,
-                  ThreadType *returnThread) {
+bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity, ThreadType *returnThread) {
 	(void)name;
 
 	pthread_attr_t threadAttr;
