@@ -63,7 +63,8 @@ public:
 	}
 
 private:
-	ThreadLocalHandle(ThreadLocal<T> &parent, T &v) : m_parent{parent}, m_value{v} {
+	ThreadLocalHandle(ThreadLocal<T> &parent, T &v)
+	        : m_parent{parent}, m_value{v} {
 	}
 
 	ThreadLocal<T> &m_parent;
@@ -82,7 +83,8 @@ class ThreadLocal {
 private:
 	template <class VpT>
 	struct alignas(kCacheLineSize) ValuePadder {
-		ValuePadder() : Value() {
+		ValuePadder()
+		        : Value() {
 		}
 		VpT Value;
 		bool Initialized = true;
@@ -97,10 +99,11 @@ public:
 
 #ifdef _MSC_VER
 #	pragma warning(push)
-#	pragma warning(                                                                                                                       \
+#	pragma warning( \
 	    disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
 #endif                  // _MSC_VER
-	explicit ThreadLocal(TaskScheduler *ts) : m_scheduler{ts}, m_initializer{}, m_data{new ValuePadder<T>[ts->GetThreadCount()]} {
+	explicit ThreadLocal(TaskScheduler *ts)
+	        : m_scheduler{ts}, m_initializer{}, m_data{new ValuePadder<T>[ts->GetThreadCount()]} {
 	}
 #ifdef _MSC_VER
 #	pragma warning(pop)

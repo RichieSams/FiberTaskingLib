@@ -115,7 +115,8 @@ private:
 	};
 
 	struct alignas(kCacheLineSize) ThreadLocalStorage {
-		ThreadLocalStorage() : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
+		ThreadLocalStorage()
+		        : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
 		}
 
 	public:
@@ -186,8 +187,7 @@ public:
 	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
 	 * @param behavior          The behavior of the threads after they have no work to do.
 	 */
-	void Run(unsigned fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, unsigned threadPoolSize = 0,
-	         EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
+	void Run(unsigned fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, unsigned threadPoolSize = 0, EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
 
 	/**
 	 * Adds a task to the internal queue.

@@ -227,8 +227,7 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_tls;
 }
 
-void TaskScheduler::Run(unsigned const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, unsigned const threadPoolSize,
-                        EmptyQueueBehavior const behavior) {
+void TaskScheduler::Run(unsigned const fiberPoolSize, TaskFunction const mainTask, void *const mainTaskArg, unsigned const threadPoolSize, EmptyQueueBehavior const behavior) {
 	// Initialize the flags
 	m_initialized.store(false, std::memory_order::memory_order_release);
 	m_quit.store(false, std::memory_order_release);
@@ -437,8 +436,7 @@ size_t TaskScheduler::GetNextFreeFiberIndex() const {
 			}
 
 			bool expected = true;
-			if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &expected, false, std::memory_order_release,
-			                                               std::memory_order_relaxed)) {
+			if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &expected, false, std::memory_order_release, std::memory_order_relaxed)) {
 				return i;
 			}
 		}

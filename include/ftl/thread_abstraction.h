@@ -95,8 +95,7 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
  * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
  * @return                True if thread creation succeeds, false if it fails
  */
-bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity,
-                  ThreadType *returnThread);
+bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity, ThreadType *returnThread);
 
 /**
  * Get the current thread

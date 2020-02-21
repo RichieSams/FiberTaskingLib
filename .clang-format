@@ -18,8 +18,8 @@ AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 BraceWrapping:   
   AfterClass:      false
   AfterControlStatement: false
@@ -43,7 +43,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeColon
 BreakStringLiterals: true
-ColumnLimit:     140
+ColumnLimit:     0
 CommentPragmas: '^ ?@'  # Javadoc
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
