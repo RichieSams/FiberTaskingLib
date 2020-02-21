@@ -222,7 +222,7 @@ public:
 	 *
 	 * @return    The index of the current thread
 	 */
-	FTL_NOINLINE_POSIX size_t GetCurrentThreadIndex();
+	FTL_NOINLINE size_t GetCurrentThreadIndex();
 
 	/**
 	 * Gets the amount of backing threads.

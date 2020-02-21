@@ -371,7 +371,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, A
 
 #if defined(FTL_WIN32_THREADS)
 
-size_t TaskScheduler::GetCurrentThreadIndex() {
+FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() {
 	DWORD const threadId = ::GetCurrentThreadId();
 	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (m_threads[i].Id == threadId) {
@@ -384,7 +384,7 @@ size_t TaskScheduler::GetCurrentThreadIndex() {
 
 #elif defined(FTL_POSIX_THREADS)
 
-FTL_NOINLINE_POSIX size_t TaskScheduler::GetCurrentThreadIndex() {
+FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() {
 	pthread_t const currentThread = pthread_self();
 	for (size_t i = 0; i < m_numThreads; ++i) {
 		if (pthread_equal(currentThread, m_threads[i]) != 0) {
