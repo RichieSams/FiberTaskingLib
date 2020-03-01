@@ -45,11 +45,6 @@ if (FTL_FIBER_STACK_GUARD_PAGES)
 	add_definitions(-DFTL_FIBER_STACK_GUARD_PAGES=1)
 endif()
 
-# CTest needs to be included as soon as possible
-if (FTL_BUILD_TESTS)
-	include(CTest)
-endif()
-
 # MSVC Iterator Issues
 if (MSVC)
 	add_definitions(-D_ITERATOR_DEBUG_LEVEL=1)

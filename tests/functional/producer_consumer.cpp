@@ -25,15 +25,17 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "nonius/nonius.hpp"
+#include "catch2/catch.hpp"
 
-// Constants
+#include <array>
+
 constexpr static unsigned kNumProducerTasks = 100U;
-constexpr static unsigned kNumConsumerTasks = 1000U;
-constexpr static unsigned kNumIterations = 1;
+constexpr static unsigned kNumConsumerTasks = 10000U;
 
-void Consumer(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
-	// No-Op
+void Consumer(ftl::TaskScheduler * /*scheduler*/, void *arg) {
+	auto *globalCounter = reinterpret_cast<std::atomic<unsigned> *>(arg);
+
+	globalCounter->fetch_add(1);
 }
 
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
@@ -49,26 +51,25 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	taskScheduler->WaitForCounter(&counter, 0);
 }
 
-NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
+/**
+ * Tests that all scheduled tasks finish properly
+ */
+TEST_CASE("Producer Consumer", "[functional]") {
 	ftl::TaskScheduler taskScheduler;
-	ftl::TaskSchedulerInitOptions options;
-	options.ThreadPoolSize = kNumProducerTasks + 20;
-	taskScheduler.Init(options);
+	REQUIRE(taskScheduler.Init() == 0);
 
-	auto *tasks = new ftl::Task[kNumProducerTasks];
-	for (unsigned i = 0; i < kNumProducerTasks; ++i) {
-		tasks[i] = {Producer, nullptr};
+	std::atomic<unsigned> globalCounter(0U);
+	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
+
+	std::array<ftl::Task, kNumProducerTasks> tasks{};
+	for (auto &&task : tasks) {
+		task = {Producer, &globalCounter};
 	}
 
-	meter.measure([&taskScheduler, tasks] {
-		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::AtomicCounter counter(&taskScheduler);
-			taskScheduler.AddTasks(kNumProducerTasks, tasks, &counter);
+	ftl::AtomicCounter counter(&taskScheduler);
+	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), &counter);
+	taskScheduler.WaitForCounter(&counter, 0);
 
-			taskScheduler.WaitForCounter(&counter, 0);
-		}
-	});
-
-	// Cleanup
-	delete[] tasks;
-})
+	// Test to see that all tasks finished
+	REQUIRE(kNumProducerTasks * kNumConsumerTasks == globalCounter.load());
+}

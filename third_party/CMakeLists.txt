@@ -22,12 +22,9 @@
  # limitations under the License.
  ##
 
-# GTest
+# Catch2
 if (FTL_BUILD_TESTS)
-	SET(gtest_force_shared_crt ON CACHE BOOL "Use the dll runtime" )
-	add_subdirectory(gtest)
-	set_target_properties(gtest PROPERTIES FOLDER third_party)
-	set_target_properties(gtest_main PROPERTIES FOLDER third_party)
+	add_subdirectory(catch2)
 endif()
 
 # Boost Context
@@ -35,5 +32,4 @@ add_subdirectory(boost_context)
 set_target_properties(boost_context PROPERTIES FOLDER third_party)
 
 # Nonius
-add_library(nonius INTERFACE)
-target_include_directories(nonius SYSTEM INTERFACE nonius/include)
+add_subdirectory(nonius)

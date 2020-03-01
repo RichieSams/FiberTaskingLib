@@ -1,0 +1,3 @@
+v2.11.1
+
+https://github.com/catchorg/Catch2/releases/tag/v2.11.1

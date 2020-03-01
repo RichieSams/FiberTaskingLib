@@ -24,7 +24,7 @@
 
 #include "ftl/fiber.h"
 
-#include "gtest/gtest.h"
+#include "catch2/catch.hpp"
 
 #include <atomic>
 #include <stdint.h>
@@ -49,7 +49,7 @@ void FirstLevelFiberStart(void *arg) {
 	// Return from sixth
 	// We just finished 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1
 	// Let's do an intermediate check
-	GTEST_ASSERT_EQ(((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL), singleFiberArg->Counter);
+	REQUIRE(((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) == singleFiberArg->Counter);
 
 	// Now run the rest of the sequence
 	singleFiberArg->Counter *= 4;
@@ -153,10 +153,9 @@ void SixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
-constexpr static size_t kHalfMebibyte = 524288;
+TEST_CASE("Nested Fiber Switch", "[fiber]") {
+	constexpr size_t kHalfMebibyte = 524288;
 
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FiberAbstraction, NestedFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0ULL;
 	singleFiberArg.FirstFiber = ftl::Fiber(kHalfMebibyte, FirstLevelFiberStart, &singleFiberArg);
@@ -171,8 +170,5 @@ TEST(FiberAbstraction, NestedFiberSwitch) {
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.FirstFiber);
 
-	// clang-format off
-	GTEST_ASSERT_EQ(((((((((((((((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3), 
-		            singleFiberArg.Counter);
-	// clang-format on
+	REQUIRE(((((((((((((((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3) == singleFiberArg.Counter);
 }

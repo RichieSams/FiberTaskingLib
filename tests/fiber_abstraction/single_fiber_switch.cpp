@@ -24,7 +24,7 @@
 
 #include "ftl/fiber.h"
 
-#include "gtest/gtest.h"
+#include "catch2/catch.hpp"
 
 #include <atomic>
 
@@ -45,15 +45,14 @@ void SingleFiberStart(void *arg) {
 	FAIL();
 }
 
-constexpr static size_t kHalfMebibyte = 524288;
+TEST_CASE("Single Fiber Switch", "[fiber]") {
+	constexpr size_t kHalfMebibyte = 524288;
 
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FiberAbstraction, SingleFiberSwitch) {
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
 	singleFiberArg.OtherFiber = ftl::Fiber(kHalfMebibyte, SingleFiberStart, &singleFiberArg);
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);
 
-	GTEST_ASSERT_EQ(1, singleFiberArg.Counter.load());
+	REQUIRE(singleFiberArg.Counter.load() == 1);
 }

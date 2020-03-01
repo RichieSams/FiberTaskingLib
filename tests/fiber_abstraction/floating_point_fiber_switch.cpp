@@ -24,7 +24,7 @@
 
 #include "ftl/fiber.h"
 
-#include "gtest/gtest.h"
+#include "catch2/catch.hpp"
 
 #include <atomic>
 
@@ -48,7 +48,7 @@ void FloatingPointFirstLevelFiberStart(void *arg) {
 	// Return from sixth
 	// We just finished 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1
 	// Let's do an intermediate check
-	GTEST_ASSERT_EQ(((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0), singleFiberArg->Counter);
+	REQUIRE(((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0) == singleFiberArg->Counter);
 
 	// Now run the rest of the sequence
 	singleFiberArg->Counter *= 4.0;
@@ -152,10 +152,9 @@ void FloatingPointSixthLevelFiberStart(void *arg) {
 	FAIL();
 }
 
-constexpr static size_t kHalfMebibyte = 524288;
+TEST_CASE("Floating Point Fiber Switch", "[fiber]") {
+	constexpr size_t kHalfMebibyte = 524288;
 
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FiberAbstraction, FloatingPointFiberSwitch) {
 	MultipleFiberArg singleFiberArg;
 	singleFiberArg.Counter = 0.0;
 	singleFiberArg.FirstFiber = ftl::Fiber(kHalfMebibyte, FloatingPointFirstLevelFiberStart, &singleFiberArg);
@@ -170,8 +169,5 @@ TEST(FiberAbstraction, FloatingPointFiberSwitch) {
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.FirstFiber);
 
-	// clang-format off
-	GTEST_ASSERT_EQ(((((((((((((((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3),
-	                singleFiberArg.Counter);
-	// clang-format on
+	REQUIRE(((((((((((((((((((0.0 + 8.0) * 3.0) + 7.0) * 6.0) - 9.0) * 2.0) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3) == singleFiberArg.Counter);
 }

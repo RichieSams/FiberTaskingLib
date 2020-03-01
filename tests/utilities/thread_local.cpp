@@ -26,7 +26,7 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "gtest/gtest.h"
+#include "catch2/catch.hpp"
 
 #include <numeric>
 
@@ -51,10 +51,9 @@ void SideEffect(ftl::TaskScheduler *scheduler, void * /*arg*/) {
 	*SideEffectSingleton(scheduler);
 }
 
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FunctionalTests, ThreadLocal) {
+TEST_CASE("Thread Local", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
-	GTEST_ASSERT_EQ(taskScheduler.Init(), 0);
+	REQUIRE(taskScheduler.Init() == 0);
 
 	// Single Init
 	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, nullptr});
@@ -65,7 +64,7 @@ TEST(FunctionalTests, ThreadLocal) {
 
 	auto singleInitVals = SingleInitSingleton(&taskScheduler).GetAllValues();
 
-	ASSERT_EQ(taskScheduler.GetThreadCount(), std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
+	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
 
 	// Side Effects
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, nullptr});
@@ -77,8 +76,8 @@ TEST(FunctionalTests, ThreadLocal) {
 
 	// The initializer will only fire once per thread, so there must be less than the thread count
 	// in calls to it, but there should be at least one.
-	ASSERT_LE(g_sideEffectCount, taskScheduler.GetThreadCount());
-	ASSERT_GE(g_sideEffectCount, 1);
+	REQUIRE(g_sideEffectCount <= taskScheduler.GetThreadCount());
+	REQUIRE(g_sideEffectCount >= 1);
 	// The count minus one should be the greatest value within the TLS.
-	ASSERT_EQ(g_sideEffectCount - 1, *std::max_element(sideEffect.begin(), sideEffect.end()));
+	REQUIRE(g_sideEffectCount - 1 == *std::max_element(sideEffect.begin(), sideEffect.end()));
 }
