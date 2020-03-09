@@ -64,7 +64,9 @@ void InfiniteSpinLockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
 
 TEST_CASE("Fibtex Locking Tests", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
-	REQUIRE(taskScheduler.Init(ftl::TaskSchedulerInitOptions{400, 0, ftl::EmptyQueueBehavior::Yield}) == 0);
+	ftl::TaskSchedulerInitOptions options;
+	options.Behavior = ftl::EmptyQueueBehavior::Yield;
+	REQUIRE(taskScheduler.Init(options) == 0);
 
 	MutexData md(&taskScheduler);
 
