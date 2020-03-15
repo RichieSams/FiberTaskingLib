@@ -23,6 +23,8 @@
  ##
 
 include(SetSourceGroup)
+include(AddCompilerFlags)
+
 
 # Unix systems need to be explicitly linked to the threading lib
 if (UNIX)
@@ -108,3 +110,5 @@ else()
 	target_compile_features(ftl PUBLIC cxx_std_11)
 endif()
 
+# Set the warnings
+AddCompilerFlags(ftl)
