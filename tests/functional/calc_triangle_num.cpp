@@ -91,7 +91,7 @@ TEST_CASE("Triangle Number", "[functional]") {
 
 	// Schedule the tasks and wait for them to complete
 	ftl::AtomicCounter counter(&taskScheduler);
-	taskScheduler.AddTasks((unsigned)numTasks, tasks, &counter);
+	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, &counter);
 	delete[] tasks;
 
 	taskScheduler.WaitForCounter(&counter, 0);

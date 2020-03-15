@@ -173,6 +173,7 @@ public:
 	void lock() {
 		switch (m_behavior) {
 		case FibtexLockBehavior::Traditional:
+		default:
 			m_mutex.lock(m_pinToThread);
 			break;
 		case FibtexLockBehavior::Spin:
