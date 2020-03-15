@@ -77,8 +77,7 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
 }
 
 bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, const char *name, size_t coreAffinity, ThreadType *returnThread) {
-	returnThread->Handle =
-	    reinterpret_cast<HANDLE>(_beginthreadex(nullptr, (unsigned)stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
+	returnThread->Handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, (unsigned)stackSize, startRoutine, arg, CREATE_SUSPENDED, nullptr));
 	SetThreadName(returnThread->Handle, name);
 	returnThread->Id = ::GetThreadId(returnThread->Handle);
 
@@ -175,6 +174,8 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
 	CPU_ZERO(&cpuSet);
 	CPU_SET(coreAffinity, &cpuSet);
 	pthread_attr_setaffinity_np(&threadAttr, sizeof(cpu_set_t), &cpuSet);
+#	else
+	(void)coreAffinity;
 #	endif
 
 	int success = pthread_create(returnThread, &threadAttr, startRoutine, arg);
@@ -209,6 +210,8 @@ bool SetCurrentThreadAffinity(size_t coreAffinity) {
 	if (ret != 0) {
 		return false;
 	}
+#	else
+	(void)coreAffinity;
 #	endif
 
 	return true;
