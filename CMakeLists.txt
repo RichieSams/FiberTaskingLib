@@ -32,6 +32,7 @@ option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
 option(FTL_CPP_17 "Enable C++17 features" OFF)
 option(FTL_WERROR "Promote compiler warnings to errors." OFF)
+option(FTL_OPTIMIZE_ITERATORS "Avoid using full debug iterators with MSVC" OFF)
 
 set(FTL_NUM_WAITING_FIBER_SLOTS 4 CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait")
 
@@ -51,7 +52,7 @@ if (FTL_BUILD_TESTS)
 endif()
 
 # MSVC Iterator Issues
-if (MSVC)
+if (MSVC AND FTL_OPTIMIZE_ITERATORS)
 	add_definitions(-D_ITERATOR_DEBUG_LEVEL=1)
 endif()
 
