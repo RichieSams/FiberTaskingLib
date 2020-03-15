@@ -45,7 +45,7 @@ CMAKE_ARCH_ARG?=
 
 DOCKER_IMAGE=richiesams/docker_$(COMPILER):$(VERSION)
 
-.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows
+.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux valgrind_linux_build_native valgrind_linux_run_native
 
 pull_image:
 	docker pull $(DOCKER_IMAGE)
@@ -59,13 +59,24 @@ generate_linux_native:
 	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_linux .
 
 build_linux:
-	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -C build_linux
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -j -C build_linux
 
 test_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) /bin/sh -c "(cd build_linux/tests && exec ./ftl-test)"
 
 clean_linux:
-	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) rm -rf build_linux
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) rm -rf build_linux build_linux_debug
+
+valgrind_linux:
+	docker run --rm -v $(CURDIR):/app -w /app richiesams/docker_gcc:9 make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) valgrind_linux_build_native valgrind_linux_run_native
+
+valgrind_linux_build_native:
+	mkdir -p build_linux_debug
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DFTL_VALGRIND=1 -Bbuild_linux_debug -DCMAKE_BUILD_TYPE=Debug .
+	make -j -C build_linux_debug
+
+valgrind_linux_run_native:
+	cd build_linux_debug/tests && exec valgrind --leak-check=yes --log-file=memcheck_output.txt ./ftl-test
 
 
 generate_osx:
@@ -74,7 +85,7 @@ generate_osx:
 	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_osx .
 
 build_osx:
-	make -C build_osx
+	make -j -C build_osx
 
 test_osx:
 	(cd build_osx/tests && exec ./ftl-test)

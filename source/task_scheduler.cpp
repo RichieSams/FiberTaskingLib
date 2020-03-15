@@ -210,7 +210,6 @@ TaskScheduler::TaskScheduler() {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_initialized, sizeof(m_initialized));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_quit, sizeof(m_quit));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_quitCount, sizeof(m_quitCount));
-	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_mainThreadIsBound, sizeof(m_mainThreadIsBound));
 }
 
 int TaskScheduler::Init(TaskSchedulerInitOptions options) {
@@ -233,7 +232,7 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_fiberPoolSize = options.FiberPoolSize;
 	m_fibers = new Fiber[options.FiberPoolSize];
 	m_freeFibers = new std::atomic<bool>[options.FiberPoolSize];
-	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * fiberPoolSize);
+	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * m_fiberPoolSize);
 
 	// Leave the first slot for the bound main thread
 	for (unsigned i = 1; i < options.FiberPoolSize; ++i) {
