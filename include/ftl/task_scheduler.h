@@ -52,6 +52,15 @@ enum class EmptyQueueBehavior {
 	// ReSharper restore CppInconsistentNaming
 };
 
+struct TaskSchedulerInitOptions {
+	/* The size of the fiber pool.The fiber pool is used to run new tasks when the current task is waiting on a counter */
+	unsigned FiberPoolSize = 400;
+	/* The size of the thread pool to run. 0 corresponds to NumHardwareThreads() */
+	unsigned ThreadPoolSize = 0;
+	/* The behavior of the threads after they have no work to do */
+	EmptyQueueBehavior Behavior = EmptyQueueBehavior::Spin;
+};
+
 /**
  * A class that enables task-based multithreading.
  *
@@ -72,7 +81,7 @@ private:
 	constexpr static size_t kFTLInvalidIndex = std::numeric_limits<size_t>::max();
 
 	size_t m_numThreads{0};
-	std::vector<ThreadType> m_threads;
+	ThreadType *m_threads{nullptr};
 
 	size_t m_fiberPoolSize{0};
 	/* The backing storage for the fiber pool */
@@ -84,8 +93,11 @@ private:
 	 */
 	std::atomic<bool> *m_freeFibers{nullptr};
 
+	Fiber *m_quitFibers{nullptr};
+
 	std::atomic<bool> m_initialized{false};
 	std::atomic<bool> m_quit{false};
+	std::atomic<size_t> m_quitCount{0};
 
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
 
@@ -174,41 +186,43 @@ private:
 
 public:
 	/**
-	 * Initializes the TaskScheduler and then starts executing 'mainTask'
+	 * Initializes the TaskScheduler and binds the current thread as the "main" thread
 	 *
-	 * NOTE: Run will "block" until 'mainTask' returns. However, it doesn't block in the traditional sense; 'mainTask'
-	 * is created as a Fiber. Therefore, the current thread will save it's current state, and then switch execution to
-	 * the the 'mainTask' fiber. When 'mainTask' finishes, the thread will switch back to the saved state, and Run()
-	 * will return.
+	 * TaskScheduler functions can *only* be called from this thread or inside tasks on the worker threads
 	 *
-	 * @param fiberPoolSize     The size of the fiber pool. The fiber pool is used to run new tasks when the current task is waiting on a counter
-	 * @param mainTask          The main task to run
-	 * @param mainTaskArg       The argument to pass to 'mainTask'
-	 * @param threadPoolSize    The size of the thread pool to run. 0 corresponds to NumHardwareThreads()
-	 * @param behavior          The behavior of the threads after they have no work to do.
+	 * @param options    The configuration options for the TaskScheduler. See the struct defintion for more details
+	 * @return           0 on sucess. One of the following error code on failure:
+	 *                       -30  Init was called more than once
+	 *                       -60  Failed to create worker threads
 	 */
-	void Run(unsigned fiberPoolSize, TaskFunction mainTask, void *mainTaskArg = nullptr, unsigned threadPoolSize = 0, EmptyQueueBehavior behavior = EmptyQueueBehavior::Spin);
+	int Init(TaskSchedulerInitOptions options = TaskSchedulerInitOptions());
 
 	/**
 	 * Adds a task to the internal queue.
 	 *
+	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
+	 *
 	 * @param task       The task to queue
-	 * @param counter    An atomic counter corresponding to this task. Initially it will be set to 1. When the task
-	 * completes, it will be decremented.
+	 * @param counter    An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
+	 *                   completes, it will be decremented.
 	 */
 	void AddTask(Task task, AtomicCounter *counter = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
+	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
+	 *
 	 * @param numTasks    The number of tasks
 	 * @param tasks       The tasks to queue
-	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be set to
-	 * numTasks. When each task completes, it will be decremented.
+	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
+	 *                    numTasks. When each task completes, it will be decremented.
 	 */
 	void AddTasks(unsigned numTasks, Task const *tasks, AtomicCounter *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value
+	 *
+	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
 	 *
 	 * @param counter             The counter to check
 	 * @param value               The value to wait for
@@ -219,6 +233,8 @@ public:
 	/**
 	 * Gets the 0-based index of the current thread
 	 * This is useful for m_tls[GetCurrentThreadIndex()]
+	 *
+	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
 	 *
 	 * We force no-inline because inlining seems to cause some tls-type caching on max optimization levels
 	 * Discovered by @cwfitzgerald. Documented in issue #57
@@ -233,7 +249,7 @@ public:
 	 * @return    Backing thread count
 	 */
 	size_t GetThreadCount() const noexcept {
-		return m_threads.size();
+		return m_numThreads;
 	}
 
 	/**
@@ -294,19 +310,21 @@ private:
 	 * @param arg    An instance of ThreadStartArgs
 	 * @return       The return status of the thread
 	 */
-	static FTL_THREAD_FUNC_DECL ThreadStart(void *arg);
-	/**
-	 * The fiberProc function that wraps the main fiber procedure given by the user
-	 *
-	 * @param arg    An instance of TaskScheduler
-	 */
-	static void MainFiberStart(void *arg);
+	static FTL_THREAD_FUNC_DECL ThreadStartFunc(void *arg);
 	/**
 	 * The fiberProc function for all fibers in the fiber pool
 	 *
 	 * @param arg    An instance of TaskScheduler
 	 */
-	static void FiberStart(void *arg);
+	static void FiberStartFunc(void *arg);
+	/**
+	 * The fiberProc function that fibers will jump to when Term() is called
+	 * This allows us to jump back to the worker thread original stacks and clean up
+	 * In addition, this allows the "main thread" to jump back to the "main thread" stack
+	 *
+	 * @param arg    An instance of ThreadTermArgs struct
+	 */
+	static void ThreadEndFunc(void *arg);
 };
 
 } // End of namespace ftl

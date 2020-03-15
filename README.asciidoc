@@ -17,97 +17,99 @@ http://twvideo01.ubm-us.net/o1/vault/gdc2015/presentations/Gyrling_Christian_Par
 ## Example
 [source,cc]
 ----
-#include <ftl/task_scheduler.h>
-#include <ftl/atomic_counter.h>
+#include "ftl/atomic_counter.h"
+#include "ftl/task_scheduler.h"
 
+#include <assert.h>
+#include <stdint.h>
 
 struct NumberSubset {
-    uint64 start;
-    uint64 end;
+	uint64_t start;
+	uint64_t end;
 
-    uint64 total;
+	uint64_t total;
 };
 
-
 void AddNumberSubset(ftl::TaskScheduler *taskScheduler, void *arg) {
-    NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
+	NumberSubset *subset = reinterpret_cast<NumberSubset *>(arg);
 
-    subset->total = 0;
+	subset->total = 0;
 
-    while (subset->start != subset->end) {
-        subset->total += subset->start;
-        ++subset->start;
-    }
+	while (subset->start != subset->end) {
+		subset->total += subset->start;
+		++subset->start;
+	}
 
-    subset->total += subset->end;
+	subset->total += subset->end;
 }
-
 
 /**
-* Calculates the value of a triangle number by dividing the additions up into tasks
-*
-* A triangle number is defined as:
-*         Tn = 1 + 2 + 3 + ... + n
-*
-* The code is checked against the numerical solution which is:
-*         Tn = n * (n + 1) / 2
-*/
-void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
-    // Define the constants to test
-    const uint64 triangleNum = 47593243ull;
-    const uint64 numAdditionsPerTask = 10000ull;
-    const uint64 numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
-
-    // Create the tasks
-    // FTL allows you to create Tasks on the stack. 
-    // However, in this case, that would cause a stack overflow
-    ftl::Task *tasks = new ftl::Task[numTasks];
-    NumberSubset *subsets = new NumberSubset[numTasks];
-    uint64 nextNumber = 1ull;
-
-    for (uint64 i = 0ull; i < numTasks; ++i) {
-        NumberSubset *subset = &subsets[i];
-
-        subset->start = nextNumber;
-        subset->end = nextNumber + numAdditionsPerTask - 1ull;
-        if (subset->end > triangleNum) {
-            subset->end = triangleNum;
-        }
-
-        tasks[i] = {AddNumberSubset, subset};
-
-        nextNumber = subset->end + 1;
-    }
-
-    // Schedule the tasks
-    ftl::AtomicCounter counter(taskScheduler);
-    taskScheduler->AddTasks(numTasks, tasks, &counter);
-
-    // FTL creates its own copies of the tasks, so we can safely delete the memory
-    delete[] tasks;
-
-    // Wait for the tasks to complete
-    taskScheduler->WaitForCounter(&counter, 0);
-
-
-    // Add the results
-    uint64 result = 0ull;
-    for (uint64 i = 0; i < numTasks; ++i) {
-        result += subsets[i].total;
-    }
-
-    // Test
-    assert(triangleNum * (triangleNum + 1ull) / 2ull == result);
-
-    // Cleanup
-    delete[] subsets;
-}
-
+ * Calculates the value of a triangle number by dividing the additions up into tasks
+ *
+ * A triangle number is defined as:
+ *         Tn = 1 + 2 + 3 + ... + n
+ *
+ * The code is checked against the numerical solution which is:
+ *         Tn = n * (n + 1) / 2
+ */
 int main(int argc, char *argv) {
-    ftl::TaskScheduler taskScheduler;
-    taskScheduler.Run(25, TriangleNumberMainTask);
+	// Create the task scheduler and bind the main thread to it
+	ftl::TaskScheduler taskScheduler;
+	taskScheduler.Init();
 
-    return 0;
+	// Define the constants to test
+	constexpr uint64_t triangleNum = 47593243ull;
+	constexpr uint64_t numAdditionsPerTask = 10000ull;
+	constexpr uint64_t numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
+
+	// Create the tasks
+	// FTL allows you to create Tasks on the stack.
+	// However, in this case, that would cause a stack overflow
+	ftl::Task *tasks = new ftl::Task[numTasks];
+	NumberSubset *subsets = new NumberSubset[numTasks];
+	uint64_t nextNumber = 1ull;
+
+	for (uint64_t i = 0ull; i < numTasks; ++i) {
+		NumberSubset *subset = &subsets[i];
+
+		subset->start = nextNumber;
+		subset->end = nextNumber + numAdditionsPerTask - 1ull;
+		if (subset->end > triangleNum) {
+			subset->end = triangleNum;
+		}
+
+		tasks[i] = {AddNumberSubset, subset};
+
+		nextNumber = subset->end + 1;
+	}
+
+	// Schedule the tasks
+	ftl::AtomicCounter counter(&taskScheduler);
+	taskScheduler.AddTasks(numTasks, tasks, &counter);
+
+	// FTL creates its own copies of the tasks, so we can safely delete the memory
+	delete[] tasks;
+
+	// Wait for the tasks to complete
+	taskScheduler.WaitForCounter(&counter, 0);
+
+	// Add the results
+	uint64_t result = 0ull;
+	for (uint64_t i = 0; i < numTasks; ++i) {
+		result += subsets[i].total;
+	}
+
+	// Test
+	assert(triangleNum * (triangleNum + 1ull) / 2ull == result);
+
+	// Cleanup
+	delete[] subsets;
+	delete[] tasks;
+
+	// The destructor of TaskScheduler will shut down all the worker threads
+	// and unbind the main thread
+
+	return 0;
 }
 ----
 

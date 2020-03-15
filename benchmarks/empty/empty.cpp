@@ -35,29 +35,24 @@ void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 	// No-Op
 }
 
-void EmptyBenchmarkMainTask(ftl::TaskScheduler *taskScheduler, void *arg) {
-	auto &meter = *reinterpret_cast<nonius::chronometer *>(arg);
+NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
+	ftl::TaskScheduler taskScheduler;
+	taskScheduler.Init();
 
 	auto *tasks = new ftl::Task[kNumTasks];
 	for (unsigned i = 0; i < kNumTasks; ++i) {
 		tasks[i] = {EmptyBenchmarkTask, nullptr};
 	}
 
-	meter.measure([=] {
+	meter.measure([&taskScheduler, tasks] {
 		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::AtomicCounter counter(taskScheduler);
-			taskScheduler->AddTasks(kNumTasks, tasks, &counter);
+			ftl::AtomicCounter counter(&taskScheduler);
+			taskScheduler.AddTasks(kNumTasks, tasks, &counter);
 
-			taskScheduler->WaitForCounter(&counter, 0);
+			taskScheduler.WaitForCounter(&counter, 0);
 		}
 	});
 
 	// Cleanup
 	delete[] tasks;
-}
-
-NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
-	auto *taskScheduler = new ftl::TaskScheduler();
-	taskScheduler->Run(20, EmptyBenchmarkMainTask, &meter);
-	delete taskScheduler;
 })
