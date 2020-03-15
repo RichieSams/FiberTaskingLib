@@ -23,6 +23,7 @@
  ##
 
 include(SetSourceGroup)
+include(AddCompilerFlags)
 
 
 SetSourceGroup(NAME "Fiber Abstraction"
@@ -60,3 +61,6 @@ set(FIBER_TASKING_LIB_TESTS_SRC
 
 add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
 target_link_libraries(ftl-test catch2 ftl)
+
+# Set the warnings
+AddCompilerFlags(ftl-test)
