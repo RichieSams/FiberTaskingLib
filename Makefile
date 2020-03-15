@@ -56,7 +56,7 @@ generate_linux:
 generate_linux_native:
 	mkdir -p build_linux
 	cmake --version
-	(cd build_linux && exec cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -FTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) ../)
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_linux .
 
 build_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -C build_linux
@@ -71,7 +71,7 @@ clean_linux:
 generate_osx:
 	mkdir -p build_osx
 	cmake --version
-	(cd build_osx && exec cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -FTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) ../)
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_osx .
 
 build_osx:
 	make -C build_osx
