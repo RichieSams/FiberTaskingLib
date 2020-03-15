@@ -58,7 +58,11 @@ void AddNumberSubset(ftl::TaskScheduler * /*scheduler*/, void *arg) {
  *
  * TODO: Use gtest's 'Value Parameterized Tests' to test multiple triangle numbers
  */
-void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
+TEST(FunctionalTests, CalcTriangleNum) {
+	ftl::TaskScheduler taskScheduler;
+	GTEST_ASSERT_EQ(taskScheduler.Init(), 0);
+
 	// Define the constants to test
 	const uint64_t triangleNum = 47593243ULL;
 	const uint64_t numAdditionsPerTask = 10000ULL;
@@ -85,11 +89,11 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	ftl::AtomicCounter counter(taskScheduler);
-	taskScheduler->AddTasks(numTasks, tasks, &counter);
+	ftl::AtomicCounter counter(&taskScheduler);
+	taskScheduler.AddTasks(numTasks, tasks, &counter);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(&counter, 0);
+	taskScheduler.WaitForCounter(&counter, 0);
 
 	// Add the results
 	uint64_t result = 0ULL;
@@ -102,10 +106,4 @@ void TriangleNumberMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
 
 	// Cleanup
 	delete[] subsets;
-}
-
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FunctionalTests, CalcTriangleNum) {
-	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Run(400, TriangleNumberMainTask);
 }

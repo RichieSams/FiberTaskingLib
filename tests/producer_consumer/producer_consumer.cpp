@@ -51,7 +51,14 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	taskScheduler->WaitForCounter(&counter, 0);
 }
 
-void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/) {
+/**
+ * Tests that all scheduled tasks finish properly
+ */
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
+TEST(FunctionalTests, ProducerConsumer) {
+	ftl::TaskScheduler taskScheduler;
+	GTEST_ASSERT_EQ(taskScheduler.Init(), 0);
+
 	std::atomic<unsigned> globalCounter(0U);
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&globalCounter, sizeof(globalCounter));
 
@@ -60,21 +67,10 @@ void ProducerConsumerMainTask(ftl::TaskScheduler *taskScheduler, void * /*arg*/)
 		task = {Producer, &globalCounter};
 	}
 
-	ftl::AtomicCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumProducerTasks, tasks.data(), &counter);
-	taskScheduler->WaitForCounter(&counter, 0);
+	ftl::AtomicCounter counter(&taskScheduler);
+	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), &counter);
+	taskScheduler.WaitForCounter(&counter, 0);
 
 	// Test to see that all tasks finished
 	GTEST_ASSERT_EQ(kNumProducerTasks * kNumConsumerTasks, globalCounter.load());
-
-	// Cleanup
-}
-
-/**
- * Tests that all scheduled tasks finish properly
- */
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FunctionalTests, ProducerConsumer) {
-	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Run(400, ProducerConsumerMainTask);
 }

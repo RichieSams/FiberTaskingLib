@@ -62,21 +62,27 @@ void InfiniteSpinLockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
 	data->Queue.push_back(data->Counter++);
 }
 
-void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *) {
-	MutexData md(taskScheduler);
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
+TEST(FunctionalTests, LockingTests) {
+	ftl::TaskScheduler taskScheduler;
+	ftl::TaskSchedulerInitOptions options;
+	options.Behavior = ftl::EmptyQueueBehavior::Yield;
+	GTEST_ASSERT_EQ(taskScheduler.Init(options), 0);
 
-	ftl::AtomicCounter c(taskScheduler);
+	MutexData md(&taskScheduler);
+
+	ftl::AtomicCounter c(&taskScheduler);
 
 	constexpr size_t iterations = 20000;
 	for (size_t i = 0; i < iterations; ++i) {
-		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
-		taskScheduler->AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
 
-		taskScheduler->WaitForCounter(&c, 0);
+		taskScheduler.WaitForCounter(&c, 0);
 	}
 
 	GTEST_ASSERT_EQ(md.Counter, 6 * iterations);
@@ -84,10 +90,4 @@ void FutexMainTask(ftl::TaskScheduler *taskScheduler, void *) {
 	for (unsigned i = 0; i < md.Counter; ++i) {
 		GTEST_ASSERT_EQ(md.Queue[i], i);
 	}
-}
-
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-TEST(FunctionalTests, LockingTests) {
-	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Run(400, FutexMainTask, nullptr, 0, ftl::EmptyQueueBehavior::Yield);
 }
