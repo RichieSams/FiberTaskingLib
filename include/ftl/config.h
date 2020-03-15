@@ -83,13 +83,7 @@
 #	define FTL_NOINLINE
 #endif
 
-#ifdef __has_include
-#	if __has_include(<version>)
-#		include <version>
-#	else
-#		include <new>
-#	endif
-#else
+#ifdef __cpp_lib_hardware_interference_size
 #	include <new>
 #endif
 // ReSharper restore CppUnusedIncludeDirective
