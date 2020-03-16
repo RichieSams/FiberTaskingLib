@@ -50,6 +50,12 @@ matrix:
         - VERSION=9
         - VALGRIND=1
     - os: linux
+      compiler: gcc
+      env: 
+        - COMPILER=gcc
+        - VERSION=9
+        - CPP_17=1
+    - os: linux
       compiler: clang
       env: 
         - COMPILER=clang
@@ -90,6 +96,12 @@ matrix:
         - COMPILER=clang
         - VERSION=7
         - VALGRIND=1
+    - os: linux
+      compiler: clang
+      env: 
+        - COMPILER=clang
+        - VERSION=7
+        - CPP_17=1
     - os: osx
       compiler: gcc
       env: 
