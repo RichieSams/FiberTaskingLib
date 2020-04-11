@@ -23,7 +23,7 @@
  ##
 
 cmake_minimum_required(VERSION 3.8)
-project(FiberTaskingLib)
+project(FiberTaskingLib CXX)
 
 # Options
 option(FTL_BUILD_TESTS "Build FiberTaskingLib tests" ON)
