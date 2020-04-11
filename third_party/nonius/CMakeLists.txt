@@ -23,7 +23,7 @@
  ##
 
 cmake_minimum_required(VERSION 3.2)
-project(nonius)
+project(nonius CXX)
 
 add_library(nonius INTERFACE)
 target_include_directories(nonius INTERFACE include)
