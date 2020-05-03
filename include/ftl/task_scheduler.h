@@ -116,6 +116,11 @@ private:
 		AtomicCounter *Counter;
 	};
 
+	struct ReadyFiberBundle {
+		size_t FiberIndex;
+		std::atomic<bool> *FiberIsSwitched;
+	};
+
 	struct PinnedWaitingFiberBundle {
 		PinnedWaitingFiberBundle(size_t const fiberIndex, AtomicCounter *const counter, unsigned const targetValue)
 		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
@@ -153,8 +158,13 @@ private:
 		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
 		size_t LastSuccessfulSteal{1};
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
-		std::vector<std::pair<size_t, std::atomic<bool> *>> ReadyFibers;
-		std::mutex ReadyFibersLock;
+		/* The queue of ready waiting Fibers */
+		WaitFreeQueue<ReadyFiberBundle> ReadyFibers;
+		/* The last ReadyFibers queue we successfully stole from. This is an offset index from the current thread index */
+		size_t LastSuccessfulReadyFiberSteal{1};
+		/* The queue of ready waiting Fibers that were pinned to this thread */
+		std::vector<ReadyFiberBundle> PinnedReadyFibers;
+		std::mutex PinnedReadyFibersLock;
 		unsigned FailedQueuePopAttempts{0};
 		/**
 		 * This lock is used with the CV below to put threads to sleep when there
@@ -280,6 +290,14 @@ private:
 	 * @return            True: Successfully popped a task out of the queue
 	 */
 	bool GetNextTask(TaskBundle *nextTask);
+	/**
+	 * Pops the next readyFiberBundle off the ReadyFiber queue into readyFiber. If there
+	 * are no ready fibers in the queue, it will return false
+	 *
+	 * @param readyFiber    If the queue is not empty, will be filled with the next ready fiber
+	 * @return              True; Successfully popped a ready fiber out of the queue
+	 */
+	bool GetReadyFiber(ReadyFiberBundle *readyFiber);
 	/**
 	 * Gets the index of the next available fiber in the pool
 	 *
