@@ -27,6 +27,8 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/thread_abstraction.h"
 
+#include <queue>
+
 #if defined(FTL_WIN32_THREADS)
 #	ifndef WIN32_LEAN_AND_MEAN
 #		define WIN32_LEAN_AND_MEAN
@@ -85,24 +87,73 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 	// If we just started from the pool, we may need to clean up from another fiber
 	taskScheduler->CleanUpOldFiber();
 
+	std::queue<ReadyFiberBundle> readyFiberBuffer;
+
 	// Process tasks infinitely, until quit
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
-		// Check if there are any ready fibers
 		size_t waitingFiberIndex = kFTLInvalidIndex;
 		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
-		{
-			std::lock_guard<std::mutex> guard(tls.ReadyFibersLock);
+		bool readyWaitingFibers = false;
 
-			for (auto iter = tls.ReadyFibers.begin(); iter != tls.ReadyFibers.end(); ++iter) {
-				if (!iter->second->load(std::memory_order_relaxed)) {
+		// Check if there is a ready pinned waiting fiber
+		{
+			std::lock_guard<std::mutex> guard(tls.PinnedReadyFibersLock);
+
+			for (auto bundle = tls.PinnedReadyFibers.begin(); bundle != tls.PinnedReadyFibers.end(); ++bundle) {
+				readyWaitingFibers = true;
+
+				if (!bundle->FiberIsSwitched->load(std::memory_order_acquire)) {
+					// The wait condition is ready, but the "source" thread hasn't switched away from the fiber yet
+					// Skip this fiber until the next round
 					continue;
 				}
 
-				waitingFiberIndex = iter->first;
-				delete iter->second;
-				tls.ReadyFibers.erase(iter);
+				waitingFiberIndex = bundle->FiberIndex;
+				delete bundle->FiberIsSwitched;
+				tls.PinnedReadyFibers.erase(bundle);
 				break;
+			}
+		}
+
+		// If nothing was found, check if there is a ready waiting fiber
+		if (waitingFiberIndex == kFTLInvalidIndex) {
+			while (true) {
+				ReadyFiberBundle bundle;
+				if (!taskScheduler->GetReadyFiber(&bundle)) {
+					// No tasks in all the queues
+					break;
+				}
+
+				readyWaitingFibers = true;
+
+				if (bundle.FiberIsSwitched->load(std::memory_order_acquire)) {
+					waitingFiberIndex = bundle.FiberIndex;
+					delete bundle.FiberIsSwitched;
+
+					break;
+				}
+
+				// The wait condition is ready, but the "source" thread hasn't switched away from the fiber yet
+				// Add this bundle to our temp buffer, and try to find another one that *is* switched
+				readyFiberBuffer.push(bundle);
+			}
+			if (!readyFiberBuffer.empty()) {
+				// Re-push all the ready fibers we found that hadn't switched yet
+				// We (or another thread) will get them next round
+				do {
+					tls.ReadyFibers.Push(readyFiberBuffer.front());
+					readyFiberBuffer.pop();
+
+				} while (!readyFiberBuffer.empty());
+
+				// If we're using Sleep mode, we need to wake up the other threads
+				// They may have looked for tasks while we had them all in our temp buffer and thus not
+				// found anything and gone to sleep.
+				EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+				if (behavior == EmptyQueueBehavior::Sleep) {
+					// TODO: impl
+				}
 			}
 		}
 
@@ -148,20 +199,21 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 					break;
 
 				case EmptyQueueBehavior::Sleep: {
-					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
+					// If we have a ready waiting fiber, prevent sleep
+					bool waited = false;
+					if (!readyWaitingFibers) {
+						std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
 
-					// Check if we have a ready fiber
-					{
-						std::lock_guard<std::mutex> guard(tls.ReadyFibersLock);
-
-						// Prevent sleepy-time if we have ready fibers
-						if (tls.ReadyFibers.empty()) {
-							++tls.FailedQueuePopAttempts;
+						// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
+						while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+							tls.FailedQueuePopCV.wait(lock);
+							waited = true;
 						}
 					}
-					// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
-					while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
-						tls.FailedQueuePopCV.wait(lock);
+
+					// If we didn't wait for anything, we should yield to give the other threads time to complete switching / tasks
+					if (!waited) {
+						YieldThread();
 					}
 
 					break;
@@ -439,6 +491,32 @@ bool TaskScheduler::GetNextTask(TaskBundle *const nextTask) {
 	return false;
 }
 
+bool TaskScheduler::GetReadyFiber(ReadyFiberBundle *readyFiber) {
+	size_t const currentThreadIndex = GetCurrentThreadIndex();
+	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
+
+	// Try to pop from our own queue
+	if (tls.ReadyFibers.Pop(readyFiber)) {
+		return true;
+	}
+
+	// Ours is empty, try to steal from the others'
+	const size_t threadIndex = tls.LastSuccessfulReadyFiberSteal;
+	for (size_t i = 0; i < m_numThreads; ++i) {
+		const size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
+		if (threadIndexToStealFrom == currentThreadIndex) {
+			continue;
+		}
+		ThreadLocalStorage &otherTLS = m_tls[threadIndexToStealFrom];
+		if (otherTLS.ReadyFibers.Steal(readyFiber)) {
+			tls.LastSuccessfulReadyFiberSteal = threadIndexToStealFrom;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 size_t TaskScheduler::GetNextFreeFiberIndex() const {
 	for (unsigned j = 0;; ++j) {
 		for (size_t i = 0; i < m_fiberPoolSize; ++i) {
@@ -519,7 +597,7 @@ void TaskScheduler::CleanUpOldFiber() {
 		// The waiting fibers are stored directly in their counters
 		// They have an atomic<bool> that signals whether the waiting fiber can be consumed if it's ready
 		// We just have to set it to true
-		tls.OldFiberStoredFlag->store(true, std::memory_order_relaxed);
+		tls.OldFiberStoredFlag->store(true, std::memory_order_release);
 		tls.OldFiberDestination = FiberDestination::None;
 		tls.OldFiberIndex = kFTLInvalidIndex;
 		break;
@@ -530,32 +608,39 @@ void TaskScheduler::CleanUpOldFiber() {
 }
 
 void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, size_t fiberIndex, std::atomic<bool> *const fiberStoredFlag) {
-	ThreadLocalStorage *tls;
+	ReadyFiberBundle bundle;
+	bundle.FiberIndex = fiberIndex;
+	bundle.FiberIsSwitched = fiberStoredFlag;
+
 	if (pinnedThreadIndex == std::numeric_limits<size_t>::max()) {
-		tls = &m_tls[GetCurrentThreadIndex()];
+		ThreadLocalStorage *tls = &m_tls[GetCurrentThreadIndex()];
+
+		tls->ReadyFibers.Push(bundle);
 	} else {
-		tls = &m_tls[pinnedThreadIndex];
-	}
+		ThreadLocalStorage *tls = &m_tls[pinnedThreadIndex];
 
-	{
-		std::lock_guard<std::mutex> guard(tls->ReadyFibersLock);
-		tls->ReadyFibers.emplace_back(fiberIndex, fiberStoredFlag);
-	}
-
-	// If the Task is pinned, we add the Task to the pinned thread's ReadyFibers queue, instead
-	// of our own. Normally, this works fine; the other thread will pick it up next time it
-	// searches for a Task to run.
-	//
-	// However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
-	// Therefore, we need to kick the thread to make sure that it's awake
-	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
-	if (behavior == EmptyQueueBehavior::Sleep) {
-		// Kick the thread
 		{
-			std::unique_lock<std::mutex> lock(tls->FailedQueuePopLock);
-			tls->FailedQueuePopAttempts = 0;
+			std::lock_guard<std::mutex> guard(tls->PinnedReadyFibersLock);
+			tls->PinnedReadyFibers.emplace_back(bundle);
 		}
-		tls->FailedQueuePopCV.notify_all();
+
+		// If the Task is pinned, we add the Task to the pinned thread's PinnedReadyFibers queue
+		// Normally, this works fine; the other thread will pick it up next time it
+		// searches for a Task to run.
+		//
+		// However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
+		// Therefore, we need to kick the thread to make sure that it's awake
+		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+		if (behavior == EmptyQueueBehavior::Sleep) {
+			if (GetCurrentThreadIndex() != pinnedThreadIndex) {
+				// Kick the thread
+				{
+					std::unique_lock<std::mutex> lock(tls->FailedQueuePopLock);
+					tls->FailedQueuePopAttempts = 0;
+				}
+				tls->FailedQueuePopCV.notify_all();
+			}
+		}
 	}
 }
 
