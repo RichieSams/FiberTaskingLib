@@ -74,12 +74,12 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 
 	constexpr size_t iterations = 20000;
 	for (size_t i = 0; i < iterations; ++i) {
-		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, &c);
-		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, &c);
-		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
-		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, &c);
+		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Low, &c);
+		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Low, &c);
+		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
+		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
+		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
+		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
 
 		taskScheduler.WaitForCounter(&c, 0);
 	}
