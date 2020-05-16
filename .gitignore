@@ -5,3 +5,7 @@ build*/
 .idea/
 # CLion build files
 cmake-build*/
+
+
+# Visual Studio local files
+.vs/
