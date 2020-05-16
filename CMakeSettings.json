@@ -1,0 +1,70 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "FTL_DISABLE_ITERATOR_DEBUG",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_FIBER_CANARY_BYTES",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_FIBER_STACK_GUARD_PAGES",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_WERROR",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "FTL_DISABLE_ITERATOR_DEBUG",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_FIBER_CANARY_BYTES",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_FIBER_STACK_GUARD_PAGES",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "FTL_WERROR",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
+    }
+  ]
+}
