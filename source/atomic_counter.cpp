@@ -65,7 +65,7 @@ AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-bool AtomicCounter::AddFiberToWaitingList(size_t const fiberIndex, unsigned const targetValue, std::atomic<bool> *const fiberStoredFlag, size_t const pinnedThreadIndex) {
+bool AtomicCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t const pinnedThreadIndex) {
 	for (size_t i = 0; i < m_fiberSlots; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
@@ -75,9 +75,8 @@ bool AtomicCounter::AddFiberToWaitingList(size_t const fiberIndex, unsigned cons
 		}
 
 		// We found a free slot
-		m_waitingFibers[i].FiberIndex = fiberIndex;
+		m_waitingFibers[i].FiberBundle = fiberBundle;
 		m_waitingFibers[i].TargetValue = targetValue;
-		m_waitingFibers[i].FiberStoredFlag = fiberStoredFlag;
 		m_waitingFibers[i].PinnedThreadIndex = pinnedThreadIndex;
 		// We have to use memory_order_seq_cst here instead of memory_order_acquire to prevent
 		// later loads from being re-ordered before this store
@@ -111,8 +110,8 @@ bool AtomicCounter::AddFiberToWaitingList(size_t const fiberIndex, unsigned cons
 
 	// BARF. We ran out of slots
 	// ReSharper disable once CppUnreachableCode
-	FTL_ASSERT("All the waiting fiber slots are full. Not able to add another wait.\nIncrease the value of fiberSlots "
-	           "in the constructor or modify your algorithm to use less waits on the same counter",
+	FTL_ASSERT("All the waiting fiber slots are full. Not able to add another wait.\n"
+	           "Increase the value of fiberSlots in the constructor or modify your algorithm to use less waits on the same counter",
 	           false);
 	return false;
 }
@@ -137,7 +136,7 @@ void AtomicCounter::CheckWaitingFibers(unsigned const value) {
 				continue;
 			}
 
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, m_waitingFibers[i].FiberIndex, m_waitingFibers[i].FiberStoredFlag);
+			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, reinterpret_cast<TaskScheduler::ReadyFiberBundle *>(m_waitingFibers[i].FiberBundle));
 			// Signal that the slot is free
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);

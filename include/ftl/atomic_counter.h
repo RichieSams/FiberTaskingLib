@@ -90,15 +90,10 @@ private:
 		 * The wait checking code uses this atomic to prevent multiple threads from modifying the same slot
 		 */
 		std::atomic<bool> InUse;
-		/* The index of the fiber that is waiting on this counter */
-		size_t FiberIndex{0};
+		/* The fiber bundle that's waiting */
+		void *FiberBundle{nullptr};
 		/* The value the fiber is waiting for */
 		unsigned TargetValue{0};
-		/**
-		 * A flag signaling if the fiber has been successfully switched out of and "cleaned up"
-		 * See TaskScheduler::CleanUpOldFiber()
-		 */
-		std::atomic<bool> *FiberStoredFlag{nullptr};
 		/**
 		 * The index of the thread this fiber is pinned to
 		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<size_t>::max()
@@ -227,13 +222,12 @@ private:
 	 * on a counter, the fiber will not be tracked, which will cause WaitForCounter() to
 	 * infinitely sleep. This will probably cause a hang
 	 *
-	 * @param fiberIndex           The index of the fiber that is waiting
 	 * @param targetValue          The target value the fiber is waiting for
-	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned up"
+	 * @param fiberBundle          The fiber that is waiting
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(size_t fiberIndex, unsigned targetValue, std::atomic<bool> *fiberStoredFlag, size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
+	bool AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue

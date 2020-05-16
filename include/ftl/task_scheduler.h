@@ -117,8 +117,10 @@ private:
 	};
 
 	struct ReadyFiberBundle {
+		// The fiber
 		size_t FiberIndex;
-		std::atomic<bool> *FiberIsSwitched;
+		// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
+		std::atomic<bool> FiberIsSwitched;
 	};
 
 	struct PinnedWaitingFiberBundle {
@@ -153,18 +155,21 @@ private:
 		size_t OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
 		FiberDestination OldFiberDestination{FiberDestination::None};
-		/* The queue of waiting tasks */
-		WaitFreeQueue<TaskBundle> TaskQueue;
-		/* The last queue that we successfully stole from. This is an offset index from the current thread index */
-		size_t LastSuccessfulSteal{1};
+		/* The queue of high priority waiting tasks. This also contains the ready waiting fibers, which are differentiated by the Task function == ReadyFiberDummyTask */
+		WaitFreeQueue<TaskBundle> HiPriTaskQueue;
+		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
+		size_t HiPriLastSuccessfulSteal{1};
+		/* The queue of high priority waiting tasks */
+		WaitFreeQueue<TaskBundle> LoPriTaskQueue;
+		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
+		size_t LoPriLastSuccessfulSteal{1};
+
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
-		/* The queue of ready waiting Fibers */
-		WaitFreeQueue<ReadyFiberBundle> ReadyFibers;
-		/* The last ReadyFibers queue we successfully stole from. This is an offset index from the current thread index */
-		size_t LastSuccessfulReadyFiberSteal{1};
+
 		/* The queue of ready waiting Fibers that were pinned to this thread */
-		std::vector<ReadyFiberBundle> PinnedReadyFibers;
+		std::vector<ReadyFiberBundle *> PinnedReadyFibers;
 		std::mutex PinnedReadyFibersLock;
+
 		unsigned FailedQueuePopAttempts{0};
 		/**
 		 * This lock is used with the CV below to put threads to sleep when there
@@ -212,11 +217,12 @@ public:
 	 *
 	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
 	 *
-	 * @param task       The task to queue
-	 * @param counter    An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
-	 *                   completes, it will be decremented.
+	 * @param task        The task to queue
+	 * @param priority    Which priority queue to put the task in
+	 * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
+	 *                    completes, it will be decremented.
 	 */
-	void AddTask(Task task, AtomicCounter *counter = nullptr);
+	void AddTask(Task task, TaskPriority priority, AtomicCounter *counter = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
@@ -224,10 +230,11 @@ public:
 	 *
 	 * @param numTasks    The number of tasks
 	 * @param tasks       The tasks to queue
+	 * @param priority    Which priority queue to put the tasks in
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
 	 *                    numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(unsigned numTasks, Task const *tasks, AtomicCounter *counter = nullptr);
+	void AddTasks(unsigned numTasks, Task const *tasks, TaskPriority priority, AtomicCounter *counter = nullptr);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -251,7 +258,7 @@ public:
 	 *
 	 * @return    The index of the current thread
 	 */
-	FTL_NOINLINE size_t GetCurrentThreadIndex();
+	FTL_NOINLINE size_t GetCurrentThreadIndex() const;
 
 	/**
 	 * Gets the amount of backing threads.
@@ -283,21 +290,34 @@ public:
 
 private:
 	/**
-	 * Pops the next task off the queue into nextTask. If there are no tasks in the
+	 * Pops the next task off the high priority queue into nextTask. If there are no tasks in the
+	 * the queue, it will return false.
+	 *
+	 * @param nextTask      If the queue is not empty, will be filled with the next task
+	 * @param taskBuffer    An empty buffer the function can use
+	 * @return              True: Successfully popped a task out of the queue
+	 */
+	bool GetNextHiPriTask(TaskBundle *nextTask, std::vector<TaskBundle> *taskBuffer);
+	/**
+	 * Pops the next task off the low priority queue into nextTask. If there are no tasks in the
 	 * the queue, it will return false.
 	 *
 	 * @param nextTask    If the queue is not empty, will be filled with the next task
 	 * @return            True: Successfully popped a task out of the queue
 	 */
-	bool GetNextTask(TaskBundle *nextTask);
+	bool GetNextLoPriTask(TaskBundle *nextTask);
+
 	/**
-	 * Pops the next readyFiberBundle off the ReadyFiber queue into readyFiber. If there
-	 * are no ready fibers in the queue, it will return false
+	 * Checks if the Task is ready to execute
+	 * "Real" tasks are always ready. ReadyFiber dummy tasks may be still waiting for the fiber to be switched
+	 * away from.
 	 *
-	 * @param readyFiber    If the queue is not empty, will be filled with the next ready fiber
-	 * @return              True; Successfully popped a ready fiber out of the queue
+	 * @param bundle    The task bundle to check
+	 * @return          True: task bundle is a "real" task or a ReadyFiber dummy task which is safe to execute
+	 *                  False: task bundle is a ReadyFiber dummy task which is not safe to execute
 	 */
-	bool GetReadyFiber(ReadyFiberBundle *readyFiber);
+	bool TaskIsReadyToExecute(TaskBundle *bundle) const;
+
 	/**
 	 * Gets the index of the next available fiber in the pool
 	 *
@@ -320,7 +340,7 @@ private:
 	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
 	 * up"
 	 */
-	void AddReadyFiber(size_t pinnedThreadIndex, size_t fiberIndex, std::atomic<bool> *fiberStoredFlag);
+	void AddReadyFiber(size_t pinnedThreadIndex, ReadyFiberBundle *bundle);
 
 	/**
 	 * The threadProc function for all worker threads

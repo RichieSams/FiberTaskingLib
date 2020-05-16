@@ -59,7 +59,7 @@ TEST_CASE("Thread Local", "[utility]") {
 	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, nullptr});
 
 	ftl::AtomicCounter ac(&taskScheduler);
-	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), &ac);
+	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Low, &ac);
 	taskScheduler.WaitForCounter(&ac, 0);
 
 	auto singleInitVals = SingleInitSingleton(&taskScheduler).GetAllValues();
@@ -69,7 +69,7 @@ TEST_CASE("Thread Local", "[utility]") {
 	// Side Effects
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, nullptr});
 
-	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), &ac);
+	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), ftl::TaskPriority::Low, &ac);
 	taskScheduler.WaitForCounter(&ac, 0);
 
 	auto sideEffect = SideEffectSingleton(&taskScheduler).GetAllValues();

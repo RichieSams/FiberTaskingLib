@@ -35,4 +35,9 @@ struct Task {
 	void *ArgData;
 };
 
+enum class TaskPriority {
+	High,
+	Low,
+};
+
 } // End of namespace ftl
