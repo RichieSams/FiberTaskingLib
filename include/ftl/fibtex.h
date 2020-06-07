@@ -66,7 +66,7 @@ public:
 	// ReSharper disable once CppInconsistentNaming
 	void lock(bool const pinToThread = false) {
 		while (true) {
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
 
@@ -91,10 +91,12 @@ public:
 		// Spin for a bit
 		for (unsigned i = 0; i < iterations; ++i) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
-			FTL_PAUSE();
+			while(m_atomicCounter.Load(std::memory_order_relaxed)){
+				FTL_PAUSE();
+			}
 		}
 
 		// Spinning didn't grab the lock, we're in for the long haul. Yield.
@@ -114,7 +116,7 @@ public:
 
 		while (true) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
 			FTL_PAUSE();
@@ -128,7 +130,7 @@ public:
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	bool try_lock() {
-		return m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel);
+		return m_atomicCounter.Set(std::memory_order_acq_rel);
 	}
 
 	/**
@@ -136,7 +138,7 @@ public:
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	void unlock() {
-		if (!m_atomicCounter.CompareExchange(1, 0, std::memory_order_acq_rel)) {
+		if (!m_atomicCounter.Reset(std::memory_order_acq_rel)) {
 			FTL_ASSERT("Error: Mutex was unlocked by another fiber or was double unlocked.", false);
 		}
 	}

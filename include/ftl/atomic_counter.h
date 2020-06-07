@@ -216,6 +216,34 @@ public:
 		return success;
 	}
 
+	/**
+	 *	Use the AtomicCounter in binary mode - sets the Counter to 1 and does not signal tasks
+	 *  @param memoryOrder      The memory order to use for the Set
+	 *  @return					If the Set succeded
+	 */
+	bool Set(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+		return m_value.exchange(1, memoryOrder) == 0;
+	}
+
+	/**
+	 *	Use the AtomicCounter in binary mode - resets the Counter to 0 and signals tasks waiting for 0
+	 *  @param memoryOrder      The memory order to use for the Reset
+	 *  @return					If the Reset succeded
+	 */
+	bool Reset(std::memory_order const memoryOrder = std::memory_order_seq_cst) {
+		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+
+		bool const success = m_value.exchange(0, memoryOrder) == 1;
+		if (!success) {
+			m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+			return false;
+		}
+		CheckWaitingFibers(0);
+
+		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+		return true;
+	}
+
 private:
 	/**
 	 * Add a fiber to the list of waiting fibers
