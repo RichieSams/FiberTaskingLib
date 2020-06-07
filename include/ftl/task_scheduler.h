@@ -59,6 +59,8 @@ struct TaskSchedulerInitOptions {
 	unsigned ThreadPoolSize = 0;
 	/* The behavior of the threads after they have no work to do */
 	EmptyQueueBehavior Behavior = EmptyQueueBehavior::Spin;
+	/* Callback to run on thread start */
+	void (*ThreadStartCallback)() = nullptr;
 };
 
 /**

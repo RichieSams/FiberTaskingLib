@@ -48,13 +48,14 @@ constexpr static int kInitErrorFailedToCreateWorkerThread = -60;
 struct ThreadStartArgs {
 	TaskScheduler *Scheduler;
 	unsigned ThreadIndex;
+	void(*ThreadStartCallback)();
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	unsigned const index = threadArgs->ThreadIndex;
-
+	void (*callback)() = threadArgs->ThreadStartCallback;
 	// Clean up
 	delete threadArgs;
 
@@ -62,6 +63,11 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	while (!taskScheduler->m_initialized.load(std::memory_order_acquire)) {
 		// Spin
 		FTL_PAUSE();
+	}
+
+	// Execute user thread start callback, if set
+	if (callback) {
+		callback();
 	}
 
 	// Get a free fiber to switch to
@@ -314,6 +320,7 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
 		threadArgs->ThreadIndex = static_cast<unsigned>(i);
+		threadArgs->ThreadStartCallback = options.ThreadStartCallback;
 
 		char threadName[256];
 		snprintf(threadName, sizeof(threadName), "FTL Worker Thread %zu", i);
