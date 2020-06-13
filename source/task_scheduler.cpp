@@ -691,11 +691,15 @@ void TaskScheduler::WaitForCounter(TaskCounter *counter, bool pinToCurrentThread
 	WaitForCounterInternal(counter, 0, pinToCurrentThread);
 }
 
+void TaskScheduler::WaitForCounter(AtomicFlag *counter, bool pinToCurrentThread) {
+	WaitForCounterInternal(counter, 0, pinToCurrentThread);
+}
+
 void TaskScheduler::WaitForCounter(FullAtomicCounter *counter, unsigned value, bool pinToCurrentThread) {
 	WaitForCounterInternal(counter, value, pinToCurrentThread);
 }
 
-void TaskScheduler::WaitForCounterInternal(TaskCounter *counter, unsigned value, bool pinToCurrentThread) {
+void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value, bool pinToCurrentThread) {
 	// Fast out
 	if (counter->m_value.load(std::memory_order_relaxed) == value) {
 		// wait for threads to drain from counter logic, otherwise we might continue too early

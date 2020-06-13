@@ -22,14 +22,14 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
+#include "ftl/base_counter.h"
 
 #include "ftl/ftl_valgrind.h"
 #include "ftl/task_scheduler.h"
 
 namespace ftl {
 
-TaskCounter::TaskCounter(TaskScheduler *const taskScheduler, unsigned const initialValue, size_t const fiberSlots)
+BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned const initialValue, size_t const fiberSlots)
         : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_fiberSlots(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
 	m_waitingFibers = new WaitingFiberBundle[fiberSlots];
@@ -50,7 +50,7 @@ TaskCounter::TaskCounter(TaskScheduler *const taskScheduler, unsigned const init
 	}
 }
 
-TaskCounter::~TaskCounter() {
+BaseCounter::~BaseCounter() {
 	// We can't destroy the counter until all other threads have left the member functions
 	while (m_lock.load(std::memory_order_relaxed) > 0) {
 		std::this_thread::yield();
@@ -60,30 +60,12 @@ TaskCounter::~TaskCounter() {
 	delete[] m_waitingFibers;
 }
 
-TaskCounter::WaitingFiberBundle::WaitingFiberBundle()
+BaseCounter::WaitingFiberBundle::WaitingFiberBundle()
         : InUse(true), PinnedThreadIndex(std::numeric_limits<size_t>::max()) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-void TaskCounter::Add(unsigned x) {
-	m_value.fetch_add(x, std::memory_order_seq_cst);
-}
-
-void TaskCounter::Decrement() {
-	m_lock.fetch_add(1U, std::memory_order_seq_cst);
-
-	const unsigned prev = m_value.fetch_sub(1U, std::memory_order_seq_cst);
-	const unsigned newValue = prev - 1;
-
-	// TaskCounters are only allowed to wait on 0, so we only need to check when newValue would be zero
-	if (newValue == 0) {
-		CheckWaitingFibers(newValue);
-	}
-
-	m_lock.fetch_sub(1U, std::memory_order_seq_cst);
-}
-
-bool TaskCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t const pinnedThreadIndex) {
+bool BaseCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t const pinnedThreadIndex) {
 	for (size_t i = 0; i < m_fiberSlots; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
@@ -134,7 +116,7 @@ bool TaskCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue,
 	return false;
 }
 
-void TaskCounter::CheckWaitingFibers(unsigned const value) {
+void BaseCounter::CheckWaitingFibers(unsigned const value) {
 	for (size_t i = 0; i < m_fiberSlots; ++i) {
 		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {

@@ -23,6 +23,7 @@
  */
 
 #include "ftl/fibtex.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "catch2/catch.hpp"
