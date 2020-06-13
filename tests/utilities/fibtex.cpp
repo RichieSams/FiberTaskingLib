@@ -70,7 +70,7 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 
 	MutexData md(&taskScheduler);
 
-	ftl::AtomicCounter c(&taskScheduler);
+	ftl::TaskCounter c(&taskScheduler);
 
 	constexpr size_t iterations = 20000;
 	for (size_t i = 0; i < iterations; ++i) {

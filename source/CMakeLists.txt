@@ -70,8 +70,9 @@ SetSourceGroup(NAME Core
 	PREFIX FTL
 	SOURCE_FILES 
 				 ../include/ftl/task.h
+	             ../include/ftl/task_counter.h
+	             task_counter.cpp
 	             ../include/ftl/atomic_counter.h
-	             atomic_counter.cpp
 	             ../include/ftl/task_scheduler.h
 	             task_scheduler.cpp
 )

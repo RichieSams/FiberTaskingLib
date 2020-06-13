@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "catch2/catch.hpp"
@@ -44,7 +44,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = {Consumer, arg};
 	}
 
-	ftl::AtomicCounter counter(taskScheduler);
+	ftl::TaskCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Low, &counter);
 	delete[] tasks;
 
@@ -66,7 +66,7 @@ TEST_CASE("Producer Consumer", "[functional]") {
 		task = {Producer, &globalCounter};
 	}
 
-	ftl::AtomicCounter counter(&taskScheduler);
+	ftl::TaskCounter counter(&taskScheduler);
 	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), ftl::TaskPriority::Low, &counter);
 	taskScheduler.WaitForCounter(&counter, 0);
 

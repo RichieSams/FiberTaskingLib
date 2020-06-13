@@ -34,7 +34,7 @@ option(FTL_CPP_17 "Enable C++17 features" OFF)
 option(FTL_WERROR "Promote compiler warnings to errors." OFF)
 option(FTL_DISABLE_ITERATOR_DEBUG "In MSVC, sets _ITERATOR_DEBUG_LEVEL=0. NOP for all other compilers." OFF)
 
-set(FTL_NUM_WAITING_FIBER_SLOTS 4 CACHE STRING "Number of slots within ftl::AtomicCounter for fibers to wait")
+set(FTL_NUM_WAITING_FIBER_SLOTS 4 CACHE STRING "Number of slots within ftl::TaskCounter for fibers to wait")
 
 # Include Valgrind
 if (FTL_VALGRIND)

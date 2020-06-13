@@ -25,6 +25,7 @@
 #include "ftl/task_scheduler.h"
 
 #include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
 
 #if defined(FTL_WIN32_THREADS)
@@ -175,7 +176,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
 				if (nextTask.Counter != nullptr) {
-					nextTask.Counter->FetchSub(1);
+					nextTask.Counter->Decrement();
 				}
 			} else {
 				// We failed to find a Task from any of the queues
@@ -375,9 +376,9 @@ TaskScheduler::~TaskScheduler() {
 	delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, AtomicCounter *const counter) {
+void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter *const counter) {
 	if (counter != nullptr) {
-		counter->FetchAdd(1);
+		counter->Add(1);
 	}
 
 	const TaskBundle bundle = {task, counter};
@@ -394,9 +395,9 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, AtomicCounte
 	}
 }
 
-void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, TaskPriority priority, AtomicCounter *const counter) {
+void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, TaskPriority priority, TaskCounter *const counter) {
 	if (counter != nullptr) {
-		counter->FetchAdd(numTasks);
+		counter->Add(numTasks);
 	}
 
 	WaitFreeQueue<TaskBundle> *queue = nullptr;
@@ -686,9 +687,17 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBund
 	}
 }
 
-void TaskScheduler::WaitForCounter(AtomicCounter *const counter, unsigned const value, bool const pinToCurrentThread) {
+void TaskScheduler::WaitForCounter(TaskCounter *counter, bool pinToCurrentThread) {
+	WaitForCounterInternal(counter, 0, pinToCurrentThread);
+}
+
+void TaskScheduler::WaitForCounter(FullAtomicCounter *counter, unsigned value, bool pinToCurrentThread) {
+	WaitForCounterInternal(counter, value, pinToCurrentThread);
+}
+
+void TaskScheduler::WaitForCounterInternal(TaskCounter *counter, unsigned value, bool pinToCurrentThread) {
 	// Fast out
-	if (counter->Load(std::memory_order_relaxed) == value) {
+	if (counter->m_value.load(std::memory_order_relaxed) == value) {
 		// wait for threads to drain from counter logic, otherwise we might continue too early
 		while (counter->m_lock.load() > 0) {
 		}

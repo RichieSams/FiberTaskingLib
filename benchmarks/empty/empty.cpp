@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "nonius/nonius.hpp"
@@ -46,7 +46,7 @@ NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
 
 	meter.measure([&taskScheduler, tasks] {
 		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::AtomicCounter counter(&taskScheduler);
+			ftl::TaskCounter counter(&taskScheduler);
 			taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Low);
 
 			taskScheduler.WaitForCounter(&counter, 0);

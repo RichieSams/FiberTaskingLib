@@ -37,7 +37,8 @@
 
 namespace ftl {
 
-class AtomicCounter;
+class TaskCounter;
+class FullAtomicCounter;
 
 enum class EmptyQueueBehavior {
 	// Fixing this will break api.
@@ -122,7 +123,7 @@ private:
 	 */
 	struct TaskBundle {
 		Task TaskToExecute;
-		AtomicCounter *Counter;
+		TaskCounter *Counter;
 	};
 
 	struct ReadyFiberBundle {
@@ -133,12 +134,12 @@ private:
 	};
 
 	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(size_t const fiberIndex, AtomicCounter *const counter, unsigned const targetValue)
+		PinnedWaitingFiberBundle(size_t const fiberIndex, TaskCounter *const counter, unsigned const targetValue)
 		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
 		size_t FiberIndex;
-		AtomicCounter *Counter;
+		TaskCounter *Counter;
 		unsigned TargetValue;
 	};
 
@@ -195,7 +196,7 @@ private:
 	 * We friend AtomicCounter so we can keep AddReadyFiber() private
 	 * This makes the public API cleaner
 	 */
-	friend class AtomicCounter;
+	friend class TaskCounter;
 
 public:
 	/**
@@ -220,7 +221,7 @@ public:
 	 * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
 	 *                    completes, it will be decremented.
 	 */
-	void AddTask(Task task, TaskPriority priority, AtomicCounter *counter = nullptr);
+	void AddTask(Task task, TaskPriority priority, TaskCounter *counter = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
@@ -232,18 +233,25 @@ public:
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
 	 *                    numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(unsigned numTasks, Task const *tasks, TaskPriority priority, AtomicCounter *counter = nullptr);
+	void AddTasks(unsigned numTasks, Task const *tasks, TaskPriority priority, TaskCounter *counter = nullptr);
 
 	/**
-	 * Yields execution to another task until counter == value
-	 *
-	 * NOTE: This can *only* be called from the main thread or inside tasks on the worker threads
+	 * Yields execution to another task until counter == 0
 	 *
 	 * @param counter             The counter to check
 	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
-	void WaitForCounter(AtomicCounter *counter, unsigned value, bool pinToCurrentThread = false);
+	void WaitForCounter(TaskCounter *counter, bool pinToCurrentThread = false);
+
+	/**
+	 * Yields execution to another task until counter == value
+	 *
+	 * @param counter             The counter to check
+	 * @param value               The value to wait for
+	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
+	 */
+	void WaitForCounter(FullAtomicCounter *counter, unsigned value, bool pinToCurrentThread = false);
 
 	/**
 	 * Gets the 0-based index of the current thread
@@ -327,6 +335,8 @@ private:
 	 * The old fiber is the last fiber to run on the thread before the current fiber
 	 */
 	void CleanUpOldFiber();
+
+	void WaitForCounterInternal(TaskCounter *counter, unsigned value, bool pinToCurrentThread);
 
 	/**
 	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching

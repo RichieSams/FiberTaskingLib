@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "catch2/catch.hpp"
@@ -90,7 +90,7 @@ TEST_CASE("Triangle Number", "[functional]") {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	ftl::AtomicCounter counter(&taskScheduler);
+	ftl::TaskCounter counter(&taskScheduler);
 	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Low, &counter);
 	delete[] tasks;
 
