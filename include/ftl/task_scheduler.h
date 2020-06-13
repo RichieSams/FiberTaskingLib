@@ -37,7 +37,9 @@
 
 namespace ftl {
 
+class BaseCounter;
 class TaskCounter;
+class AtomicFlag;
 class FullAtomicCounter;
 
 enum class EmptyQueueBehavior {
@@ -196,7 +198,7 @@ private:
 	 * We friend AtomicCounter so we can keep AddReadyFiber() private
 	 * This makes the public API cleaner
 	 */
-	friend class TaskCounter;
+	friend class BaseCounter;
 
 public:
 	/**
@@ -243,6 +245,15 @@ public:
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
 	void WaitForCounter(TaskCounter *counter, bool pinToCurrentThread = false);
+
+	/**
+	 * Yields execution to another task until counter == 0
+	 *
+	 * @param counter             The counter to check
+	 * @param value               The value to wait for
+	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
+	 */
+	void WaitForCounter(AtomicFlag *counter, bool pinToCurrentThread = false);
 
 	/**
 	 * Yields execution to another task until counter == value
@@ -336,7 +347,7 @@ private:
 	 */
 	void CleanUpOldFiber();
 
-	void WaitForCounterInternal(TaskCounter *counter, unsigned value, bool pinToCurrentThread);
+	void WaitForCounterInternal(BaseCounter *counter, unsigned value, bool pinToCurrentThread);
 
 	/**
 	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching
