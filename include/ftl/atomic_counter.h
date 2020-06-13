@@ -96,7 +96,7 @@ private:
 		unsigned TargetValue{0};
 		/**
 		 * The index of the thread this fiber is pinned to
-		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<size_t>::max()
+		 * If the fiber *isn't* pinned, this will equal kNoThreadPinning
 		 */
 		size_t PinnedThreadIndex;
 	};
@@ -224,7 +224,7 @@ private:
 	 *
 	 * @param targetValue          The target value the fiber is waiting for
 	 * @param fiberBundle          The fiber that is waiting
-	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == kNoThreadPinning, the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
 	bool AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
