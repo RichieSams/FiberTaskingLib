@@ -17,7 +17,7 @@ http://twvideo01.ubm-us.net/o1/vault/gdc2015/presentations/Gyrling_Christian_Par
 ## Example
 [source,cc]
 ----
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include <assert.h>
@@ -84,7 +84,7 @@ int main(int argc, char *argv) {
 	}
 
 	// Schedule the tasks
-	ftl::AtomicCounter counter(&taskScheduler);
+	ftl::TaskCounter counter(&taskScheduler);
 	taskScheduler.AddTasks(numTasks, tasks, &counter);
 
 	// FTL creates its own copies of the tasks, so we can safely delete the memory
@@ -204,25 +204,48 @@ You schedule a task for execution by calling TaskScheduler::AddTasks()
 
 [source,cc]
 ----
-ftl::AtomicCounter counter(taskScheduler);
+ftl::TaskCounter counter(taskScheduler);
 taskScheduler->AddTasks(10, tasks, &counter);
 ----
 
 The tasks get added to the queue, and other threads (or the current one, when it is finished with the current task) can start executing them when they get popped off the queue.
 
-AddTasks can optionally take a pointer to an AtomicCounter. If you do, the value of the counter will be set equal to the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
+AddTasks can optionally take a pointer to a TaskCounter. If you do, the value of the counter will incremented by the number of tasks queued. Every time a task finishes, the counter will be atomically decremented. You can use this functionality to create depencendies between tasks. You do that with the function
 
 [source,cc]
 ----
-void TaskScheduler::WaitForCounter(AtomicCounter *counter, int targetValue);
+void TaskScheduler::WaitForCounter(TaskCounter *counter);
 ----
 
-This is where fibers come into play. If the counter == value, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** list and grab a new fiber from the **Fiber Pool**. The new fiber pops a task from the **Task Queue** and starts execution with that.
+This is where fibers come into play. If the counter == 0, the function trivially returns. If not, the scheduler will move the current fiber into the **Waiting Tasks** list and grab a new fiber from the **Fiber Pool**. The new fiber pops a task from the **Task Queue** and starts execution with that.
 
 But what about the task we stored in **Waiting Tasks**? When will it finish being executed? 
 
-Every time an AtomicCounter is modified ( Store() / FetchAdd() / FetchSub() ), we check the new value against the targetValue of any fibers that are waiting on the counter. If we find one, we remove it from the list, and add it to a **Ready Fibers** list in the TaskScheduler.
+When the TaskCounter hit zero from decrements, we add all the waiting fibers to the **Ready Fibers** list in the TaskScheduler.
 Before a fiber tries to pop a task off the **Task Queue**, it checks if there are any **Ready Fibers**. If so, it will return itself to the **Fiber Pool** and switch to the fiber that is ready. The ready fiber will continue execution right where it left off
+
+{blank}
+
+## Advanced Features
+
+### FullAtomicCounter
+
+TaskCounters are implemented with an internal atomic counter. However, access to this atomic counter is protected from the user for performance and algorithmic simplicity reasons.
+That said, it can be useful to be able to use WaitForCounter on something non task-related. That's where FullAtomicCounter comes in.
+
+FullAtomicCounter has member functions correlaries for all the "regular" atomic functions (load, store, fetch_add, etc).
+Each time they're called, we check all waiting fibers if they're equal to their target value. In comparison, TaskCounter only checks when the final value is zero.
+Therefore, FullAtomicCounter has more overhead than TaskCounter, but much greater flexibility
+
+### Fibtex
+
+Generally, you shouldn't use Mutexes in fiber code, for two reasons:
+
+1. If you take a mutex, and call WaitForCounter(), when WaitForCounter resumes, your code could be on another thread. The mutex unlock will be undefined behavior, and probably lead to a deadlock
+2. Mutex contention will block the worker threads. And since we generally don't oversubscribe the threads to the cores, this leaves cores idle.
+
+To solve this, we created Fibtex. It implements the std lockable interface, so you can use it with all your favorite wrappers (std::lock_guard, std::unique_lock, etc.)
+It's implemented behind the scenes with a TaskCounter, so if a Fibtex is locked, a waiter can switch to another task and do valuable work
 
 {blank}
 

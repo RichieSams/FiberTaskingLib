@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "nonius/nonius.hpp"
@@ -42,7 +42,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = {Consumer, arg};
 	}
 
-	ftl::AtomicCounter counter(taskScheduler);
+	ftl::TaskCounter counter(taskScheduler);
 	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Low, &counter);
 	delete[] tasks;
 
@@ -62,7 +62,7 @@ NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
 
 	meter.measure([&taskScheduler, tasks] {
 		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::AtomicCounter counter(&taskScheduler);
+			ftl::TaskCounter counter(&taskScheduler);
 			taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Low);
 
 			taskScheduler.WaitForCounter(&counter, 0);

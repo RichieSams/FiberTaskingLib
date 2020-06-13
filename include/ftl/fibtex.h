@@ -24,8 +24,9 @@
 
 #pragma once
 
-#include "atomic_counter.h"
-#include "task_scheduler.h"
+#include "ftl/atomic_counter.h"
+#include "ftl/task_scheduler.h"
+
 #include <cassert>
 #include <mutex>
 #include <system_error>
@@ -60,17 +61,23 @@ public:
 
 	~Fibtex() = default;
 
+private:
+	bool m_ableToSpin;
+	TaskScheduler *m_taskScheduler;
+	AtomicFlag m_atomicCounter;
+
+public:
 	/**
 	 * Lock mutex in traditional way, yielding immediately.
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	void lock(bool const pinToThread = false) {
 		while (true) {
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
 
-			m_taskScheduler->WaitForCounter(&m_atomicCounter, 0, pinToThread);
+			m_taskScheduler->WaitForCounter(&m_atomicCounter, pinToThread);
 		}
 	}
 
@@ -91,7 +98,7 @@ public:
 		// Spin for a bit
 		for (unsigned i = 0; i < iterations; ++i) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
 			FTL_PAUSE();
@@ -114,7 +121,7 @@ public:
 
 		while (true) {
 			// Spin
-			if (m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel)) {
+			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
 				return;
 			}
 			FTL_PAUSE();
@@ -128,7 +135,7 @@ public:
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	bool try_lock() {
-		return m_atomicCounter.CompareExchange(0, 1, std::memory_order_acq_rel);
+		return m_atomicCounter.Set(std::memory_order_acq_rel);
 	}
 
 	/**
@@ -136,15 +143,10 @@ public:
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	void unlock() {
-		if (!m_atomicCounter.CompareExchange(1, 0, std::memory_order_acq_rel)) {
+		if (!m_atomicCounter.Clear(std::memory_order_acq_rel)) {
 			FTL_ASSERT("Error: Mutex was unlocked by another fiber or was double unlocked.", false);
 		}
 	}
-
-private:
-	bool m_ableToSpin;
-	TaskScheduler *m_taskScheduler;
-	AtomicCounter m_atomicCounter;
 };
 
 enum class FibtexLockBehavior {

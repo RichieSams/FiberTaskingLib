@@ -23,7 +23,7 @@
  */
 
 #include "ftl/thread_local.h"
-#include "ftl/atomic_counter.h"
+#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
 #include "catch2/catch.hpp"
@@ -58,7 +58,7 @@ TEST_CASE("Thread Local", "[utility]") {
 	// Single Init
 	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, nullptr});
 
-	ftl::AtomicCounter ac(&taskScheduler);
+	ftl::TaskCounter ac(&taskScheduler);
 	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Low, &ac);
 	taskScheduler.WaitForCounter(&ac, 0);
 
