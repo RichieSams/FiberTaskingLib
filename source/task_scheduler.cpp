@@ -95,7 +95,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 	// Process tasks infinitely, until quit
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
-		size_t waitingFiberIndex = kFTLInvalidIndex;
+		size_t waitingFiberIndex = kInvalidIndex;
 		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
 		bool readyWaitingFibers = false;
@@ -124,7 +124,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 		bool foundTask = false;
 
 		// If nothing was found, check if there is a high priority task to run
-		if (waitingFiberIndex == kFTLInvalidIndex) {
+		if (waitingFiberIndex == kInvalidIndex) {
 			foundTask = taskScheduler->GetNextHiPriTask(&nextTask, &taskBuffer);
 
 			// Check if the found task is a ReadyFiber dummy task
@@ -137,7 +137,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			}
 		}
 
-		if (waitingFiberIndex != kFTLInvalidIndex) {
+		if (waitingFiberIndex != kInvalidIndex) {
 			// Found a waiting task that is ready to continue
 
 			tls.OldFiberIndex = tls.CurrentFiberIndex;
@@ -438,7 +438,7 @@ FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
 		}
 	}
 
-	return kFTLInvalidIndex;
+	return kInvalidIndex;
 }
 
 #elif defined(FTL_POSIX_THREADS)
@@ -451,7 +451,7 @@ FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
 		}
 	}
 
-	return kFTLInvalidIndex;
+	return kInvalidIndex;
 }
 
 #endif
@@ -642,7 +642,7 @@ void TaskScheduler::CleanUpOldFiber() {
 		// So in order to "Push" the fiber to the fiber pool, we just set its corresponding atomic to true
 		m_freeFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
 		tls.OldFiberDestination = FiberDestination::None;
-		tls.OldFiberIndex = kFTLInvalidIndex;
+		tls.OldFiberIndex = kInvalidIndex;
 		break;
 	case FiberDestination::ToWaiting:
 		// The waiting fibers are stored directly in their counters
@@ -650,7 +650,7 @@ void TaskScheduler::CleanUpOldFiber() {
 		// We just have to set it to true
 		tls.OldFiberStoredFlag->store(true, std::memory_order_release);
 		tls.OldFiberDestination = FiberDestination::None;
-		tls.OldFiberIndex = kFTLInvalidIndex;
+		tls.OldFiberIndex = kInvalidIndex;
 		break;
 	case FiberDestination::None:
 	default:
@@ -659,7 +659,7 @@ void TaskScheduler::CleanUpOldFiber() {
 }
 
 void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBundle *bundle) {
-	if (pinnedThreadIndex == std::numeric_limits<size_t>::max()) {
+	if (pinnedThreadIndex == kNoThreadPinning) {
 		ThreadLocalStorage *tls = &m_tls[GetCurrentThreadIndex()];
 
 		// Push a dummy task to the high priority queue
@@ -715,7 +715,7 @@ void TaskScheduler::WaitForCounter(AtomicCounter *const counter, unsigned const 
 	if (pinToCurrentThread) {
 		pinnedThreadIndex = GetCurrentThreadIndex();
 	} else {
-		pinnedThreadIndex = std::numeric_limits<size_t>::max();
+		pinnedThreadIndex = kNoThreadPinning;
 	}
 
 	// Create the ready fiber bundle and attempt to add it to the waiting list

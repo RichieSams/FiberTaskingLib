@@ -78,7 +78,8 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static size_t kFTLInvalidIndex = std::numeric_limits<size_t>::max();
+	constexpr static size_t kInvalidIndex = std::numeric_limits<size_t>::max();
+	constexpr static size_t kNoThreadPinning = std::numeric_limits<size_t>::max();
 
 	size_t m_numThreads{0};
 	ThreadType *m_threads{nullptr};
@@ -135,7 +136,7 @@ private:
 
 	struct alignas(kCacheLineSize) ThreadLocalStorage {
 		ThreadLocalStorage()
-		        : CurrentFiberIndex(kFTLInvalidIndex), OldFiberIndex(kFTLInvalidIndex) {
+		        : CurrentFiberIndex(kInvalidIndex), OldFiberIndex(kInvalidIndex) {
 		}
 
 	public:
@@ -334,8 +335,7 @@ private:
 	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching
 	 * for a new task
 	 *
-	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal
-	 * std::numeric_limits<size_t>::max()
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal kNoThreadPinning
 	 * @param fiberIndex           The index of the fiber to add
 	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
 	 * up"

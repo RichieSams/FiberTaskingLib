@@ -61,7 +61,7 @@ AtomicCounter::~AtomicCounter() {
 }
 
 AtomicCounter::WaitingFiberBundle::WaitingFiberBundle()
-        : InUse(true), PinnedThreadIndex(std::numeric_limits<size_t>::max()) {
+        : InUse(true), PinnedThreadIndex(TaskScheduler::kNoThreadPinning) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
