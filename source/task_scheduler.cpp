@@ -185,7 +185,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 					bool waited = false;
 					if (!readyWaitingFibers) {
 						std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
-
+						
+						++tls.FailedQueuePopAttempts;
 						// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
 						while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 							tls.FailedQueuePopCV.wait(lock);
