@@ -104,7 +104,6 @@ int main(int argc, char *argv) {
 
 	// Cleanup
 	delete[] subsets;
-	delete[] tasks;
 
 	// The destructor of TaskScheduler will shut down all the worker threads
 	// and unbind the main thread
