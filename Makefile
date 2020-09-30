@@ -47,8 +47,7 @@ DOCKER_IMAGE=richiesams/docker_$(COMPILER):$(VERSION)
 
 .PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run
 
-pull_image:
-	docker pull $(DOCKER_IMAGE)
+all: generate_linux build_linux
 
 generate_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) generate_linux_native
