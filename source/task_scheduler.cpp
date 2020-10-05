@@ -56,6 +56,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	unsigned const index = threadArgs->ThreadIndex;
 	void (*callback)() = threadArgs->ThreadStartCallback;
+	
 	// Clean up
 	delete threadArgs;
 
@@ -66,7 +67,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	}
 
 	// Execute user thread start callback, if set
-	if (callback) {
+	if (callback != nullptr) {
 		callback();
 	}
 
