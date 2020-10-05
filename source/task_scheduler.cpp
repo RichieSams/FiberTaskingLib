@@ -151,7 +151,6 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			taskScheduler->CleanUpOldFiber();
 
 			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
-				std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
 				tls.FailedQueuePopAttempts = 0;
 			}
 		} else {
@@ -164,7 +163,6 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 			if (foundTask) {
 				if (behavior == EmptyQueueBehavior::Sleep) {
-					std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
 					tls.FailedQueuePopAttempts = 0;
 				}
 
@@ -182,21 +180,14 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 				case EmptyQueueBehavior::Sleep: {
 					// If we have a ready waiting fiber, prevent sleep
-					bool waited = false;
 					if (!readyWaitingFibers) {
-						std::unique_lock<std::mutex> lock(tls.FailedQueuePopLock);
-						
 						++tls.FailedQueuePopAttempts;
 						// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
-						while (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
-							tls.FailedQueuePopCV.wait(lock);
-							waited = true;
+						if (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+							std::unique_lock<std::mutex> lock(taskScheduler->ThreadSleepLock);
+							taskScheduler->ThreadSleepCV.wait(lock);
+							tls.FailedQueuePopAttempts = 0;
 						}
-					}
-
-					// If we didn't wait for anything, we should yield to give the other threads time to complete switching / tasks
-					if (!waited) {
-						YieldThread();
 					}
 
 					break;
@@ -341,13 +332,7 @@ TaskScheduler::~TaskScheduler() {
 
 	// Signal any waiting threads so they can finish
 	if (m_emptyQueueBehavior.load(std::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
-		for (size_t i = 0; i < m_numThreads; ++i) {
-			{
-				std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
-				m_tls[i].FailedQueuePopAttempts = 0;
-			}
-			m_tls[i].FailedQueuePopCV.notify_all();
-		}
+		ThreadSleepCV.notify_all();
 	}
 
 	// Jump to the quit fiber
@@ -387,16 +372,8 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, AtomicCounte
 
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
-		// Find a thread that is sleeping and wake it
-		for (size_t i = 0; i < m_numThreads; ++i) {
-			std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
-			if (m_tls[i].FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
-				m_tls[i].FailedQueuePopAttempts = 0;
-				m_tls[i].FailedQueuePopCV.notify_one();
-
-				break;
-			}
-		}
+		// Wake a sleeping thread
+		ThreadSleepCV.notify_one();
 	}
 }
 
@@ -419,13 +396,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 	const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 	if (behavior == EmptyQueueBehavior::Sleep) {
 		// Wake all the threads
-		for (size_t i = 0; i < m_numThreads; ++i) {
-			{
-				std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
-				m_tls[i].FailedQueuePopAttempts = 0;
-			}
-			m_tls[i].FailedQueuePopCV.notify_all();
-		}
+		ThreadSleepCV.notify_all();
 	}
 }
 
@@ -530,13 +501,7 @@ cleanup:
 		EmptyQueueBehavior const behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 		if (behavior == EmptyQueueBehavior::Sleep) {
 			// Wake all the threads
-			for (size_t i = 0; i < m_numThreads; ++i) {
-				{
-					std::unique_lock<std::mutex> lock(m_tls[i].FailedQueuePopLock);
-					m_tls[i].FailedQueuePopAttempts = 0;
-				}
-				m_tls[i].FailedQueuePopCV.notify_all();
-			}
+			ThreadSleepCV.notify_all();
 		}
 	}
 
@@ -685,16 +650,12 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBund
 		// searches for a Task to run.
 		//
 		// However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
-		// Therefore, we need to kick the thread to make sure that it's awake
+		// Therefore, we need to kick all the threads so that the pinned-to thread can take it
 		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 		if (behavior == EmptyQueueBehavior::Sleep) {
 			if (GetCurrentThreadIndex() != pinnedThreadIndex) {
-				// Kick the thread
-				{
-					std::unique_lock<std::mutex> lock(tls->FailedQueuePopLock);
-					tls->FailedQueuePopAttempts = 0;
-				}
-				tls->FailedQueuePopCV.notify_all();
+				// Kick all threads
+				ThreadSleepCV.notify_all();
 			}
 		}
 	}

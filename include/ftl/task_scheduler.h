@@ -101,6 +101,12 @@ private:
 	std::atomic<size_t> m_quitCount{0};
 
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
+	/**
+	* This lock is used with the CV below to put threads to sleep when there
+	* is no work to do.
+	*/
+	std::mutex ThreadSleepLock;
+	std::condition_variable ThreadSleepCV;
 
 	enum class FiberDestination {
 		None = 0,
@@ -172,17 +178,6 @@ private:
 		std::mutex PinnedReadyFibersLock;
 
 		unsigned FailedQueuePopAttempts{0};
-		/**
-		 * This lock is used with the CV below to put threads to sleep when there
-		 * is no work to do. It also protects accesses to FailedQueuePopAttempts.
-		 *
-		 * We *could* use an atomic for FailedQueuePopAttempts, however, we still need
-		 * to lock when changing the value, because spurious wakes of the CV could
-		 * cause a thread to fail to wake up. See https://stackoverflow.com/a/36130475
-		 * So, if we need to lock, there is no reason to have the overhead of an atomic as well.
-		 */
-		std::mutex FailedQueuePopLock;
-		std::condition_variable FailedQueuePopCV;
 	};
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple
