@@ -645,6 +645,13 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBund
 		taskBundle.Counter = nullptr;
 
 		tls->HiPriTaskQueue.Push(taskBundle);
+		
+		// If we're using EmptyQueueBehavior::Sleep, the other threads could be sleeping
+		// Therefore, we need to kick a thread awake to ensure that the readied task is taken
+		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
+		if (behavior == EmptyQueueBehavior::Sleep) {
+			ThreadSleepCV.notify_one();
+		}
 	} else {
 		ThreadLocalStorage *tls = &m_tls[pinnedThreadIndex];
 
