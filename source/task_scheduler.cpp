@@ -192,7 +192,16 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 						// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
 						if (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 							std::unique_lock<std::mutex> lock(taskScheduler->ThreadSleepLock);
-							taskScheduler->ThreadSleepCV.wait(lock);
+							// Acquire the pinned ready fibers lock here and check if there are any pinned fibers ready
+							// Acquiring the lock here prevents a race between readying a pinned fiber (on another thread) and going to sleep
+							// Either this thread wins, then notify_*() will wake it
+							// Or the other thread wins, then this thread will observe the pinned fiber, and will not go to sleep
+							std::unique_lock<std::mutex> readyfiberslock(tls.PinnedReadyFibersLock);
+							if (tls.PinnedReadyFibers.empty()) {
+								// Unlock before going to sleep (the other lock is released by the CV wait)
+								readyfiberslock.unlock();
+								taskScheduler->ThreadSleepCV.wait(lock);
+							}
 							tls.FailedQueuePopAttempts = 0;
 						}
 					}
