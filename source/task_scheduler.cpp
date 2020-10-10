@@ -678,6 +678,7 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBund
 		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 		if (behavior == EmptyQueueBehavior::Sleep) {
 			if (GetCurrentThreadIndex() != pinnedThreadIndex) {
+				std::unique_lock<std::mutex> lock(ThreadSleepLock);
 				// Kick all threads
 				ThreadSleepCV.notify_all();
 			}
