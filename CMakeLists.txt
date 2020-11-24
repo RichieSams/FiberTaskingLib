@@ -28,6 +28,7 @@ project(FiberTaskingLib CXX)
 # Options
 option(FTL_BUILD_TESTS "Build FiberTaskingLib tests" ON)
 option(FTL_BUILD_BENCHMARKS "Build FiberTaskingLib benchmarks" ON)
+option(FTL_BUILD_EXAMPLES "Build FiberTaskingLib examples" ON)
 option(FTL_VALGRIND "Link and test with Valgrind" OFF)
 option(FTL_FIBER_STACK_GUARD_PAGES "Add guard pages around the fiber stacks" OFF)
 option(FTL_CPP_17 "Enable C++17 features" OFF)
@@ -69,4 +70,9 @@ endif()
 # Build benchmarks
 if (FTL_BUILD_BENCHMARKS)
 	add_subdirectory(benchmarks)
+endif()
+
+# Build examples
+if (FTL_BUILD_EXAMPLES)
+	add_subdirectory(examples)
 endif()
