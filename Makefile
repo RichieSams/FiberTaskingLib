@@ -43,7 +43,7 @@ endif
 CMAKE_GEN_NAME?=Visual Studio 15 2017 Win64
 CMAKE_ARCH_ARG?=
 
-DOCKER_IMAGE=richiesams/docker_$(COMPILER):$(VERSION)
+DOCKER_IMAGE=quay.io/richiesams/docker_$(COMPILER):$(VERSION)
 
 .PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run
 
@@ -111,7 +111,7 @@ clean_windows:
 
 
 format:
-	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:latest /bin/bash tools/format.sh
+	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /bin/bash tools/format.sh
 
 lint:
-	docker run --rm -v $(CURDIR):/app -w /app richiesams/clang-tools-extra:latest /bin/bash tools/lint-clang.sh
+	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /bin/bash tools/lint-clang.sh
