@@ -1,3 +1,11 @@
+/*
+I'd love to have the below be included directly in the README.asciidoc file with an `include::` block,
+so it's not possible to be out of date. However, Github doesn't support include blocks. :(
+So we have to do it manually.
+
+!! If you update this example, make sure it matches the code in `README.asciidoc` !!
+*/
+
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
