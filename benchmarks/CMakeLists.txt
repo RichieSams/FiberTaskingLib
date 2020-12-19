@@ -39,11 +39,18 @@ SetSourceGroup(NAME "Producer Consumer"
 	SOURCE_FILES producer_consumer/producer_consumer.cpp
 )
 
+SetSourceGroup(NAME Synthetic
+    PREFIX FTL_BENCHMARK
+    SOURCE_FILES synthetic/fibonacci.cpp
+                 synthetic/mandelbrot.cpp
+)
+
 
 set(FTL_BENCHMARK_SRC
 	${FTL_BENCHMARK_ROOT}
 	${FTL_BENCHMARK_EMPTY}
 	${FTL_BENCHMARK_PRODUCER_CONSUMER}
+    ${FTL_BENCHMARK_SYNTHETIC}
 )
 
 

@@ -22,37 +22,35 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
-#include "ftl/task_scheduler.h"
-
 #include "nonius/nonius.hpp"
 
 // Constants
-constexpr static unsigned kNumTasks = 65000;
-constexpr static unsigned kNumIterations = 1;
+volatile static uint64_t kFibinacciNumber = 1000;
 
-void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
-	// No-Op
+uint64_t Fibonacci(uint64_t n) {
+	if (n <= 1) {
+		return n;
+	}
+
+	// Work our way up to n, accumulating as we go
+	uint64_t prevFib = 0;
+	uint64_t currFib = 1;
+	for (uint64_t i = 0; i < n - 1; ++i) {
+		uint64_t newFib = prevFib + currFib;
+		prevFib = currFib;
+		currFib = newFib;
+	}
+
+	return currFib;
 }
 
-//NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
-//	ftl::TaskScheduler taskScheduler;
-//	taskScheduler.Init();
-//
-//	auto *tasks = new ftl::Task[kNumTasks];
-//	for (unsigned i = 0; i < kNumTasks; ++i) {
-//		tasks[i] = {EmptyBenchmarkTask, nullptr};
-//	}
-//
-//	meter.measure([&taskScheduler, tasks] {
-//		for (unsigned i = 0; i < kNumIterations; ++i) {
-//			ftl::TaskCounter counter(&taskScheduler);
-//			taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Low);
-//
-//			taskScheduler.WaitForCounter(&counter, 0);
-//		}
-//	});
-//
-//	// Cleanup
-//	delete[] tasks;
-//})
+NONIUS_BENCHMARK("Fibonacci", [](nonius::chronometer meter) {
+	meter.measure([] {
+		uint64_t total = 0;
+		for (int i = 0; i < 4000; ++i) {
+			total += Fibonacci(kFibinacciNumber + i);
+		}
+
+		return total;
+	});
+})

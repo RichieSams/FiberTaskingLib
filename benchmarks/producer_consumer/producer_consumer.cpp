@@ -49,26 +49,26 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	taskScheduler->WaitForCounter(&counter, 0);
 }
 
-NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
-	ftl::TaskScheduler taskScheduler;
-	ftl::TaskSchedulerInitOptions options;
-	options.ThreadPoolSize = kNumProducerTasks + 20;
-	taskScheduler.Init(options);
-
-	auto *tasks = new ftl::Task[kNumProducerTasks];
-	for (unsigned i = 0; i < kNumProducerTasks; ++i) {
-		tasks[i] = {Producer, nullptr};
-	}
-
-	meter.measure([&taskScheduler, tasks] {
-		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::TaskCounter counter(&taskScheduler);
-			taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Low);
-
-			taskScheduler.WaitForCounter(&counter, 0);
-		}
-	});
-
-	// Cleanup
-	delete[] tasks;
-})
+//NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
+//	ftl::TaskScheduler taskScheduler;
+//	ftl::TaskSchedulerInitOptions options;
+//	options.ThreadPoolSize = kNumProducerTasks + 20;
+//	taskScheduler.Init(options);
+//
+//	auto *tasks = new ftl::Task[kNumProducerTasks];
+//	for (unsigned i = 0; i < kNumProducerTasks; ++i) {
+//		tasks[i] = {Producer, nullptr};
+//	}
+//
+//	meter.measure([&taskScheduler, tasks] {
+//		for (unsigned i = 0; i < kNumIterations; ++i) {
+//			ftl::TaskCounter counter(&taskScheduler);
+//			taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Low);
+//
+//			taskScheduler.WaitForCounter(&counter, 0);
+//		}
+//	});
+//
+//	// Cleanup
+//	delete[] tasks;
+//})
