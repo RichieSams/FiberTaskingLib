@@ -49,7 +49,7 @@ constexpr static int kInitErrorFailedToCreateWorkerThread = -60;
 struct ThreadStartArgs {
 	TaskScheduler *Scheduler;
 	unsigned ThreadIndex;
-	void(*ThreadStartCallback)();
+	void (*ThreadStartCallback)();
 };
 
 FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
@@ -57,7 +57,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	unsigned const index = threadArgs->ThreadIndex;
 	void (*callback)() = threadArgs->ThreadStartCallback;
-	
+
 	// Clean up
 	delete threadArgs;
 
@@ -104,15 +104,15 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 	// Process tasks infinitely, until quit
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
 		size_t waitingFiberIndex = kInvalidIndex;
-		ThreadLocalStorage &tls = taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
+		ThreadLocalStorage *tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
 		bool readyWaitingFibers = false;
 
 		// Check if there is a ready pinned waiting fiber
 		{
-			std::lock_guard<std::mutex> guard(tls.PinnedReadyFibersLock);
+			std::lock_guard<std::mutex> guard(tls->PinnedReadyFibersLock);
 
-			for (auto bundle = tls.PinnedReadyFibers.begin(); bundle != tls.PinnedReadyFibers.end(); ++bundle) {
+			for (auto bundle = tls->PinnedReadyFibers.begin(); bundle != tls->PinnedReadyFibers.end(); ++bundle) {
 				readyWaitingFibers = true;
 
 				if (!(*bundle)->FiberIsSwitched.load(std::memory_order_acquire)) {
@@ -123,7 +123,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 				waitingFiberIndex = (*bundle)->FiberIndex;
 				delete (*bundle);
-				tls.PinnedReadyFibers.erase(bundle);
+				tls->PinnedReadyFibers.erase(bundle);
 				break;
 			}
 		}
@@ -148,18 +148,21 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 		if (waitingFiberIndex != kInvalidIndex) {
 			// Found a waiting task that is ready to continue
 
-			tls.OldFiberIndex = tls.CurrentFiberIndex;
-			tls.CurrentFiberIndex = waitingFiberIndex;
-			tls.OldFiberDestination = FiberDestination::ToPool;
+			tls->OldFiberIndex = tls->CurrentFiberIndex;
+			tls->CurrentFiberIndex = waitingFiberIndex;
+			tls->OldFiberDestination = FiberDestination::ToPool;
 
 			// Switch
-			taskScheduler->m_fibers[tls.OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls.CurrentFiberIndex]);
+			taskScheduler->m_fibers[tls->OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls->CurrentFiberIndex]);
 
 			// And we're back
 			taskScheduler->CleanUpOldFiber();
 
+			// Get a fresh instance of TLS, since we could be on a new thread now
+			tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
+
 			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
-				tls.FailedQueuePopAttempts = 0;
+				tls->FailedQueuePopAttempts = 0;
 			}
 		} else {
 			// If we didn't find a high priority task, look for a low priority task
@@ -171,7 +174,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 			if (foundTask) {
 				if (behavior == EmptyQueueBehavior::Sleep) {
-					tls.FailedQueuePopAttempts = 0;
+					tls->FailedQueuePopAttempts = 0;
 				}
 
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
@@ -189,21 +192,21 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 				case EmptyQueueBehavior::Sleep: {
 					// If we have a ready waiting fiber, prevent sleep
 					if (!readyWaitingFibers) {
-						++tls.FailedQueuePopAttempts;
+						++tls->FailedQueuePopAttempts;
 						// Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
-						if (tls.FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
+						if (tls->FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic) {
 							std::unique_lock<std::mutex> lock(taskScheduler->ThreadSleepLock);
 							// Acquire the pinned ready fibers lock here and check if there are any pinned fibers ready
 							// Acquiring the lock here prevents a race between readying a pinned fiber (on another thread) and going to sleep
 							// Either this thread wins, then notify_*() will wake it
 							// Or the other thread wins, then this thread will observe the pinned fiber, and will not go to sleep
-							std::unique_lock<std::mutex> readyfiberslock(tls.PinnedReadyFibersLock);
-							if (tls.PinnedReadyFibers.empty()) {
+							std::unique_lock<std::mutex> readyfiberslock(tls->PinnedReadyFibersLock);
+							if (tls->PinnedReadyFibers.empty()) {
 								// Unlock before going to sleep (the other lock is released by the CV wait)
 								readyfiberslock.unlock();
 								taskScheduler->ThreadSleepCV.wait(lock);
 							}
-							tls.FailedQueuePopAttempts = 0;
+							tls->FailedQueuePopAttempts = 0;
 						}
 					}
 
@@ -663,7 +666,7 @@ void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBund
 		taskBundle.Counter = nullptr;
 
 		tls->HiPriTaskQueue.Push(taskBundle);
-		
+
 		// If we're using EmptyQueueBehavior::Sleep, the other threads could be sleeping
 		// Therefore, we need to kick a thread awake to ensure that the readied task is taken
 		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
