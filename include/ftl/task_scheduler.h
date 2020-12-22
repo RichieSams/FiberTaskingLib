@@ -278,6 +278,13 @@ public:
 	FTL_NOINLINE size_t GetCurrentThreadIndex() const;
 
 	/**
+	* Gets the 0-based index of the current fiber.
+	* 
+	* NOTE: main fiber index is 0
+	*/
+	size_t GetCurrentFiberIndex() const;
+
+	/**
 	 * Gets the amount of backing threads.
 	 *
 	 * @return    Backing thread count
