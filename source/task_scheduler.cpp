@@ -446,6 +446,11 @@ FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
 
 #endif
 
+size_t TaskScheduler::GetCurrentFiberIndex() const {
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	return tls.CurrentFiberIndex;
+}
+
 inline bool TaskScheduler::TaskIsReadyToExecute(TaskBundle *bundle) const {
 	// "Real" tasks are always ready to execute
 	if (bundle->TaskToExecute.Function != ReadyFiberDummyTask) {
