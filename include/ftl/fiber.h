@@ -197,21 +197,33 @@ private:
 inline void MemoryGuard(void *const memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_NONE);
 	FTL_ASSERT("mprotect", !result);
+#		if defined(NDEBUG)
+	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
+	(void)result;
+#		endif
 }
 
 inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
 	int const result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
 	FTL_ASSERT("mprotect", !result);
+#		if defined(NDEBUG)
+	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
+	(void)result;
+#		endif
 }
 
 inline size_t SystemPageSize() {
-	auto const pageSize = static_cast<size_t>(getpagesize());
-	return pageSize;
+	return static_cast<size_t>(getpagesize());
 }
 
 inline void *AlignedAlloc(size_t const size, size_t const alignment) {
-	void *returnPtr;
-	posix_memalign(&returnPtr, alignment, size);
+	void *returnPtr = nullptr;
+	int const result = posix_memalign(&returnPtr, alignment, size);
+	FTL_ASSERT("posix_memalign", !result);
+#		if defined(NDEBUG)
+	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
+	(void)result;
+#		endif
 
 	return returnPtr;
 }
