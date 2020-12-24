@@ -28,7 +28,10 @@ gcc-7)
 	upgradeBrewFormula gcc@7
 	;;
 gcc-8)
-	upgradeBrewFormula gcc@7
+	upgradeBrewFormula gcc@8
+	;;
+gcc-9)
+	upgradeBrewFormula gcc@9
 	;;
 clang-3.7)
 	upgradeBrewFormula llvm@3.7
@@ -44,27 +47,39 @@ clang-3.9)
 	;;
 clang-4)
 	upgradeBrewFormula llvm@4
-	# 3.9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@3.9/bin/clang
-	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	# 4 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@4/bin/clang
+	export CXX=/usr/local/opt/llvm@4/bin/clang++
 	;;
 clang-5)
 	upgradeBrewFormula llvm@5
-	# 3.9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@3.9/bin/clang
-	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	# 5 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@5/bin/clang
+	export CXX=/usr/local/opt/llvm@5/bin/clang++
 	;;
 clang-6)
 	upgradeBrewFormula llvm@6
-	# 3.9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@3.9/bin/clang
-	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	# 6 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@6/bin/clang
+	export CXX=/usr/local/opt/llvm@6/bin/clang++
 	;;
 clang-7)
 	upgradeBrewFormula llvm@7
-	# 3.9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@3.9/bin/clang
-	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
+	# 7 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@7/bin/clang
+	export CXX=/usr/local/opt/llvm@7/bin/clang++
+	;;
+clang-8)
+	upgradeBrewFormula llvm@9
+	# 8 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@8/bin/clang
+	export CXX=/usr/local/opt/llvm@8/bin/clang++
+	;;
+clang-9)
+	upgradeBrewFormula llvm@9
+	# 9 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@9/bin/clang
+	export CXX=/usr/local/opt/llvm@9/bin/clang++
 	;;
 *) echo "Compiler not supported: ${COMPILER}-${VERSION}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac

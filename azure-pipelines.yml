@@ -1,0 +1,115 @@
+jobs:
+  - job: linux_gcc_49
+    displayName: Linux - GCC 4.9
+    pool:
+      vmImage: ubuntu-18.04
+    variables:
+      compiler: gcc
+      version: 4.9
+    steps:
+      - bash: make generate_linux build_linux
+        displayName: Build
+      - bash: make test_linux
+        displayName: Test
+  - job: linux_gcc_9
+    displayName: Linux - GCC 9
+    pool:
+      vmImage: ubuntu-18.04
+    variables:
+      compiler: gcc
+      version: 9
+    steps:
+      - bash: make generate_linux build_linux
+        displayName: Build
+      - bash: make test_linux
+        displayName: Test
+  - job: linux_clang_37
+    displayName: Linux - Clang 3.7
+    pool:
+      vmImage: ubuntu-18.04
+    variables:
+      compiler: clang
+      version: 3.7
+    steps:
+      - bash: make generate_linux build_linux
+        displayName: Build
+      - bash: make test_linux
+        displayName: Test
+  - job: linux_clang_9
+    displayName: Linux - Clang 9
+    pool:
+      vmImage: ubuntu-18.04
+    variables:
+      compiler: clang
+      version: 9
+    steps:
+      - bash: make generate_linux build_linux
+        displayName: Build
+      - bash: make test_linux
+        displayName: Test
+  - job: osx_gcc_49
+    displayName: OSX - GCC 4.9
+    pool:
+      vmImage: macos-10.15
+    variables:
+      compiler: gcc
+      version: 4.9
+    steps:
+      - bash: bash ci_scripts/travis_ci_install_osx.sh
+        displayName: Install
+      - bash: make generate_osx build_osx
+        displayName: Build
+      - bash: make test_osx
+        displayName: Test
+  - job: osx_gcc_9
+    displayName: OSX - GCC 9
+    pool:
+      vmImage: macos-10.15
+    variables:
+      compiler: gcc
+      version: 9
+    steps:
+      - bash: bash ci_scripts/travis_ci_install_osx.sh
+        displayName: Install
+      - bash: make generate_osx build_osx
+        displayName: Build
+      - bash: make test_osx
+        displayName: Test
+  - job: osx_clang_9
+    displayName: OSX - Clang 9
+    pool:
+      vmImage: macos-10.15
+    variables:
+      compiler: clang
+      version: 9
+    steps:
+      - bash: bash ci_scripts/travis_ci_install_osx.sh
+        displayName: Install
+      - bash: make generate_osx build_osx
+        displayName: Build
+      - bash: make test_osx
+        displayName: Test
+  - job: windows_vs_2017
+    displayName: Windows - Visual Studio 2017
+    pool:
+      vmImage: vs2017-win2016
+    variables:
+      cmake.gen.name: Visual Studio 15 2017 Win64
+      cmake.arch.arg: ""
+    steps:
+      - powershell: make generate_windows build_windows
+        displayName: Build
+      - powershell: make test_windows
+        displayName: Test
+  - job: windows_vs_2019
+    displayName: Windows - Visual Studio 2019
+    pool:
+      vmImage: windows-2019
+    variables:
+      cmake.gen.name: Visual Studio 16 2019
+      cmake.arch.arg: -A x64
+    steps:
+      - powershell: make generate_windows build_windows
+        displayName: Build
+      - powershell: make test_windows
+        displayName: Test
