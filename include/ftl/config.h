@@ -27,6 +27,8 @@
 #ifndef FTL_DEBUG
 #	ifndef NDEBUG
 #		define FTL_DEBUG 1
+#	else
+#		define FTL_DEBUG 0
 #	endif
 #endif
 

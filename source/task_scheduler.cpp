@@ -381,7 +381,7 @@ TaskScheduler::~TaskScheduler() {
 
 void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter *const counter) {
 	FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
-	
+
 	if (counter != nullptr) {
 		counter->Add(1);
 	}

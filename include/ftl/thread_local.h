@@ -228,6 +228,7 @@ void ThreadLocalHandle<T>::ValidHandle(T &value) {
 #else
 template <class T>
 void ThreadLocalHandle<T>::ValidHandle(T &value) {
+	(void)value;
 }
 #endif
 
