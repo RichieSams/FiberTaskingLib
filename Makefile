@@ -53,18 +53,22 @@ generate_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) generate_linux_native
 
 generate_linux_native:
-	mkdir -p build_linux
+	mkdir -p build_linux/debug
+	mkdir -p build_linux/release
 	cmake --version
-	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_linux .
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Debug -Bbuild_linux/debug .
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Release -Bbuild_linux/release .
 
 build_linux:
-	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -j -C build_linux
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -j -C build_linux/debug
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make -j -C build_linux/release
 
 test_linux:
-	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) /bin/sh -c "(cd build_linux/tests && exec ./ftl-test)"
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) /bin/sh -c "(cd build_linux/debug/tests && exec ./ftl-test)"
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) /bin/sh -c "(cd build_linux/release/tests && exec ./ftl-test)"
 
 clean_linux:
-	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) rm -rf build_linux build_linux_debug
+	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) rm -rf build_linux
 
 valgrind_linux_build:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) valgrind_linux_build_native
@@ -79,15 +83,19 @@ valgrind_linux_run:
 
 
 generate_osx:
-	mkdir -p build_osx
+	mkdir -p build_linux/debug
+	mkdir -p build_linux/release
 	cmake --version
-	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -Bbuild_osx .
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Debug -Bbuild_osx/debug .
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Release -Bbuild_osx/release .
 
 build_osx:
-	make -j -C build_osx
+	make -j -C build_osx/debug
+	make -j -C build_osx/release
 
 test_osx:
-	(cd build_osx/tests && exec ./ftl-test)
+	(cd build_osx/debug/tests && exec ./ftl-test)
+	(cd build_osx/release/tests && exec ./ftl-test)
 
 clean_osx:
 	rm -rf build_osx
