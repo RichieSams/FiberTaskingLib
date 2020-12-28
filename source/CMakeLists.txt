@@ -84,6 +84,7 @@ SetSourceGroup(NAME Util
 	             ../include/ftl/config.h
 	             ../include/ftl/fiber.h
 	             ../include/ftl/fibtex.h
+	             ../include/ftl/callbacks.h
 	             ../include/ftl/thread_abstraction.h
 	             thread_abstraction.cpp
 	             ../include/ftl/thread_local.h

@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
@@ -62,8 +63,8 @@ struct TaskSchedulerInitOptions {
 	unsigned ThreadPoolSize = 0;
 	/* The behavior of the threads after they have no work to do */
 	EmptyQueueBehavior Behavior = EmptyQueueBehavior::Spin;
-	/* Callback to run on thread start */
-	void (*ThreadStartCallback)() = nullptr;
+	/* Callbacks to run at various points to allow for e.g. hooking a profiler to fiber states */
+	EventCallbacks Callbacks;
 };
 
 /**
@@ -85,6 +86,8 @@ public:
 private:
 	constexpr static unsigned kInvalidIndex = std::numeric_limits<unsigned>::max();
 	constexpr static unsigned kNoThreadPinning = std::numeric_limits<unsigned>::max();
+
+	EventCallbacks m_callbacks;
 
 	unsigned m_numThreads{0};
 	ThreadType *m_threads{nullptr};
