@@ -120,7 +120,7 @@ public:
 	ThreadLocal(TaskScheduler *ts, F &&factory)
 	        : m_scheduler{ts}, m_initializer{std::forward<F>(factory)},
 	          m_data(static_cast<ValuePadder<T> *>(operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
-		for (size_t i = 0; i < ts->GetThreadCount(); ++i) {
+		for (unsigned i = 0; i < ts->GetThreadCount(); ++i) {
 			// That's not how placement new works...
 			// ReSharper disable once CppNonReclaimedResourceAcquisition
 			new (&m_data[i].Initialized) bool(false);
@@ -149,12 +149,12 @@ public:
 	}
 
 	T &operator*() {
-		size_t idx = m_scheduler->GetCurrentThreadIndex();
+		unsigned idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
 		return m_data[idx].Value;
 	}
 	T *operator->() {
-		size_t idx = m_scheduler->GetCurrentThreadIndex();
+		unsigned idx = m_scheduler->GetCurrentThreadIndex();
 		InitValue(idx);
 		return &m_data[idx].Value;
 	}
@@ -167,10 +167,10 @@ public:
 	 */
 	std::vector<T> GetAllValues() {
 		std::vector<T> vec;
-		size_t const threads = m_scheduler->GetThreadCount();
+		unsigned const threads = m_scheduler->GetThreadCount();
 		vec.reserve(threads);
 
-		for (size_t i = 0; i < threads; ++i) {
+		for (unsigned i = 0; i < threads; ++i) {
 			InitValue(i);
 			vec.emplace_back(m_data[i].Value);
 		}
@@ -186,10 +186,10 @@ public:
 	 */
 	std::vector<std::reference_wrapper<T>> GetAllValuesByRef() {
 		std::vector<T> vec;
-		size_t const threads = m_scheduler->GetThreadCount();
+		unsigned const threads = m_scheduler->GetThreadCount();
 		vec.reserve(threads);
 
-		for (size_t i = 0; i < threads; ++i) {
+		for (unsigned i = 0; i < threads; ++i) {
 			InitValue(i);
 			vec.emplace_back(std::ref(m_data[i].Value));
 		}
@@ -198,7 +198,7 @@ public:
 	}
 
 private:
-	void InitValue(size_t idx) {
+	void InitValue(unsigned idx) {
 		// I add this exception with careful consideration due to the scale of the warning. There is no way to get here
 		// without running into a operator new on this member, or on the parent object, setting the value.
 		// I _think_ it is complaining because I might not call operator new on the parent as I get the object

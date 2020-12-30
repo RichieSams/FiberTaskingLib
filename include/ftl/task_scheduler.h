@@ -83,13 +83,13 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static size_t kInvalidIndex = std::numeric_limits<size_t>::max();
-	constexpr static size_t kNoThreadPinning = std::numeric_limits<size_t>::max();
+	constexpr static unsigned kInvalidIndex = std::numeric_limits<unsigned>::max();
+	constexpr static unsigned kNoThreadPinning = std::numeric_limits<unsigned>::max();
 
-	size_t m_numThreads{0};
+	unsigned m_numThreads{0};
 	ThreadType *m_threads{nullptr};
 
-	size_t m_fiberPoolSize{0};
+	unsigned m_fiberPoolSize{0};
 	/* The backing storage for the fiber pool */
 	Fiber *m_fibers{nullptr};
 	/**
@@ -103,7 +103,7 @@ private:
 
 	std::atomic<bool> m_initialized{false};
 	std::atomic<bool> m_quit{false};
-	std::atomic<size_t> m_quitCount{0};
+	std::atomic<unsigned> m_quitCount{0};
 
 	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
 	/**
@@ -130,17 +130,17 @@ private:
 
 	struct ReadyFiberBundle {
 		// The fiber
-		size_t FiberIndex;
+		unsigned FiberIndex;
 		// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
 		std::atomic<bool> FiberIsSwitched;
 	};
 
 	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(size_t const fiberIndex, TaskCounter *const counter, unsigned const targetValue)
+		PinnedWaitingFiberBundle(unsigned const fiberIndex, TaskCounter *const counter, unsigned const targetValue)
 		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
 		}
 
-		size_t FiberIndex;
+		unsigned FiberIndex;
 		TaskCounter *Counter;
 		unsigned TargetValue;
 	};
@@ -162,19 +162,19 @@ private:
 		 */
 		Fiber ThreadFiber;
 		/* The index of the current fiber in m_fibers */
-		size_t CurrentFiberIndex;
+		unsigned CurrentFiberIndex;
 		/* The index of the previously executed fiber in m_fibers */
-		size_t OldFiberIndex;
+		unsigned OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
 		FiberDestination OldFiberDestination{FiberDestination::None};
 		/* The queue of high priority waiting tasks. This also contains the ready waiting fibers, which are differentiated by the Task function == ReadyFiberDummyTask */
 		WaitFreeQueue<TaskBundle> HiPriTaskQueue;
 		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
-		size_t HiPriLastSuccessfulSteal{1};
+		unsigned HiPriLastSuccessfulSteal{1};
 		/* The queue of high priority waiting tasks */
 		WaitFreeQueue<TaskBundle> LoPriTaskQueue;
 		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
-		size_t LoPriLastSuccessfulSteal{1};
+		unsigned LoPriLastSuccessfulSteal{1};
 
 		std::atomic<bool> *OldFiberStoredFlag{nullptr};
 
@@ -275,21 +275,21 @@ public:
 	 *
 	 * @return    The index of the current thread
 	 */
-	FTL_NOINLINE size_t GetCurrentThreadIndex() const;
+	FTL_NOINLINE unsigned GetCurrentThreadIndex() const;
 
 	/**
 	* Gets the 0-based index of the current fiber.
 	* 
 	* NOTE: main fiber index is 0
 	*/
-	size_t GetCurrentFiberIndex() const;
+	unsigned GetCurrentFiberIndex() const;
 
 	/**
 	 * Gets the amount of backing threads.
 	 *
 	 * @return    Backing thread count
 	 */
-	size_t GetThreadCount() const noexcept {
+	unsigned GetThreadCount() const noexcept {
 		return m_numThreads;
 	}
 
@@ -298,7 +298,7 @@ public:
 	 *
 	 * @return    Fiber pool size
 	 */
-	size_t GetFiberCount() const noexcept {
+	unsigned GetFiberCount() const noexcept {
 		return m_fiberPoolSize;
 	}
 
@@ -347,7 +347,7 @@ private:
 	 *
 	 * @return    The index of the next available fiber in the pool
 	 */
-	size_t GetNextFreeFiberIndex() const;
+	unsigned GetNextFreeFiberIndex() const;
 	/**
 	 * If necessary, moves the old fiber to the fiber pool or the waiting list
 	 * The old fiber is the last fiber to run on the thread before the current fiber
@@ -365,7 +365,7 @@ private:
 	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
 	 * up"
 	 */
-	void AddReadyFiber(size_t pinnedThreadIndex, ReadyFiberBundle *bundle);
+	void AddReadyFiber(unsigned pinnedThreadIndex, ReadyFiberBundle *bundle);
 
 	/**
 	 * The threadProc function for all worker threads
