@@ -29,7 +29,7 @@
 
 namespace ftl {
 
-BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned const initialValue, size_t const fiberSlots)
+BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned const initialValue, unsigned const fiberSlots)
         : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_fiberSlots(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
 	m_waitingFibers = new WaitingFiberBundle[fiberSlots];
@@ -61,12 +61,12 @@ BaseCounter::~BaseCounter() {
 }
 
 BaseCounter::WaitingFiberBundle::WaitingFiberBundle()
-        : InUse(true), PinnedThreadIndex(std::numeric_limits<size_t>::max()) {
+        : InUse(true), PinnedThreadIndex(std::numeric_limits<unsigned>::max()) {
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&InUse, sizeof(InUse));
 }
 
-bool BaseCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t const pinnedThreadIndex) {
-	for (size_t i = 0; i < m_fiberSlots; ++i) {
+bool BaseCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, unsigned const pinnedThreadIndex) {
+	for (unsigned i = 0; i < m_fiberSlots; ++i) {
 		bool expected = true;
 		// Try to acquire the slot
 		if (!std::atomic_compare_exchange_strong_explicit(&m_freeSlots[i], &expected, false, std::memory_order_seq_cst, std::memory_order_relaxed)) {
@@ -117,7 +117,7 @@ bool BaseCounter::AddFiberToWaitingList(void *fiberBundle, unsigned targetValue,
 }
 
 void BaseCounter::CheckWaitingFibers(unsigned const value) {
-	for (size_t i = 0; i < m_fiberSlots; ++i) {
+	for (unsigned i = 0; i < m_fiberSlots; ++i) {
 		// Check if the slot is full
 		if (m_freeSlots[i].load(std::memory_order_acquire)) {
 			continue;

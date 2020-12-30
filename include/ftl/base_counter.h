@@ -55,7 +55,7 @@ class TaskScheduler;
 class BaseCounter {
 
 public:
-	explicit BaseCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	explicit BaseCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 	BaseCounter(BaseCounter const &) = delete;
 	BaseCounter(BaseCounter &&) noexcept = delete;
@@ -95,9 +95,9 @@ protected:
 		unsigned TargetValue{0};
 		/**
 		 * The index of the thread this fiber is pinned to
-		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<size_t>::max()
+		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<unsigned>::max()
 		 */
-		size_t PinnedThreadIndex;
+		unsigned PinnedThreadIndex;
 	};
 	/**
 	 * The storage for the fibers waiting on this counter
@@ -110,7 +110,7 @@ protected:
 	/**
 	 * The number of elements in m_freeSlots and m_waitingFibers
 	 */
-	size_t m_fiberSlots;
+	unsigned m_fiberSlots;
 
 	/**
 	 * We friend TaskScheduler so we can keep AddFiberToWaitingList() private
@@ -131,10 +131,10 @@ protected:
 	 *
 	 * @param targetValue          The target value the fiber is waiting for
 	 * @param fiberBundle          The fiber that is waiting
-	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<size_t>::max(), the fiber can be resumed on any thread
+	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If == std::numeric_limits<unsigned>::max(), the fiber can be resumed on any thread
 	 * @return                     True: The counter value changed to equal targetValue while we were adding the fiber to the wait list
 	 */
-	bool AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, size_t pinnedThreadIndex = std::numeric_limits<size_t>::max());
+	bool AddFiberToWaitingList(void *fiberBundle, unsigned targetValue, unsigned pinnedThreadIndex = std::numeric_limits<unsigned>::max());
 
 	/**
 	 * Checks all the waiting fibers in the list to see if value == targetValue

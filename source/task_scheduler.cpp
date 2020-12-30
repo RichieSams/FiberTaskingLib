@@ -42,7 +42,7 @@
 
 namespace ftl {
 
-constexpr static size_t kFailedPopAttemptsHeuristic = 5;
+constexpr static unsigned kFailedPopAttemptsHeuristic = 5;
 constexpr static int kInitErrorDoubleCall = -30;
 constexpr static int kInitErrorFailedToCreateWorkerThread = -60;
 
@@ -73,7 +73,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	}
 
 	// Get a free fiber to switch to
-	size_t const freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
+	unsigned const freeFiberIndex = taskScheduler->GetNextFreeFiberIndex();
 
 	// Initialize tls
 	taskScheduler->m_tls[index].CurrentFiberIndex = freeFiberIndex;
@@ -103,7 +103,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 	// Process tasks infinitely, until quit
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
-		size_t waitingFiberIndex = kInvalidIndex;
+		unsigned waitingFiberIndex = kInvalidIndex;
 		ThreadLocalStorage *tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
 		bool readyWaitingFibers = false;
@@ -222,7 +222,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 	}
 
 	// Switch to the quit fibers
-	size_t index = taskScheduler->GetCurrentThreadIndex();
+
+	unsigned index = taskScheduler->GetCurrentThreadIndex();
 	taskScheduler->m_fibers[taskScheduler->m_tls[index].CurrentFiberIndex].SwitchToFiber(&taskScheduler->m_quitFibers[index]);
 
 	// We should never get here
@@ -239,7 +240,7 @@ void TaskScheduler::ThreadEndFunc(void *arg) {
 	}
 
 	// Jump to the thread fibers
-	size_t threadIndex = taskScheduler->GetCurrentThreadIndex();
+	unsigned threadIndex = taskScheduler->GetCurrentThreadIndex();
 
 	if (threadIndex == 0) {
 		// Special case for the main thread fiber
@@ -321,14 +322,13 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_tls[0].CurrentFiberIndex = 0;
 
 	// Create the worker threads
-	for (size_t i = 1; i < m_numThreads; ++i) {
+	for (unsigned i = 1; i < m_numThreads; ++i) {
 		auto *const threadArgs = new ThreadStartArgs();
 		threadArgs->Scheduler = this;
-		threadArgs->ThreadIndex = static_cast<unsigned>(i);
-		threadArgs->ThreadStartCallback = options.ThreadStartCallback;
+		threadArgs->ThreadIndex = i;
 
 		char threadName[256];
-		snprintf(threadName, sizeof(threadName), "FTL Worker Thread %zu", i);
+		snprintf(threadName, sizeof(threadName), "FTL Worker Thread %u", i);
 
 		if (!CreateThread(524288, ThreadStartFunc, threadArgs, threadName, &m_threads[i])) {
 			return kInitErrorFailedToCreateWorkerThread;
@@ -344,7 +344,7 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 TaskScheduler::~TaskScheduler() {
 	// Create the quit fibers
 	m_quitFibers = new Fiber[m_numThreads];
-	for (size_t i = 0; i < m_numThreads; ++i) {
+	for (unsigned i = 0; i < m_numThreads; ++i) {
 		m_quitFibers[i] = Fiber(524288, ThreadEndFunc, this);
 	}
 
@@ -359,14 +359,14 @@ TaskScheduler::~TaskScheduler() {
 	// Jump to the quit fiber
 	// Create a scope so index isn't used after we come back from the switch. It will be wrong if we started on a non-main thread
 	{
-		size_t index = GetCurrentThreadIndex();
+		unsigned index = GetCurrentThreadIndex();
 		m_fibers[m_tls[index].CurrentFiberIndex].SwitchToFiber(&m_quitFibers[index]);
 	}
 
 	// We're back. We should be on the main thread now
 
 	// Wait for the worker threads to finish
-	for (size_t i = 1; i < m_numThreads; ++i) {
+	for (unsigned i = 1; i < m_numThreads; ++i) {
 		JoinThread(m_threads[i]);
 	}
 
@@ -426,9 +426,9 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 
 #if defined(FTL_WIN32_THREADS)
 
-FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
+FTL_NOINLINE unsigned TaskScheduler::GetCurrentThreadIndex() const {
 	DWORD const threadId = ::GetCurrentThreadId();
-	for (size_t i = 0; i < m_numThreads; ++i) {
+	for (unsigned i = 0; i < m_numThreads; ++i) {
 		if (m_threads[i].Id == threadId) {
 			return i;
 		}
@@ -439,9 +439,9 @@ FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
 
 #elif defined(FTL_POSIX_THREADS)
 
-FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
+FTL_NOINLINE unsigned TaskScheduler::GetCurrentThreadIndex() const {
 	pthread_t const currentThread = pthread_self();
-	for (size_t i = 0; i < m_numThreads; ++i) {
+	for (unsigned i = 0; i < m_numThreads; ++i) {
 		if (pthread_equal(currentThread, m_threads[i]) != 0) {
 			return i;
 		}
@@ -452,7 +452,7 @@ FTL_NOINLINE size_t TaskScheduler::GetCurrentThreadIndex() const {
 
 #endif
 
-size_t TaskScheduler::GetCurrentFiberIndex() const {
+unsigned TaskScheduler::GetCurrentFiberIndex() const {
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	return tls.CurrentFiberIndex;
 }
@@ -469,7 +469,7 @@ inline bool TaskScheduler::TaskIsReadyToExecute(TaskBundle *bundle) const {
 }
 
 bool TaskScheduler::GetNextHiPriTask(TaskBundle *nextTask, std::vector<TaskBundle> *taskBuffer) {
-	size_t const currentThreadIndex = GetCurrentThreadIndex();
+	unsigned const currentThreadIndex = GetCurrentThreadIndex();
 	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
 	bool result = false;
@@ -490,9 +490,9 @@ bool TaskScheduler::GetNextHiPriTask(TaskBundle *nextTask, std::vector<TaskBundl
 	// Force a scope so the `goto cleanup` above doesn't skip initialization
 	{
 		// Ours is empty, try to steal from the others'
-		const size_t threadIndex = tls.HiPriLastSuccessfulSteal;
-		for (size_t i = 0; i < m_numThreads; ++i) {
-			const size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
+		const unsigned threadIndex = tls.HiPriLastSuccessfulSteal;
+		for (unsigned i = 0; i < m_numThreads; ++i) {
+			const unsigned threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
 			if (threadIndexToStealFrom == currentThreadIndex) {
 				continue;
 			}
@@ -538,7 +538,7 @@ cleanup:
 }
 
 bool TaskScheduler::GetNextLoPriTask(TaskBundle *nextTask) {
-	size_t const currentThreadIndex = GetCurrentThreadIndex();
+	unsigned const currentThreadIndex = GetCurrentThreadIndex();
 	ThreadLocalStorage &tls = m_tls[currentThreadIndex];
 
 	// Try to pop from our own queue
@@ -547,9 +547,9 @@ bool TaskScheduler::GetNextLoPriTask(TaskBundle *nextTask) {
 	}
 
 	// Ours is empty, try to steal from the others'
-	const size_t threadIndex = tls.LoPriLastSuccessfulSteal;
-	for (size_t i = 0; i < m_numThreads; ++i) {
-		const size_t threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
+	const unsigned threadIndex = tls.LoPriLastSuccessfulSteal;
+	for (unsigned i = 0; i < m_numThreads; ++i) {
+		const unsigned threadIndexToStealFrom = (threadIndex + i) % m_numThreads;
 		if (threadIndexToStealFrom == currentThreadIndex) {
 			continue;
 		}
@@ -563,9 +563,9 @@ bool TaskScheduler::GetNextLoPriTask(TaskBundle *nextTask) {
 	return false;
 }
 
-size_t TaskScheduler::GetNextFreeFiberIndex() const {
+unsigned TaskScheduler::GetNextFreeFiberIndex() const {
 	for (unsigned j = 0;; ++j) {
-		for (size_t i = 0; i < m_fiberPoolSize; ++i) {
+		for (unsigned i = 0; i < m_fiberPoolSize; ++i) {
 			// Double lock
 			if (!m_freeFibers[i].load(std::memory_order_relaxed)) {
 				continue;
@@ -653,7 +653,7 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(size_t const pinnedThreadIndex, ReadyFiberBundle *bundle) {
+void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBundle *bundle) {
 	if (pinnedThreadIndex == kNoThreadPinning) {
 		ThreadLocalStorage *tls = &m_tls[GetCurrentThreadIndex()];
 
@@ -720,9 +720,9 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	}
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
-	size_t const currentFiberIndex = tls.CurrentFiberIndex;
+	unsigned const currentFiberIndex = tls.CurrentFiberIndex;
 
-	size_t pinnedThreadIndex;
+	unsigned pinnedThreadIndex;
 	if (pinToCurrentThread) {
 		pinnedThreadIndex = GetCurrentThreadIndex();
 	} else {
@@ -744,7 +744,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	}
 
 	// Get a free fiber
-	size_t const freeFiberIndex = GetNextFreeFiberIndex();
+	unsigned const freeFiberIndex = GetNextFreeFiberIndex();
 
 	// Fill in tls
 	tls.OldFiberIndex = currentFiberIndex;

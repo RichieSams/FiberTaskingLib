@@ -34,7 +34,7 @@ namespace ftl {
  */
 class FullAtomicCounter : public BaseCounter {
 public:
-	explicit FullAtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS)
+	explicit FullAtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : BaseCounter(taskScheduler, initialValue, fiberSlots) {
 	}
 
@@ -141,7 +141,7 @@ public:
  */
 class AtomicFlag : public BaseCounter {
 public:
-	explicit AtomicFlag(TaskScheduler *taskScheduler, unsigned const initialValue = 0, size_t const fiberSlots = NUM_WAITING_FIBER_SLOTS)
+	explicit AtomicFlag(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : BaseCounter(taskScheduler, initialValue, fiberSlots) {
 	}
 
