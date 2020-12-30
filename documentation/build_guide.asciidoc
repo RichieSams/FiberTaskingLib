@@ -142,5 +142,5 @@ target_link_libraries(MyProject ftl)
 === Your Project Does Not Use CMake
 
 . Build FiberTaskingLib as per the instructions above
-. Add `{FTL_ROOT}/include` to your toolchain's include directories
-. Link to ftl.lib
+. Add `{FTL_ROOT}/include` and `{FTL_ROOT}/third_party/boost_context/include` to your toolchain's include directories
+. Link to `ftl.lib` and `boost_context.lib` built in step 1
