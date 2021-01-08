@@ -117,9 +117,11 @@ test_windows:
 clean_windows:
 	if exist rmdir /s /q build_windows
 
-
 format:
-	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /bin/bash tools/format.sh
+	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /usr/bin/python3 tools/run-clang-format.py -r --clang-format-executable clang-format-8 -i benchmarks examples include source tests
+
+format_check:
+	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /usr/bin/python3 tools/run-clang-format.py -r --clang-format-executable clang-format-8 benchmarks examples include source tests
 
 lint:
 	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /usr/bin/python3 tools/run-clang-tidy.py
