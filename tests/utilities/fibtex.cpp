@@ -82,7 +82,7 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
 		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Low, &c);
 
-		taskScheduler.WaitForCounter(&c, 0);
+		taskScheduler.WaitForCounter(&c);
 	}
 
 	REQUIRE(md.Counter == 6 * iterations);

@@ -101,7 +101,7 @@ int main() {
 	delete[] tasks;
 
 	// Wait for the tasks to complete
-	taskScheduler.WaitForCounter(&counter, 0);
+	taskScheduler.WaitForCounter(&counter);
 
 	// Add the results
 	uint64_t result = 0ull;
