@@ -122,4 +122,4 @@ format:
 	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /bin/bash tools/format.sh
 
 lint:
-	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /bin/bash tools/lint-clang.sh
+	docker run --rm -v $(CURDIR):/app -w /app quay.io/richiesams/clang-tools-extra:latest /usr/bin/python3 tools/run-clang-tidy.py

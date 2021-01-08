@@ -9,3 +9,6 @@ cmake-build*/
 
 # Visual Studio local files
 .vs/
+
+# Lint output files
+clang-tidy-output.txt
