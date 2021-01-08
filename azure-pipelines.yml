@@ -119,3 +119,9 @@ jobs:
       vmImage: ubuntu-18.04
     steps:
       - bash: make lint
+  - job: format
+    displayName: Clang-Format
+    pool:
+      vmImage: ubuntu-18.04
+    steps:
+      - bash: make format_check
