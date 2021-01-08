@@ -129,7 +129,7 @@ private:
 
 	struct ReadyFiberBundle {
 		ReadyFiberBundle() = default;
-		
+
 		// The fiber
 		unsigned FiberIndex;
 		// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
