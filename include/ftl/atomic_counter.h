@@ -29,7 +29,7 @@
 namespace ftl {
 
 /**
- * FullAtomicCounter implements TaskCounter and adds the full function set
+ * FullAtomicCounter implements the full set of functions
  * of an atomic (with more overhead vs TaskCounter)
  */
 class FullAtomicCounter : public BaseCounter {
@@ -42,6 +42,7 @@ public:
 	FullAtomicCounter(FullAtomicCounter &&) noexcept = delete;
 	FullAtomicCounter &operator=(FullAtomicCounter const &) = delete;
 	FullAtomicCounter &operator=(FullAtomicCounter &&) noexcept = delete;
+	~FullAtomicCounter() = default;
 
 public:
 	/**
@@ -137,7 +138,7 @@ public:
 };
 
 /**
- * AtomicFlag implements TaskCounter and adds Set/Clear
+ * AtomicFlag implements a simple Set/Clear counter
  */
 class AtomicFlag : public BaseCounter {
 public:
@@ -149,6 +150,7 @@ public:
 	AtomicFlag(AtomicFlag &&) noexcept = delete;
 	AtomicFlag &operator=(AtomicFlag const &) = delete;
 	AtomicFlag &operator=(AtomicFlag &&) noexcept = delete;
+	~AtomicFlag() = default;
 
 public:
 	bool Set(std::memory_order const memoryOrder = std::memory_order_seq_cst) {

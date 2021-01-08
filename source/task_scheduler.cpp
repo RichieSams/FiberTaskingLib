@@ -68,7 +68,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 
 	// Execute user thread start callback, if set
 	const EventCallbacks &callbacks = taskScheduler->m_callbacks;
-	if (callbacks.OnWorkerThreadStarted) {
+	if (callbacks.OnWorkerThreadStarted != nullptr) {
 		callbacks.OnWorkerThreadStarted(callbacks.Context, index);
 	}
 
@@ -83,7 +83,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	// And we've returned
 
 	// Execute user thread end callback, if set
-	if (callbacks.OnWorkerThreadEnded) {
+	if (callbacks.OnWorkerThreadEnded != nullptr) {
 		callbacks.OnWorkerThreadEnded(callbacks.Context, index);
 	}
 
@@ -95,13 +95,15 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 // This Task is never used directly
 // However, a function pointer to it is the signal that the task is a Ready fiber, not a "real" task
 // See @FiberStartFunc() for more details
-static void ReadyFiberDummyTask(TaskScheduler *, void *) {
+static void ReadyFiberDummyTask(TaskScheduler *taskScheduler, void *arg) {
+	(void)taskScheduler;
+	(void)arg;
 }
 
 void TaskScheduler::FiberStartFunc(void *const arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
-	if (taskScheduler->m_callbacks.OnFiberStateChanged) {
+	if (taskScheduler->m_callbacks.OnFiberStateChanged != nullptr) {
 		taskScheduler->m_callbacks.OnFiberStateChanged(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex(), ftl::FiberState::Attached);
 	}
 
@@ -162,14 +164,14 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			tls->OldFiberDestination = FiberDestination::ToPool;
 
 			const EventCallbacks &callbacks = taskScheduler->m_callbacks;
-			if (callbacks.OnFiberStateChanged) {
+			if (callbacks.OnFiberStateChanged != nullptr) {
 				callbacks.OnFiberStateChanged(callbacks.Context, tls->OldFiberIndex, FiberState::Detached);
 			}
 
 			// Switch
 			taskScheduler->m_fibers[tls->OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls->CurrentFiberIndex]);
 
-			if (callbacks.OnFiberStateChanged) {
+			if (callbacks.OnFiberStateChanged != nullptr) {
 				callbacks.OnFiberStateChanged(callbacks.Context, taskScheduler->GetCurrentFiberIndex(), FiberState::Attached);
 			}
 
@@ -241,7 +243,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 	// Switch to the quit fibers
 
-	if (taskScheduler->m_callbacks.OnFiberStateChanged) {
+	if (taskScheduler->m_callbacks.OnFiberStateChanged != nullptr) {
 		taskScheduler->m_callbacks.OnFiberStateChanged(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex(), ftl::FiberState::Detached);
 	}
 
@@ -329,10 +331,10 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_threads[0].Id = static_cast<DWORD>(-1);
 #endif
 
-	if (m_callbacks.OnThreadsCreated) {
+	if (m_callbacks.OnThreadsCreated != nullptr) {
 		m_callbacks.OnThreadsCreated(m_callbacks.Context, m_numThreads);
 	}
-	if (m_callbacks.OnFibersCreated) {
+	if (m_callbacks.OnFibersCreated != nullptr) {
 		m_callbacks.OnFibersCreated(m_callbacks.Context, options.FiberPoolSize);
 	}
 
@@ -366,8 +368,8 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 		}
 	}
 
-	// Manually invoke callbacks for 'main' fiber
-	if (m_callbacks.OnFiberStateChanged) {
+	// Manually invoke callback for 'main' fiber
+	if (m_callbacks.OnFiberStateChanged != nullptr) {
 		m_callbacks.OnFiberStateChanged(m_callbacks.Context, 0, FiberState::Attached);
 	}
 
@@ -395,7 +397,7 @@ TaskScheduler::~TaskScheduler() {
 	// Jump to the quit fiber
 	// Create a scope so index isn't used after we come back from the switch. It will be wrong if we started on a non-main thread
 	{
-		if (m_callbacks.OnFiberStateChanged) {
+		if (m_callbacks.OnFiberStateChanged != nullptr) {
 			m_callbacks.OnFiberStateChanged(m_callbacks.Context, GetCurrentFiberIndex(), FiberState::Detached);
 		}
 
@@ -450,6 +452,9 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 		queue = &m_tls[GetCurrentThreadIndex()].HiPriTaskQueue;
 	} else if (priority == TaskPriority::Low) {
 		queue = &m_tls[GetCurrentThreadIndex()].LoPriTaskQueue;
+	} else {
+		FTL_ASSERT("Unknown task priority", false);
+		return;
 	}
 	for (unsigned i = 0; i < numTasks; ++i) {
 		FTL_ASSERT("Task given to TaskScheduler:AddTasks has a nullptr Function", tasks[i].Function != nullptr);
@@ -519,7 +524,7 @@ bool TaskScheduler::GetNextHiPriTask(TaskBundle *nextTask, std::vector<TaskBundl
 		if (TaskIsReadyToExecute(nextTask)) {
 			result = true;
 			// Break to cleanup
-			goto cleanup;
+			goto cleanup; // NOLINT(cppcoreguidelines-avoid-goto)
 		}
 
 		// It's a ReadyTask whose fiber hasn't switched away yet
@@ -698,10 +703,10 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
 		ThreadLocalStorage *tls = &m_tls[GetCurrentThreadIndex()];
 
 		// Push a dummy task to the high priority queue
-		Task task;
+		Task task{};
 		task.Function = ReadyFiberDummyTask;
 		task.ArgData = bundle;
-		TaskBundle taskBundle;
+		TaskBundle taskBundle{};
 		taskBundle.TaskToExecute = task;
 		taskBundle.Counter = nullptr;
 
@@ -792,14 +797,14 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	tls.OldFiberDestination = FiberDestination::ToWaiting;
 	tls.OldFiberStoredFlag = &readyFiberBundle->FiberIsSwitched;
 
-	if (m_callbacks.OnFiberStateChanged) {
+	if (m_callbacks.OnFiberStateChanged != nullptr) {
 		m_callbacks.OnFiberStateChanged(m_callbacks.Context, currentFiberIndex, FiberState::Detached);
 	}
 
 	// Switch
 	m_fibers[currentFiberIndex].SwitchToFiber(&m_fibers[freeFiberIndex]);
 
-	if (m_callbacks.OnFiberStateChanged) {
+	if (m_callbacks.OnFiberStateChanged != nullptr) {
 		m_callbacks.OnFiberStateChanged(m_callbacks.Context, GetCurrentFiberIndex(), FiberState::Attached);
 	}
 

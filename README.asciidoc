@@ -68,22 +68,22 @@ int main() {
 	taskScheduler.Init();
 
 	// Define the constants to test
-	constexpr uint64_t triangleNum = 47593243ull;
-	constexpr uint64_t numAdditionsPerTask = 10000ull;
-	constexpr uint64_t numTasks = (triangleNum + numAdditionsPerTask - 1ull) / numAdditionsPerTask;
+	constexpr uint64_t triangleNum = 47593243ULL;
+	constexpr uint64_t numAdditionsPerTask = 10000ULL;
+	constexpr uint64_t numTasks = (triangleNum + numAdditionsPerTask - 1ULL) / numAdditionsPerTask;
 
 	// Create the tasks
 	// FTL allows you to create Tasks on the stack.
 	// However, in this case, that would cause a stack overflow
 	ftl::Task *tasks = new ftl::Task[numTasks];
 	NumberSubset *subsets = new NumberSubset[numTasks];
-	uint64_t nextNumber = 1ull;
+	uint64_t nextNumber = 1ULL;
 
-	for (uint64_t i = 0ull; i < numTasks; ++i) {
+	for (uint64_t i = 0ULL; i < numTasks; ++i) {
 		NumberSubset *subset = &subsets[i];
 
 		subset->start = nextNumber;
-		subset->end = nextNumber + numAdditionsPerTask - 1ull;
+		subset->end = nextNumber + numAdditionsPerTask - 1ULL;
 		if (subset->end > triangleNum) {
 			subset->end = triangleNum;
 		}
@@ -104,13 +104,13 @@ int main() {
 	taskScheduler.WaitForCounter(&counter);
 
 	// Add the results
-	uint64_t result = 0ull;
+	uint64_t result = 0ULL;
 	for (uint64_t i = 0; i < numTasks; ++i) {
 		result += subsets[i].total;
 	}
 
 	// Test
-	assert(triangleNum * (triangleNum + 1ull) / 2ull == result);
+	assert(triangleNum * (triangleNum + 1ULL) / 2ULL == result);
 
 	// Cleanup
 	delete[] subsets;

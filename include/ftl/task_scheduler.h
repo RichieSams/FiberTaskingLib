@@ -31,7 +31,6 @@
 #include "ftl/wait_free_queue.h"
 
 #include <atomic>
-#include <climits>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
@@ -44,9 +43,6 @@ class AtomicFlag;
 class FullAtomicCounter;
 
 enum class EmptyQueueBehavior {
-	// Fixing this will break api.
-	// ReSharper disable CppInconsistentNaming
-
 	// Spin in a loop, actively searching for tasks
 	Spin,
 	// Same as spin, except yields to the OS after each round of searching
@@ -132,6 +128,8 @@ private:
 	};
 
 	struct ReadyFiberBundle {
+		ReadyFiberBundle() = default;
+		
 		// The fiber
 		unsigned FiberIndex;
 		// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
@@ -251,7 +249,6 @@ public:
 	 * Yields execution to another task until counter == 0
 	 *
 	 * @param counter             The counter to check
-	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
 	void WaitForCounter(TaskCounter *counter, bool pinToCurrentThread = false);
@@ -260,7 +257,6 @@ public:
 	 * Yields execution to another task until counter == 0
 	 *
 	 * @param counter             The counter to check
-	 * @param value               The value to wait for
 	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
 	 */
 	void WaitForCounter(AtomicFlag *counter, bool pinToCurrentThread = false);
@@ -371,8 +367,7 @@ private:
 	 * for a new task
 	 *
 	 * @param pinnedThreadIndex    The index of the thread this fiber is pinned to. If not pinned, this will equal kNoThreadPinning
-	 * @param fiberIndex           The index of the fiber to add
-	 * @param fiberStoredFlag      A flag used to signal if the fiber has been successfully switched out of and "cleaned
+	 * @param bundle               The fiber bundle to add
 	 * up"
 	 */
 	void AddReadyFiber(unsigned pinnedThreadIndex, ReadyFiberBundle *bundle);

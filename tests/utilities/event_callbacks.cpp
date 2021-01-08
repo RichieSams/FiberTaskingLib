@@ -36,20 +36,26 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 	struct TestCheckValues {
 		std::atomic_int fiberEventNum;
 	};
-	TestCheckValues testValues;
+	TestCheckValues testValues{};
 	testValues.fiberEventNum.store(0, std::memory_order_seq_cst);
 
 	options.Callbacks.Context = &testValues;
-	options.Callbacks.OnThreadsCreated = [](void *, unsigned threadCount) {
+	options.Callbacks.OnThreadsCreated = [](void *context, unsigned threadCount) {
+		(void)context;
 		REQUIRE(threadCount == 1);
 	};
-	options.Callbacks.OnFibersCreated = [](void *, unsigned fiberCount) {
+	options.Callbacks.OnFibersCreated = [](void *context, unsigned fiberCount) {
+		(void)context;
 		REQUIRE(fiberCount == 20);
 	};
-	options.Callbacks.OnWorkerThreadStarted = [](void *, unsigned) {
+	options.Callbacks.OnWorkerThreadStarted = [](void *context, unsigned threadIndex) {
+		(void)context;
+		(void)threadIndex;
 		FAIL("This should never be called, since we don't create worker threads");
 	};
-	options.Callbacks.OnWorkerThreadEnded = [](void *, unsigned) {
+	options.Callbacks.OnWorkerThreadEnded = [](void *context, unsigned fiberIndex) {
+		(void)context;
+		(void)fiberIndex;
 		FAIL("This should never be called, since we don't create worker threads");
 	};
 	options.Callbacks.OnFiberStateChanged = [](void *context, unsigned fiberIndex, ftl::FiberState newState) {
@@ -104,9 +110,11 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 		REQUIRE(taskScheduler.Init(options) == 0);
 
 		std::atomic_int taskRunCount(0);
-		ftl::Task testTask;
+		ftl::Task testTask{};
 		testTask.ArgData = &taskRunCount;
-		testTask.Function = [](ftl::TaskScheduler *, void *arg) {
+		testTask.Function = [](ftl::TaskScheduler *ts, void *arg) {
+			(void)ts;
+
 			std::atomic_int *runCount = static_cast<std::atomic_int *>(arg);
 			runCount->fetch_add(1, std::memory_order_seq_cst);
 		};
@@ -135,7 +143,7 @@ TEST_CASE("Thread Event Callbacks", "[utility]") {
 		std::atomic_int fiberAttaches[kThreadCount];
 		std::atomic_int fiberDetaches[kThreadCount];
 	};
-	TestCheckValues testValues;
+	TestCheckValues testValues{};
 	// Initialize
 	for (unsigned i = 0; i < kThreadCount; ++i) {
 		testValues.threadStarts[i].store(0);
@@ -145,10 +153,12 @@ TEST_CASE("Thread Event Callbacks", "[utility]") {
 	}
 
 	options.Callbacks.Context = &testValues;
-	options.Callbacks.OnThreadsCreated = [](void *, unsigned threadCount) {
+	options.Callbacks.OnThreadsCreated = [](void *context, unsigned threadCount) {
+		(void)context;
 		REQUIRE(threadCount == 4);
 	};
-	options.Callbacks.OnFibersCreated = [](void *, unsigned fiberCount) {
+	options.Callbacks.OnFibersCreated = [](void *context, unsigned fiberCount) {
+		(void)context;
 		REQUIRE(fiberCount == 20);
 	};
 	options.Callbacks.OnWorkerThreadStarted = [](void *context, unsigned threadIndex) {

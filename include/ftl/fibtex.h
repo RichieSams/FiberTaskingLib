@@ -27,15 +27,7 @@
 #include "ftl/atomic_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include <cassert>
-#include <mutex>
-#include <system_error>
-
 namespace ftl {
-// Pull std helpers into ftl namespace
-using std::adopt_lock;
-using std::defer_lock;
-using std::try_to_lock;
 
 /**
  * A fiber aware mutex. Does not block in the traditional way. Methods do not follow the lowerCamelCase convention

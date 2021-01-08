@@ -28,10 +28,8 @@
 
 #include "catch2/catch.hpp"
 
-#include <atomic>
-
 struct MutexData {
-	MutexData(ftl::TaskScheduler *scheduler)
+	explicit MutexData(ftl::TaskScheduler *scheduler)
 	        : Lock(scheduler, 6), Counter(0) {
 	}
 

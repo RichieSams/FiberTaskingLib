@@ -30,49 +30,53 @@
 
 #include <numeric>
 
-ftl::ThreadLocal<size_t> &SingleInitSingleton(ftl::TaskScheduler *scheduler) {
-	static ftl::ThreadLocal<size_t> counter(scheduler);
+void SimpleInit(ftl::TaskScheduler *scheduler, void *arg) {
+	(void)scheduler;
+	ftl::ThreadLocal<size_t> *counter = static_cast<ftl::ThreadLocal<size_t> *>(arg);
 
-	return counter;
+	// Double dereference
+	// First to get from ThreadLocal pointer to instance
+	// Second to get from ThreadLocal to our thread-specific instance of size_t
+	(*(*counter)) += 1;
 }
 
-void SimpleInit(ftl::TaskScheduler *scheduler, void * /*arg*/) {
-	*SingleInitSingleton(scheduler) += 1;
+void SideEffect(ftl::TaskScheduler *scheduler, void *arg) {
+	(void)scheduler;
+	ftl::ThreadLocal<size_t> *counter = static_cast<ftl::ThreadLocal<size_t> *>(arg);
+
+	// Double dereference
+	// First to get from ThreadLocal pointer to instance
+	// Second to get from ThreadLocal to our thread-specific instance of size_t
+	(*(*counter));
 }
 
 static std::atomic<size_t> g_sideEffectCount{0};
-ftl::ThreadLocal<size_t> &SideEffectSingleton(ftl::TaskScheduler *scheduler) {
-	static ftl::ThreadLocal<size_t> counter(scheduler, []() { return g_sideEffectCount++; });
-
-	return counter;
-}
-
-void SideEffect(ftl::TaskScheduler *scheduler, void * /*arg*/) {
-	*SideEffectSingleton(scheduler);
-}
 
 TEST_CASE("Thread Local", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
 	REQUIRE(taskScheduler.Init() == 0);
 
 	// Single Init
-	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, nullptr});
+	ftl::ThreadLocal<size_t> simpleCounter(&taskScheduler);
+
+	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, &simpleCounter});
 
 	ftl::TaskCounter ac(&taskScheduler);
 	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Low, &ac);
 	taskScheduler.WaitForCounter(&ac);
 
-	auto singleInitVals = SingleInitSingleton(&taskScheduler).GetAllValues();
-
+	auto singleInitVals = simpleCounter.GetAllValues();
 	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
 
 	// Side Effects
-	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, nullptr});
+	ftl::ThreadLocal<size_t> sideEffectCounter(&taskScheduler, []() { return g_sideEffectCount++; });
+
+	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, &sideEffectCounter});
 
 	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), ftl::TaskPriority::Low, &ac);
 	taskScheduler.WaitForCounter(&ac);
 
-	auto sideEffect = SideEffectSingleton(&taskScheduler).GetAllValues();
+	auto sideEffect = sideEffectCounter.GetAllValues();
 
 	// The initializer will only fire once per thread, so there must be less than the thread count
 	// in calls to it, but there should be at least one.
