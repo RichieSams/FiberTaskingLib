@@ -31,7 +31,7 @@
 // Forward declare the platform types so we don't have to include their heavy header files
 #if defined(FTL_WIN32_THREADS)
 
-typedef void *HANDLE; // NOLINT(modernize-use-using)
+typedef void *HANDLE;        // NOLINT(modernize-use-using)
 typedef unsigned long DWORD; // NOLINT(modernize-use-using)
 
 #elif defined(FTL_POSIX_THREADS)
@@ -41,7 +41,7 @@ typedef unsigned long int pthread_t; // NOLINT(modernize-use-using)
 #	elif defined(FTL_OS_APPLE)
 struct _opaque_pthread_t;
 typedef struct _opaque_pthread_t *__darwin_pthread_t; // NOLINT(modernize-use-using)
-typedef __darwin_pthread_t pthread_t; // NOLINT(modernize-use-using)
+typedef __darwin_pthread_t pthread_t;                 // NOLINT(modernize-use-using)
 #	endif
 #endif
 
