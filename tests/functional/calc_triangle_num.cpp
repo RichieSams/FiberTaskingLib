@@ -94,7 +94,7 @@ TEST_CASE("Triangle Number", "[functional]") {
 	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Low, &counter);
 	delete[] tasks;
 
-	taskScheduler.WaitForCounter(&counter, 0);
+	taskScheduler.WaitForCounter(&counter);
 
 	// Add the results
 	uint64_t result = 0ULL;
