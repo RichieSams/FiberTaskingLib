@@ -113,3 +113,9 @@ jobs:
         displayName: Build
       - powershell: make test_windows
         displayName: Test
+  - job: lint
+    displayName: Clang-Tidy Linting
+    pool:
+      vmImage: ubuntu-18.04
+    steps:
+      - bash: make lint
