@@ -154,6 +154,18 @@ private:
 		}
 
 	public:
+		// NOTE: The order of these variables may seem odd / jumbled. However, it it to optimize the padding required
+
+		/* The queue of high priority waiting tasks. This also contains the ready waiting fibers, which are differentiated by the Task function == ReadyFiberDummyTask */
+		WaitFreeQueue<TaskBundle> HiPriTaskQueue;
+		/* The queue of high priority waiting tasks */
+		WaitFreeQueue<TaskBundle> LoPriTaskQueue;
+
+		std::atomic<bool> *OldFiberStoredFlag{nullptr};
+
+		/* The queue of ready waiting Fibers that were pinned to this thread */
+		std::vector<ReadyFiberBundle *> PinnedReadyFibers;
+
 		/**
 		 * The current fiber implementation requires that fibers created from threads finish on the same thread where
 		 * they started
@@ -164,26 +176,21 @@ private:
 		 * safely clean up.
 		 */
 		Fiber ThreadFiber;
+
+		/* Lock protecting access to PinnedReadyFibers */
+		std::mutex PinnedReadyFibersLock;
+
 		/* The index of the current fiber in m_fibers */
 		unsigned CurrentFiberIndex;
 		/* The index of the previously executed fiber in m_fibers */
 		unsigned OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
 		FiberDestination OldFiberDestination{FiberDestination::None};
-		/* The queue of high priority waiting tasks. This also contains the ready waiting fibers, which are differentiated by the Task function == ReadyFiberDummyTask */
-		WaitFreeQueue<TaskBundle> HiPriTaskQueue;
+
 		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
 		unsigned HiPriLastSuccessfulSteal{1};
-		/* The queue of high priority waiting tasks */
-		WaitFreeQueue<TaskBundle> LoPriTaskQueue;
-		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
+		/* The last low priority queue that we successfully stole from. This is an offset index from the current thread index */
 		unsigned LoPriLastSuccessfulSteal{1};
-
-		std::atomic<bool> *OldFiberStoredFlag{nullptr};
-
-		/* The queue of ready waiting Fibers that were pinned to this thread */
-		std::vector<ReadyFiberBundle *> PinnedReadyFibers;
-		std::mutex PinnedReadyFibersLock;
 
 		unsigned FailedQueuePopAttempts{0};
 	};
