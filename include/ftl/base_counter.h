@@ -26,8 +26,6 @@
 
 #include <atomic>
 #include <limits>
-#include <thread>
-#include <vector>
 
 namespace ftl {
 
@@ -51,11 +49,13 @@ class TaskScheduler;
 /**
  * BaseCounter is a wrapper over a C++11 atomic_unsigned
  * It implements the base logic for the rest of the AtomicCounter-type classes
+ *
+ * You should never use this class directly. Use the other AtomicCounter-type classes
  */
 class BaseCounter {
 
 public:
-	explicit BaseCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS);
+	explicit BaseCounter(TaskScheduler *taskScheduler, unsigned initialValue = 0, unsigned fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 	BaseCounter(BaseCounter const &) = delete;
 	BaseCounter(BaseCounter &&) noexcept = delete;

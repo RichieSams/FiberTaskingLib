@@ -46,6 +46,7 @@ public:
 	TaskCounter(TaskCounter &&) noexcept = delete;
 	TaskCounter &operator=(TaskCounter const &) = delete;
 	TaskCounter &operator=(TaskCounter &&) noexcept = delete;
+	~TaskCounter() = default;
 
 public:
 	/**

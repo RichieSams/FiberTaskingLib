@@ -10,11 +10,7 @@
 
 #pragma once
 
-#include <cstdint>
-// intptr_t
-
-#include <cstddef>
-// size_t
+#include <stddef.h> // size_t
 
 namespace boost_context {
 

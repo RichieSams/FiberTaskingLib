@@ -27,9 +27,11 @@
 #include "ftl/ftl_valgrind.h"
 #include "ftl/task_scheduler.h"
 
+#include <thread>
+
 namespace ftl {
 
-BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned const initialValue, unsigned const fiberSlots)
+BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned initialValue, unsigned fiberSlots)
         : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_fiberSlots(fiberSlots) {
 	m_freeSlots = new std::atomic<bool>[fiberSlots];
 	m_waitingFibers = new WaitingFiberBundle[fiberSlots];

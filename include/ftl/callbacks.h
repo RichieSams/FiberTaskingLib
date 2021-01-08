@@ -33,10 +33,10 @@ enum class FiberState : int {
 	Detached
 };
 
-typedef void (*ThreadCreationCallback)(void *context, unsigned threadCount);
-typedef void (*FiberCreationCallback)(void *context, unsigned fiberCount);
-typedef void (*ThreadEventCallback)(void *context, unsigned threadIndex);
-typedef void (*FiberEventCallback)(void *context, unsigned fiberIndex, FiberState newState);
+using ThreadCreationCallback = void (*)(void *context, unsigned threadCount);
+using FiberCreationCallback = void (*)(void *context, unsigned fiberCount);
+using ThreadEventCallback = void (*)(void *context, unsigned threadIndex);
+using FiberEventCallback = void (*)(void *context, unsigned fiberIndex, FiberState newState);
 
 struct EventCallbacks {
 	void *Context = nullptr;

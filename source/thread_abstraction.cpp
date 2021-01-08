@@ -187,7 +187,7 @@ bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void *arg, 
 }
 
 void EndCurrentThread() {
-	pthread_exit(NULL);
+	pthread_exit(nullptr);
 }
 
 bool JoinThread(ThreadType thread) {
@@ -208,6 +208,8 @@ bool SetCurrentThreadAffinity(size_t coreAffinity) {
 
 	int ret = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
 	if (ret != 0) {
+		// Clang-tidy can't figure out the #ifdefs
+		// NOLINTNEXTLINE(readability-simplify-boolean-expr)
 		return false;
 	}
 #	else
