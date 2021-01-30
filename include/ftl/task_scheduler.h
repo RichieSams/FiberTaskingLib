@@ -80,37 +80,7 @@ public:
 	~TaskScheduler();
 
 private:
-	constexpr static unsigned kInvalidIndex = std::numeric_limits<unsigned>::max();
-	constexpr static unsigned kNoThreadPinning = std::numeric_limits<unsigned>::max();
-
-	EventCallbacks m_callbacks;
-
-	unsigned m_numThreads{0};
-	ThreadType *m_threads{nullptr};
-
-	unsigned m_fiberPoolSize{0};
-	/* The backing storage for the fiber pool */
-	Fiber *m_fibers{nullptr};
-	/**
-	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
-	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
-	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
-	 */
-	std::atomic<bool> *m_freeFibers{nullptr};
-
-	Fiber *m_quitFibers{nullptr};
-
-	std::atomic<bool> m_initialized{false};
-	std::atomic<bool> m_quit{false};
-	std::atomic<unsigned> m_quitCount{0};
-
-	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
-	/**
-	* This lock is used with the CV below to put threads to sleep when there
-	* is no work to do.
-	*/
-	std::mutex ThreadSleepLock;
-	std::condition_variable ThreadSleepCV;
+	// Inner struct definitions
 
 	enum class FiberDestination {
 		None = 0,
@@ -136,23 +106,13 @@ private:
 		std::atomic<bool> FiberIsSwitched;
 	};
 
-	struct PinnedWaitingFiberBundle {
-		PinnedWaitingFiberBundle(unsigned const fiberIndex, TaskCounter *const counter, unsigned const targetValue)
-		        : FiberIndex(fiberIndex), Counter(counter), TargetValue(targetValue) {
-		}
-
-		unsigned FiberIndex;
-		TaskCounter *Counter;
-		unsigned TargetValue;
-	};
-
 	struct alignas(kCacheLineSize) ThreadLocalStorage {
 		ThreadLocalStorage()
 		        : CurrentFiberIndex(kInvalidIndex), OldFiberIndex(kInvalidIndex) {
 		}
 
 	public:
-		// NOTE: The order of these variables may seem odd / jumbled. However, it it to optimize the padding required
+		// NOTE: The order of these variables may seem odd / jumbled. However, it is to optimize the padding required
 
 		/* The queue of high priority waiting tasks. This also contains the ready waiting fibers, which are differentiated by the Task function == ReadyFiberDummyTask */
 		WaitFreeQueue<TaskBundle> HiPriTaskQueue;
@@ -192,6 +152,55 @@ private:
 
 		unsigned FailedQueuePopAttempts{0};
 	};
+
+private:
+	// Member variables
+
+	constexpr static unsigned kInvalidIndex = std::numeric_limits<unsigned>::max();
+	constexpr static unsigned kNoThreadPinning = std::numeric_limits<unsigned>::max();
+
+	EventCallbacks m_callbacks;
+
+	unsigned m_numThreads{0};
+	ThreadType *m_threads{nullptr};
+
+	unsigned m_fiberPoolSize{0};
+	/* The backing storage for the fiber pool */
+	Fiber *m_fibers{nullptr};
+	/**
+	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
+	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
+	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
+	 */
+	std::atomic<bool> *m_freeFibers{nullptr};
+	/**
+	 * An array of ReadyFiberBundle which is used by @WaitForCounter()
+	 *
+	 * We don't technically need one per fiber. Only one per call to WaitForCounter()
+	 * In the past we would dynamically allocate this struct in WaitForCounter() and
+	 * then free it when we resumed the fiber.
+	 *
+	 * However, we want to avoid allocations during runtime. So we pre-allocate
+	 * them. At max, we can call WaitForCounter() for each fiber. So, to make things
+	 * simple, we pre-allocate one for each fiber. The struct is small, so this
+	 * preallocation isn't too bad
+	 */
+	ReadyFiberBundle *m_readyFiberBundles{nullptr};
+
+	Fiber *m_quitFibers{nullptr};
+
+	std::atomic<bool> m_initialized{false};
+	std::atomic<bool> m_quit{false};
+	std::atomic<unsigned> m_quitCount{0};
+
+	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
+	/**
+	* This lock is used with the CV below to put threads to sleep when there
+	* is no work to do.
+	*/
+	std::mutex ThreadSleepLock;
+	std::condition_variable ThreadSleepCV;
+
 	/**
 	 * c++ Thread Local Storage is, by definition, static/global. This poses some problems, such as multiple
 	 * TaskScheduler instances. In addition, with the current fiber implementation, we have no way of telling the

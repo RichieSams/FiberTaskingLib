@@ -133,7 +133,6 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 				}
 
 				waitingFiberIndex = (*bundle)->FiberIndex;
-				delete (*bundle);
 				tls->PinnedReadyFibers.erase(bundle);
 				break;
 			}
@@ -148,11 +147,9 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 			// Check if the found task is a ReadyFiber dummy task
 			if (foundTask && nextTask.TaskToExecute.Function == ReadyFiberDummyTask) {
-				// Get the waiting fiber index and clean up the allocation
+				// Get the waiting fiber index
 				ReadyFiberBundle *readyFiberBundle = reinterpret_cast<ReadyFiberBundle *>(nextTask.TaskToExecute.ArgData);
 				waitingFiberIndex = readyFiberBundle->FiberIndex;
-
-				delete readyFiberBundle;
 			}
 		}
 
@@ -306,6 +303,7 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_fibers = new Fiber[options.FiberPoolSize];
 	m_freeFibers = new std::atomic<bool>[options.FiberPoolSize];
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * m_fiberPoolSize);
+	m_readyFiberBundles = new ReadyFiberBundle[options.FiberPoolSize];
 
 	// Leave the first slot for the bound main thread
 	for (unsigned i = 1; i < options.FiberPoolSize; ++i) {
@@ -413,10 +411,11 @@ TaskScheduler::~TaskScheduler() {
 	}
 
 	// Cleanup
-	delete[] m_fibers;
-	delete[] m_freeFibers;
 	delete[] m_tls;
 	delete[] m_threads;
+	delete[] m_readyFiberBundles;
+	delete[] m_freeFibers;
+	delete[] m_fibers;
 
 	delete[] m_quitFibers;
 }
@@ -775,16 +774,15 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	}
 
 	// Create the ready fiber bundle and attempt to add it to the waiting list
-	auto *const readyFiberBundle = new ReadyFiberBundle();
-	readyFiberBundle->FiberIndex = tls.CurrentFiberIndex;
+	ReadyFiberBundle *readyFiberBundle = &m_readyFiberBundles[currentFiberIndex];
+	readyFiberBundle->FiberIndex = currentFiberIndex;
 	readyFiberBundle->FiberIsSwitched.store(false);
 
 	bool const alreadyDone = counter->AddFiberToWaitingList(readyFiberBundle, value, pinnedThreadIndex);
 
 	// The counter finished while we were trying to put it in the waiting list
-	// Just clean up and trivially return
+	// Just trivially return
 	if (alreadyDone) {
-		delete readyFiberBundle;
 		return;
 	}
 
