@@ -55,6 +55,14 @@ class TaskScheduler;
 class BaseCounter {
 
 public:
+	/**
+	 * Creates a BaseCounter
+	 *
+	 * @param taskScheduler    The TaskScheduler this flag references
+	 * @param initialValue     The initial value of the flag
+	 * @param fiberSlots       This defines how many fibers can wait on this counter.
+	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
+	 */
 	explicit BaseCounter(TaskScheduler *taskScheduler, unsigned initialValue = 0, unsigned fiberSlots = NUM_WAITING_FIBER_SLOTS);
 
 	BaseCounter(BaseCounter const &) = delete;
@@ -78,8 +86,11 @@ protected:
 	 * We can't use a vector for m_freeSlots because std::atomic<t> is non-copyable and
 	 * non-moveable. std::vector constructor, push_back, and emplace_back all use either
 	 * copy or move
+	 *
+	 * We use Small Vector Optimization in order to avoid allocations for most cases
 	 */
 	std::atomic<bool> *m_freeSlots;
+	std::atomic<bool> m_freeSlotsStorage[NUM_WAITING_FIBER_SLOTS];
 
 	struct WaitingFiberBundle {
 		WaitingFiberBundle();
@@ -104,8 +115,11 @@ protected:
 	 *
 	 * We again can't use a vector because WaitingFiberBundle contains a std::atomic<t>, which is is non-copyable and
 	 * non-moveable. std::vector constructor, push_back, and emplace_back all use either copy or move
+	 *
+	 * We also use Small Vector Optimization in order to avoid allocations for most cases
 	 */
 	WaitingFiberBundle *m_waitingFibers;
+	WaitingFiberBundle m_waitingFibersStorage[NUM_WAITING_FIBER_SLOTS];
 
 	/**
 	 * The number of elements in m_freeSlots and m_waitingFibers

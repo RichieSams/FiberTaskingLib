@@ -38,8 +38,9 @@ public:
 	/**
 	 * All Fibtex's have to be aware of the task scheduler in order to yield.
 	 *
-	 * @param taskScheduler    ftl::TaskScheduler that will be using this mutex.
+	 * @param taskScheduler    The TaskScheduler that will be using this mutex.
 	 * @param fiberSlots       How many fibers can simultaneously wait on the mutex
+	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
 	 */
 	explicit Fibtex(TaskScheduler *taskScheduler, unsigned fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : m_ableToSpin(taskScheduler->GetThreadCount() > 1), m_taskScheduler(taskScheduler),
