@@ -34,6 +34,14 @@ namespace ftl {
  */
 class FullAtomicCounter : public BaseCounter {
 public:
+	/**
+	 * Creates a TaskCounter
+	 *
+	 * @param taskScheduler    The TaskScheduler this counter references
+	 * @param initialValue     The initial value of the counter
+	 * @param fiberSlots       This defines how many fibers can wait on this counter.
+	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
+	 */
 	explicit FullAtomicCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : BaseCounter(taskScheduler, initialValue, fiberSlots) {
 	}
@@ -142,6 +150,14 @@ public:
  */
 class AtomicFlag : public BaseCounter {
 public:
+	/**
+	 * Creates an AtomicFlag
+	 *
+	 * @param taskScheduler    The TaskScheduler this flag references
+	 * @param initialValue     The initial value of the flag
+	 * @param fiberSlots       This defines how many fibers can wait on this counter.
+	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
+	 */
 	explicit AtomicFlag(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
 	        : BaseCounter(taskScheduler, initialValue, fiberSlots) {
 	}

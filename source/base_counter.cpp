@@ -32,9 +32,15 @@
 namespace ftl {
 
 BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned initialValue, unsigned fiberSlots)
-        : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0), m_fiberSlots(fiberSlots) {
-	m_freeSlots = new std::atomic<bool>[fiberSlots];
-	m_waitingFibers = new WaitingFiberBundle[fiberSlots];
+        : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0),
+          m_freeSlots(m_freeSlotsStorage), m_freeSlotsStorage(),
+          m_waitingFibers(m_waitingFibersStorage),
+          m_fiberSlots(fiberSlots) {
+	// Small Vector Optimization
+	if (fiberSlots > NUM_WAITING_FIBER_SLOTS) {
+		m_freeSlots = new std::atomic<bool>[fiberSlots];
+		m_waitingFibers = new WaitingFiberBundle[fiberSlots];
+	}
 
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_value, sizeof(m_value));
 	FTL_VALGRIND_HG_DISABLE_CHECKING(&m_lock, sizeof(m_lock));
@@ -58,8 +64,10 @@ BaseCounter::~BaseCounter() {
 		std::this_thread::yield();
 	}
 
-	delete[] m_freeSlots;
-	delete[] m_waitingFibers;
+	if (m_fiberSlots > NUM_WAITING_FIBER_SLOTS) {
+		delete[] m_freeSlots;
+		delete[] m_waitingFibers;
+	}
 }
 
 BaseCounter::WaitingFiberBundle::WaitingFiberBundle()
