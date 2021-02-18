@@ -83,6 +83,7 @@ SetSourceGroup(NAME Util
 	SOURCE_FILES ../include/ftl/assert.h
 	             ../include/ftl/config.h
 	             ../include/ftl/fiber.h
+	             fiber.cpp
 	             ../include/ftl/fibtex.h
 	             ../include/ftl/callbacks.h
 	             ../include/ftl/thread_abstraction.h
