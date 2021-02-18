@@ -24,36 +24,13 @@
 
 #pragma once
 
-// ReSharper disable CppUnusedIncludeDirective
-#include "ftl/assert.h"
-#include "ftl/config.h"
 #include "ftl/ftl_valgrind.h"
 
 #include "boost_context/fcontext.h"
 
-#include <algorithm>
-#include <cstdlib>
-// ReSharper restore CppUnusedIncludeDirective
-
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-#		include <sys/mman.h>
-#		include <unistd.h>
-#	elif defined(FTL_OS_WINDOWS)
-#		define WIN32_LEAN_AND_MEAN
-#		define NOMINMAX
-#		include <Windows.h>
-#	endif
-#endif
+#include <stddef.h>
 
 namespace ftl {
-
-inline void MemoryGuard(void *memory, size_t bytes);
-inline void MemoryGuardRelease(void *memory, size_t bytes);
-inline size_t SystemPageSize();
-inline void *AlignedAlloc(size_t size, size_t alignment);
-inline void AlignedFree(void *block);
-inline size_t RoundUp(size_t numToRound, size_t multiple);
 
 using FiberStartRoutine = void (*)(void *arg);
 
@@ -72,25 +49,7 @@ public:
 	 * @param startRoutine     The function to run when the fiber first starts
 	 * @param arg              The argument to pass to 'startRoutine'
 	 */
-	Fiber(size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg)
-	        : m_arg(arg) {
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-		m_systemPageSize = SystemPageSize();
-#else
-		m_systemPageSize = 0;
-#endif
-
-		m_stackSize = RoundUp(stackSize, m_systemPageSize);
-		// We add a guard page both the top and the bottom of the stack
-		m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
-		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
-
-		FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-		MemoryGuard(static_cast<char *>(m_stack), m_systemPageSize);
-		MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, m_systemPageSize);
-#endif
-	}
+	Fiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg);
 
 	/**
 	 * Deleted copy constructor
@@ -127,17 +86,7 @@ public:
 
 		return *this;
 	}
-	~Fiber() {
-		if (m_stack != nullptr) {
-			if (m_systemPageSize != 0) {
-				MemoryGuardRelease(static_cast<char *>(m_stack), m_systemPageSize);
-				MemoryGuardRelease(static_cast<char *>(m_stack) + m_systemPageSize + m_stackSize, m_systemPageSize);
-			}
-			FTL_VALGRIND_DEREGISTER();
-
-			AlignedFree(m_stack);
-		}
-	}
+	~Fiber();
 
 private:
 	void *m_stack{nullptr};
@@ -181,122 +130,7 @@ private:
 	 * @param first     The first fiber
 	 * @param second    The second fiber
 	 */
-	static void Swap(Fiber &first, Fiber &second) noexcept {
-		using std::swap;
-
-		swap(first.m_stack, second.m_stack);
-		swap(first.m_systemPageSize, second.m_systemPageSize);
-		swap(first.m_stackSize, second.m_stackSize);
-		swap(first.m_context, second.m_context);
-		swap(first.m_arg, second.m_arg);
-	}
+	static void Swap(Fiber &first, Fiber &second) noexcept;
 };
-
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
-#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-inline void MemoryGuard(void *const memory, size_t bytes) {
-	int result = mprotect(memory, bytes, PROT_NONE);
-	FTL_ASSERT("mprotect", !result);
-#		if defined(NDEBUG)
-	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
-	(void)result;
-#		endif
-}
-
-inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
-	int const result = mprotect(memory, bytes, PROT_READ | PROT_WRITE);
-	FTL_ASSERT("mprotect", !result);
-#		if defined(NDEBUG)
-	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
-	(void)result;
-#		endif
-}
-
-inline size_t SystemPageSize() {
-	return static_cast<size_t>(getpagesize());
-}
-
-inline void *AlignedAlloc(size_t const size, size_t const alignment) {
-	void *returnPtr = nullptr;
-	int const result = posix_memalign(&returnPtr, alignment, size);
-	FTL_ASSERT("posix_memalign", !result);
-#		if defined(NDEBUG)
-	// Void out the result for release, so the compiler doesn't get cranky about an unused variable
-	(void)result;
-#		endif
-
-	return returnPtr;
-}
-
-inline void AlignedFree(void *const block) {
-	free(block);
-}
-#	elif defined(FTL_OS_WINDOWS)
-inline void MemoryGuard(void *const memory, size_t const bytes) {
-	DWORD ignored;
-
-	BOOL const result = VirtualProtect(memory, bytes, PAGE_NOACCESS, &ignored);
-	FTL_ASSERT("VirtualProtect", result);
-}
-
-inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
-	DWORD ignored;
-
-	BOOL const result = VirtualProtect(memory, bytes, PAGE_READWRITE, &ignored);
-	FTL_ASSERT("VirtualProtect", result);
-}
-
-inline size_t SystemPageSize() {
-	SYSTEM_INFO sysInfo;
-	GetSystemInfo(&sysInfo);
-	return sysInfo.dwPageSize;
-}
-
-inline void *AlignedAlloc(size_t const size, size_t const alignment) {
-	return _aligned_malloc(size, alignment);
-}
-
-inline void AlignedFree(void *const block) {
-	_aligned_free(block);
-}
-#	else
-#		error "Need a way to protect memory for this platform".
-#	endif
-#else
-inline void MemoryGuard(void *const memory, size_t const bytes) {
-	(void)memory;
-	(void)bytes;
-}
-
-inline void MemoryGuardRelease(void *const memory, size_t const bytes) {
-	(void)memory;
-	(void)bytes;
-}
-
-inline size_t SystemPageSize() {
-	return 0;
-}
-
-inline void *AlignedAlloc(size_t const size, size_t const /*alignment*/) {
-	return malloc(size);
-}
-
-inline void AlignedFree(void *const block) {
-	free(block);
-}
-#endif
-
-inline size_t RoundUp(size_t const numToRound, size_t const multiple) {
-	if (multiple == 0) {
-		return numToRound;
-	}
-
-	size_t const remainder = numToRound % multiple;
-	if (remainder == 0) {
-		return numToRound;
-	}
-
-	return numToRound + multiple - remainder;
-}
 
 } // End of namespace ftl
