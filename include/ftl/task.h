@@ -37,7 +37,7 @@ struct Task {
 
 enum class TaskPriority {
 	High,
-	Low,
+	Normal,
 };
 
 } // End of namespace ftl

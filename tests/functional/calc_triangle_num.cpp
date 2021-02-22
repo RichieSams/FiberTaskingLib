@@ -91,7 +91,7 @@ TEST_CASE("Triangle Number", "[functional]") {
 
 	// Schedule the tasks and wait for them to complete
 	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Low, &counter);
+	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Normal, &counter);
 	delete[] tasks;
 
 	taskScheduler.WaitForCounter(&counter);

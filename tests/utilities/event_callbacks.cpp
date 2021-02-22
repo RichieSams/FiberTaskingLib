@@ -120,7 +120,7 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 		};
 
 		ftl::TaskCounter waitCounter(&taskScheduler);
-		taskScheduler.AddTask(testTask, ftl::TaskPriority::Low, &waitCounter);
+		taskScheduler.AddTask(testTask, ftl::TaskPriority::Normal, &waitCounter);
 
 		taskScheduler.WaitForCounter(&waitCounter);
 
