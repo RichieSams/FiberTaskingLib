@@ -430,7 +430,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter 
 	const TaskBundle bundle = {task, counter};
 	if (priority == TaskPriority::High) {
 		m_tls[GetCurrentThreadIndex()].HiPriTaskQueue.Push(bundle);
-	} else if (priority == TaskPriority::Low) {
+	} else if (priority == TaskPriority::Normal) {
 		m_tls[GetCurrentThreadIndex()].LoPriTaskQueue.Push(bundle);
 	}
 
@@ -449,7 +449,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 	WaitFreeQueue<TaskBundle> *queue = nullptr;
 	if (priority == TaskPriority::High) {
 		queue = &m_tls[GetCurrentThreadIndex()].HiPriTaskQueue;
-	} else if (priority == TaskPriority::Low) {
+	} else if (priority == TaskPriority::Normal) {
 		queue = &m_tls[GetCurrentThreadIndex()].LoPriTaskQueue;
 	} else {
 		FTL_ASSERT("Unknown task priority", false);

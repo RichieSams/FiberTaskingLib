@@ -75,7 +75,7 @@ int main() {
 
 	// Schedule the tasks
 	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(numTasks, tasks, ftl::TaskPriority::High, &counter);
+	taskScheduler.AddTasks(numTasks, tasks, ftl::TaskPriority::Normal, &counter);
 
 	// FTL creates its own copies of the tasks, so we can safely delete the memory
 	delete[] tasks;

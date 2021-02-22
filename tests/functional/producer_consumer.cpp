@@ -45,7 +45,7 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	}
 
 	ftl::TaskCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Low, &counter);
+	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Normal, &counter);
 	delete[] tasks;
 
 	taskScheduler->WaitForCounter(&counter);
@@ -67,7 +67,7 @@ TEST_CASE("Producer Consumer", "[functional]") {
 	}
 
 	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), ftl::TaskPriority::Low, &counter);
+	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), ftl::TaskPriority::Normal, &counter);
 	taskScheduler.WaitForCounter(&counter);
 
 	// Test to see that all tasks finished
