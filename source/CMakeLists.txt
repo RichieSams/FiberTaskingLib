@@ -31,66 +31,78 @@ if (UNIX)
 	find_package(Threads REQUIRED)
 endif()
 
+# Emscripten needs posix linked and enabled via command line args
+if (EMSCRIPTEN)
+	find_package(Threads REQUIRED)
+	SET(PTHREAD_POOL_SIZE 8)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	add_definitions(-DPTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE})
+	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -s PTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE} -s ASYNCIFY")
+endif()
+
+
 # Figure out the processor architecture
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-	set(FTL_ARCH "x86_64")
-endif()
+if (NOT EMSCRIPTEN)
+	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+		set(FTL_ARCH "x86_64")
+	endif()
 
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
-	set(FTL_ARCH "x86_64")
-endif()
+	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
+		set(FTL_ARCH "x86_64")
+	endif()
 
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
-	set(FTL_ARCH "i386")
-endif()
-
-if (FTL_ARCH STREQUAL "x86_64")
-	if("${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
+	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
 		set(FTL_ARCH "i386")
 	endif()
-endif()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-	if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-		set(FTL_ARCH "arm64")
-	else()
-		set(FTL_ARCH "arm")
+	if (FTL_ARCH STREQUAL "x86_64")
+		if("${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
+			set(FTL_ARCH "i386")
+		endif()
 	endif()
-endif()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-	set(FTL_ARCH "arm64")
-endif()
+	if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+		if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+			set(FTL_ARCH "arm64")
+		else()
+			set(FTL_ARCH "arm")
+		endif()
+	endif()
 
-if ((FTL_ARCH STREQUAL "x86_64") OR (FTL_ARCH STREQUAL "i386"))
-	add_definitions(-DFTL_STRONG_MEMORY_MODEL=1)
+	if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+		set(FTL_ARCH "arm64")
+	endif()
+
+	if ((FTL_ARCH STREQUAL "x86_64") OR (FTL_ARCH STREQUAL "i386"))
+		add_definitions(-DFTL_STRONG_MEMORY_MODEL=1)
+	endif()
 endif()
 
 SetSourceGroup(NAME Core
 	PREFIX FTL
 	SOURCE_FILES 
-				 ../include/ftl/task.h
-	             ../include/ftl/base_counter.h
-	             base_counter.cpp
-	             ../include/ftl/atomic_counter.h
-	             ../include/ftl/task_counter.h
-	             ../include/ftl/task_scheduler.h
-	             task_scheduler.cpp
+				../include/ftl/task.h
+				../include/ftl/base_counter.h
+				base_counter.cpp
+				../include/ftl/atomic_counter.h
+				../include/ftl/task_counter.h
+				../include/ftl/task_scheduler.h
+				task_scheduler.cpp
 )
 
 SetSourceGroup(NAME Util
 	PREFIX FTL
 	SOURCE_FILES ../include/ftl/assert.h
-	             ../include/ftl/config.h
-	             ../include/ftl/fiber.h
-	             fiber.cpp
-	             ../include/ftl/fibtex.h
-	             ../include/ftl/callbacks.h
-	             ../include/ftl/thread_abstraction.h
-	             thread_abstraction.cpp
-	             ../include/ftl/thread_local.h
-	             ../include/ftl/wait_free_queue.h
-				 ../include/ftl/ftl_valgrind.h
+				../include/ftl/config.h
+				../include/ftl/fiber.h
+				fiber.cpp
+				../include/ftl/fibtex.h
+				../include/ftl/callbacks.h
+				../include/ftl/thread_abstraction.h
+				thread_abstraction.cpp
+				../include/ftl/thread_local.h
+				../include/ftl/wait_free_queue.h
+				../include/ftl/ftl_valgrind.h
 )
 
 # Link all the sources into one
@@ -102,7 +114,11 @@ set(FIBER_TASKING_LIB_SRC
 add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
 target_compile_options(ftl PUBLIC -DNUM_WAITING_FIBER_SLOTS=${FTL_NUM_WAITING_FIBER_SLOTS})
 target_include_directories(ftl PUBLIC ../include)
-target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
+if (EMSCRIPTEN)
+	target_link_libraries(ftl ${CMAKE_THREAD_LIBS_INIT})
+else()
+	target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 # Remove the prefix
 set_target_properties(ftl PROPERTIES PREFIX "")

@@ -80,21 +80,21 @@ private:
 			return m_items.size();
 		}
 
-		T Get(size_t const index) {
-			return m_items[index & (Size() - 1)];
+		T Get(uint64_t const index) {
+			return m_items[static_cast<size_t>(index & (Size() - 1))];
 		}
 
-		void Put(size_t const index, T x) {
-			m_items[index & (Size() - 1)] = x;
+		void Put(uint64_t const index, T x) {
+			m_items[static_cast<size_t>(index & (Size() - 1))] = x;
 		}
 
 		// Growing the array returns a new circular_array object and keeps a
 		// linked list of all previous arrays. This is done because other threads
 		// could still be accessing elements from the smaller arrays.
-		CircularArray *Grow(size_t const top, size_t const bottom) {
+		CircularArray *Grow(uint64_t const top, uint64_t const bottom) {
 			auto *const newArray = new CircularArray(Size() * 2);
 			newArray->m_previous.reset(this);
-			for (size_t i = top; i != bottom; i++) {
+			for (uint64_t i = top; i != bottom; i++) {
 				newArray->Put(i, Get(i));
 			}
 			return newArray;

@@ -24,6 +24,10 @@
 
 include(AddCompilerFlags)
 
+if (EMSCRIPTEN)
+    SET(CMAKE_EXECUTABLE_SUFFIX .html)
+endif()
+
 # Create an executable for each example
 add_executable(ftl-example-triangle-num triangle_num.cpp)
 target_link_libraries(ftl-example-triangle-num ftl)

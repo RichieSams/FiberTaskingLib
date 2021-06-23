@@ -24,9 +24,14 @@
 
 #pragma once
 
+#include "ftl/config.h"
 #include "ftl/ftl_valgrind.h"
 
-#include "boost_context/fcontext.h"
+#if defined(FTL_BOOST_CONTEXT_FIBERS)
+#	include "boost_context/fcontext.h"
+#elif defined(FTL_EMSCRIPTEN_FIBERS)
+#	include <emscripten/fiber.h>
+#endif
 
 #include <stddef.h>
 
@@ -38,7 +43,7 @@ class Fiber {
 public:
 	/**
 	 * Default constructor
-	 * Nothing is allocated. This can be used as a thread fiber.
+	 * Nothing is allocated
 	 */
 	Fiber() = default;
 	/**
@@ -89,23 +94,35 @@ public:
 	~Fiber();
 
 private:
+#if defined(FTL_BOOST_CONTEXT_FIBERS)
 	void *m_stack{nullptr};
 	size_t m_systemPageSize{0};
 	size_t m_stackSize{0};
 	boost_context::fcontext_t m_context{nullptr};
 	void *m_arg{nullptr};
 	FTL_VALGRIND_ID
+#elif defined(FTL_EMSCRIPTEN_FIBERS)
+	void *m_cStack{nullptr};
+	void *m_asyncifyStack{nullptr};
+	size_t m_systemPageSize{0};
+	size_t m_stackSize{0};
+	emscripten_fiber_t m_context;
+#endif
 
 public:
+	/**
+	 * Sets up the fiber using the stack of the current thread
+	 * This is needed so a thread can switch to a fiber, and the fiber can switch back to the thread
+	 */
+	void InitFromCurrentContext(size_t const stackSize);
+
 	/**
 	 * Saves the current stack context and then switches to the given fiber
 	 * Execution will resume here once another fiber switches to this fiber
 	 *
 	 * @param fiber    The fiber to switch to
 	 */
-	void SwitchToFiber(Fiber *const fiber) {
-		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
-	}
+	void SwitchToFiber(Fiber *const fiber);
 	/**
 	 * Re-initializes the stack with a new startRoutine and arg
 	 *
@@ -117,10 +134,7 @@ public:
 	 *
 	 * @return
 	 */
-	void Reset(FiberStartRoutine const startRoutine, void *const arg) {
-		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
-		m_arg = arg;
-	}
+	void Reset(FiberStartRoutine const startRoutine, void *const arg);
 
 private:
 	/**

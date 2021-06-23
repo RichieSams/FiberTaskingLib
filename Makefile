@@ -45,7 +45,7 @@ CMAKE_ARCH_ARG?=
 
 DOCKER_IMAGE=quay.io/richiesams/docker_$(COMPILER):$(VERSION)
 
-.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run
+.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run generate_wasm build_wasm clean_wasm
 
 all: generate_linux build_linux
 
@@ -69,6 +69,27 @@ test_linux:
 
 clean_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) rm -rf build_linux
+
+
+generate_wasm:
+	mkdir -p build_wasmdebug
+	mkdir -p build_wasm/release
+
+	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 emcmake cmake --version
+	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 emcmake cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Debug -Bbuild_wasm/debug .
+#	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 emcmake cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Release -Bbuild_wasm/release .
+
+build_wasm:
+	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -j -C build_wasm/debug
+#	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -j -C build_wasm/release
+
+clean_wasm:
+	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 rm -rf build_wasm
+
+clean_wasm_internal:
+	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -C build_wasm/debug clean
+#	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -C build_wasm/release clean
+
 
 valgrind_linux_build:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) valgrind_linux_build_native

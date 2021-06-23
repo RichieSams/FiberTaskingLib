@@ -29,34 +29,34 @@ endif()
 
 
 # Boost Context
+if (NOT EMSCRIPTEN)
+    # CMake fails to generate the correct ninja files for MASM
+    # https://gitlab.kitware.com/cmake/cmake/issues/18889
+    # We hack a fix for this by manually setting the MASM compile options
+    if (WIN32)
+        # Save the original flags
+        set(SAVED_LINKER_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
+        set(CMAKE_STATIC_LINKER_FLAGS "")
 
-# CMake fails to generate the correct ninja files for MASM
-# https://gitlab.kitware.com/cmake/cmake/issues/18889
-# We hack a fix for this by manually setting the MASM compile options
-if (WIN32)
-	# Save the original flags
-	set(SAVED_LINKER_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
-	set(CMAKE_STATIC_LINKER_FLAGS "")
+        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            set(CMAKE_AR ${CMAKE_ASM_COMPILER_AR})
+        elseif(MSVC)
+            set(CMAKE_AR lib.exe)
+            set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded         "")
+            set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL      "")
+            set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebug    "")
+            set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebugDLL "")
+            set(CMAKE_ASM_MASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> /OUT:<TARGET> <LINK_FLAGS> <OBJECTS>")
+        endif()
+    endif()
+    add_subdirectory(boost_context)
+    set_target_properties(boost_context PROPERTIES FOLDER third_party)
 
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        set(CMAKE_AR ${CMAKE_ASM_COMPILER_AR})
-    elseif(MSVC)
-        set(CMAKE_AR lib.exe)
-        set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded         "")
-        set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL      "")
-        set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebug    "")
-        set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebugDLL "")
-        set(CMAKE_ASM_MASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> /OUT:<TARGET> <LINK_FLAGS> <OBJECTS>")
+    if (WIN32)
+        # Restore the original flags
+        set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
     endif()
 endif()
-add_subdirectory(boost_context)
-set_target_properties(boost_context PROPERTIES FOLDER third_party)
-
-if (WIN32)
-	# Restore the original flags
-	set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
-endif()
-
 
 # Nonius
 add_subdirectory(nonius)

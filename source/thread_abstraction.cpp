@@ -235,7 +235,19 @@ void YieldThread() {
 #	error No Thread library found
 #endif
 
-#include <thread>
+#if defined(FTL_OS_WASM)
+
+namespace ftl {
+
+unsigned GetNumHardwareThreads() {
+	return PTHREAD_POOL_SIZE;
+}
+
+} // End of namespace ftl
+
+#else
+
+#	include <thread>
 
 namespace ftl {
 
@@ -244,3 +256,5 @@ unsigned GetNumHardwareThreads() {
 }
 
 } // End of namespace ftl
+
+#endif

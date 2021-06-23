@@ -46,6 +46,8 @@
 #	else
 #		error Unknown Apple platform
 #	endif
+#elif defined(__EMSCRIPTEN__)
+#	define FTL_OS_WASM
 #elif defined(__linux__)
 #	define FTL_OS_LINUX
 #endif
@@ -54,12 +56,18 @@
 #	define FTL_WIN32_THREADS
 #elif defined(__MINGW32__) || defined(__MINGW64__)
 #	define FTL_POSIX_THREADS
-#elif defined(FTL_OS_MAC) || defined(FTL_iOS) || defined(FTL_OS_LINUX)
+#elif defined(FTL_OS_MAC) || defined(FTL_iOS) || defined(FTL_OS_LINUX) || defined(FTL_OS_WASM)
 #	include <unistd.h>
 
 #	if defined(_POSIX_VERSION)
 #		define FTL_POSIX_THREADS
 #	endif
+#endif
+
+#if defined(FTL_OS_WINDOWS) || defined(FTL_OS_APPLE) || defined(FTL_OS_LINUX)
+#	define FTL_BOOST_CONTEXT_FIBERS
+#elif defined(FTL_OS_WASM)
+#	define FTL_EMSCRIPTEN_FIBERS
 #endif
 
 // ReSharper disable CppUnusedIncludeDirective
@@ -87,6 +95,8 @@
 
 #ifdef __cpp_lib_hardware_interference_size
 #	include <new>
+#else
+#	include <stddef.h>
 #endif
 // ReSharper restore CppUnusedIncludeDirective
 
