@@ -25,6 +25,15 @@
 include(SetSourceGroup)
 include(AddCompilerFlags)
 
+# Emscripten needs posix linked and enabled via command line args
+if (EMSCRIPTEN)
+	find_package(Threads REQUIRED)
+	SET(PTHREAD_POOL_SIZE 8)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	add_definitions(-DPTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE})
+	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -s PTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE} -s ASYNCIFY")
+endif()
+
 
 SetSourceGroup(NAME "Fiber Abstraction"
 	PREFIX FTL_TEST
