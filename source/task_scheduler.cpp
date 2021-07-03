@@ -103,8 +103,8 @@ static void ReadyFiberDummyTask(TaskScheduler *taskScheduler, void *arg) {
 void TaskScheduler::FiberStartFunc(void *const arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
-	if (taskScheduler->m_callbacks.OnFiberStateChanged != nullptr) {
-		taskScheduler->m_callbacks.OnFiberStateChanged(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex(), ftl::FiberState::Attached);
+	if (taskScheduler->m_callbacks.OnFiberAttached != nullptr) {
+		taskScheduler->m_callbacks.OnFiberAttached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex());
 	}
 
 	// If we just started from the pool, we may need to clean up from another fiber
@@ -161,15 +161,15 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			tls->OldFiberDestination = FiberDestination::ToPool;
 
 			const EventCallbacks &callbacks = taskScheduler->m_callbacks;
-			if (callbacks.OnFiberStateChanged != nullptr) {
-				callbacks.OnFiberStateChanged(callbacks.Context, tls->OldFiberIndex, FiberState::Detached);
+			if (callbacks.OnFiberDetached != nullptr) {
+				callbacks.OnFiberDetached(callbacks.Context, tls->OldFiberIndex, false);
 			}
 
 			// Switch
 			taskScheduler->m_fibers[tls->OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls->CurrentFiberIndex]);
 
-			if (callbacks.OnFiberStateChanged != nullptr) {
-				callbacks.OnFiberStateChanged(callbacks.Context, taskScheduler->GetCurrentFiberIndex(), FiberState::Attached);
+			if (callbacks.OnFiberAttached != nullptr) {
+				callbacks.OnFiberAttached(callbacks.Context, taskScheduler->GetCurrentFiberIndex());
 			}
 
 			// And we're back
@@ -240,8 +240,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 	// Switch to the quit fibers
 
-	if (taskScheduler->m_callbacks.OnFiberStateChanged != nullptr) {
-		taskScheduler->m_callbacks.OnFiberStateChanged(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex(), ftl::FiberState::Detached);
+	if (taskScheduler->m_callbacks.OnFiberDetached != nullptr) {
+		taskScheduler->m_callbacks.OnFiberDetached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex(), false);
 	}
 
 	unsigned index = taskScheduler->GetCurrentThreadIndex();
@@ -367,8 +367,8 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	}
 
 	// Manually invoke callback for 'main' fiber
-	if (m_callbacks.OnFiberStateChanged != nullptr) {
-		m_callbacks.OnFiberStateChanged(m_callbacks.Context, 0, FiberState::Attached);
+	if (m_callbacks.OnFiberAttached != nullptr) {
+		m_callbacks.OnFiberAttached(m_callbacks.Context, 0);
 	}
 
 	// Signal the worker threads that we're fully initialized
@@ -395,8 +395,8 @@ TaskScheduler::~TaskScheduler() {
 	// Jump to the quit fiber
 	// Create a scope so index isn't used after we come back from the switch. It will be wrong if we started on a non-main thread
 	{
-		if (m_callbacks.OnFiberStateChanged != nullptr) {
-			m_callbacks.OnFiberStateChanged(m_callbacks.Context, GetCurrentFiberIndex(), FiberState::Detached);
+		if (m_callbacks.OnFiberDetached != nullptr) {
+			m_callbacks.OnFiberDetached(m_callbacks.Context, GetCurrentFiberIndex(), false);
 		}
 
 		unsigned index = GetCurrentThreadIndex();
@@ -795,15 +795,15 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	tls.OldFiberDestination = FiberDestination::ToWaiting;
 	tls.OldFiberStoredFlag = &readyFiberBundle->FiberIsSwitched;
 
-	if (m_callbacks.OnFiberStateChanged != nullptr) {
-		m_callbacks.OnFiberStateChanged(m_callbacks.Context, currentFiberIndex, FiberState::Detached);
+	if (m_callbacks.OnFiberDetached != nullptr) {
+		m_callbacks.OnFiberDetached(m_callbacks.Context, currentFiberIndex, true);
 	}
 
 	// Switch
 	m_fibers[currentFiberIndex].SwitchToFiber(&m_fibers[freeFiberIndex]);
 
-	if (m_callbacks.OnFiberStateChanged != nullptr) {
-		m_callbacks.OnFiberStateChanged(m_callbacks.Context, GetCurrentFiberIndex(), FiberState::Attached);
+	if (m_callbacks.OnFiberAttached != nullptr) {
+		m_callbacks.OnFiberAttached(m_callbacks.Context, GetCurrentFiberIndex());
 	}
 
 	// And we're back
