@@ -26,17 +26,42 @@
 
 namespace ftl {
 
-enum class FiberState : int {
-	// The fiber has started execution on a worker thread
-	Attached,
-	// The fiber is no longer being executed on a worker thread
-	Detached
-};
-
+/**
+ * @brief Called before worker threads are created
+ *
+ * @param context        EventCallbacks::Context
+ * @param threadCount    The number of threads created
+ */
 using ThreadCreationCallback = void (*)(void *context, unsigned threadCount);
+/**
+ * @brief Called before fibers are created
+ *
+ * @param context       EventCallbacks::Context
+ * @param fiberCount    The number of fibers created
+ */
 using FiberCreationCallback = void (*)(void *context, unsigned fiberCount);
+/**
+ * @brief Called for each thread event
+ *
+ * @param context        EventCallbacks::Context
+ * @param threadIndex    The index of the thread
+ */
 using ThreadEventCallback = void (*)(void *context, unsigned threadIndex);
-using FiberEventCallback = void (*)(void *context, unsigned fiberIndex, FiberState newState);
+/**
+ * @brief Called when a fiber is attached to a thread
+ *
+ * @param context       EventCallbacks::Context
+ * @param fiberIndex    The index of the fiber
+ */
+using FiberAttachedCallback = void (*)(void *context, unsigned fiberIndex);
+/**
+ * @brief Called when a fiber is detached from a thread
+ *
+ * @param context       EventCallbacks::Context
+ * @param fiberIndex    The index of the fiber
+ * @param isMidTask     True = the fiber was suspended mid-task due to a wait. False = the fiber was suspended for another reason
+ */
+using FiberDetachedCallback = void (*)(void *context, unsigned fiberIndex, bool isMidTask);
 
 struct EventCallbacks {
 	void *Context = nullptr;
@@ -47,7 +72,8 @@ struct EventCallbacks {
 	ThreadEventCallback OnWorkerThreadStarted = nullptr;
 	ThreadEventCallback OnWorkerThreadEnded = nullptr;
 
-	FiberEventCallback OnFiberStateChanged = nullptr;
+	FiberAttachedCallback OnFiberAttached = nullptr;
+	FiberDetachedCallback OnFiberDetached = nullptr;
 };
 
 } // End of namespace ftl

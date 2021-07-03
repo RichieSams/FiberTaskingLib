@@ -58,46 +58,78 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 		(void)fiberIndex;
 		FAIL("This should never be called, since we don't create worker threads");
 	};
-	options.Callbacks.OnFiberStateChanged = [](void *context, unsigned fiberIndex, ftl::FiberState newState) {
+	options.Callbacks.OnFiberAttached = [](void *context, unsigned fiberIndex) {
 		REQUIRE(context != nullptr);
 		TestCheckValues *values = static_cast<TestCheckValues *>(context);
 
 		int eventNum = values->fiberEventNum.fetch_add(1, std::memory_order_seq_cst);
 		INFO("Event number: " << eventNum);
-		INFO("New state: " << static_cast<int>(newState));
 
 		switch (eventNum) {
 		case 0:
 			// The first event should be the main thread being transitioned to be a fiber
 			REQUIRE(fiberIndex == 0);
-			REQUIRE(newState == ftl::FiberState::Attached);
 			break;
 		case 1:
 			// This event should be the main fiber being unloaded, due to a wait
-			REQUIRE(fiberIndex == 0);
-			REQUIRE(newState == ftl::FiberState::Detached);
+			FAIL("Event 1 should be Detach event");
 			break;
 		case 2:
 			// This event should be the next fiber in the pool being loaded to work on the task
 			// NOTE: It's a bit of a hack to assume that we will get fiber index 1
 			//       It's an implementation detail. However, for this test, I think that's ok
 			REQUIRE(fiberIndex == 1);
-			REQUIRE(newState == ftl::FiberState::Attached);
 			break;
 		case 3:
 			// This event should be the worker fiber being unloaded, so we can go back to the main fiber
-			REQUIRE(fiberIndex == 1);
-			REQUIRE(newState == ftl::FiberState::Detached);
+			FAIL("Event 3 should be Detach event");
 			break;
 		case 4:
 			// This event should be the main fiber being re-loaded after the wait
 			REQUIRE(fiberIndex == 0);
-			REQUIRE(newState == ftl::FiberState::Attached);
+			break;
+		case 5:
+			// This event should be the main fiber being unloaded in the destructor
+			FAIL("Event 5 should be Detach event");
+			break;
+		default:
+			FAIL("Event number is in a bad range");
+		}
+	};
+	options.Callbacks.OnFiberDetached = [](void *context, unsigned fiberIndex, bool isMidTask) {
+		REQUIRE(context != nullptr);
+		TestCheckValues *values = static_cast<TestCheckValues *>(context);
+
+		int eventNum = values->fiberEventNum.fetch_add(1, std::memory_order_seq_cst);
+		INFO("Event number: " << eventNum);
+
+		switch (eventNum) {
+		case 0:
+			// The first event should be the main thread being transitioned to be a fiber
+			FAIL("Event 0 should be Attach event");
+			break;
+		case 1:
+			// This event should be the main fiber being unloaded, due to a wait
+			REQUIRE(fiberIndex == 0);
+			REQUIRE(isMidTask == true);
+			break;
+		case 2:
+			// This event should be the next fiber in the pool being loaded to work on the task
+			FAIL("Event 2 should be Attach event");
+			break;
+		case 3:
+			// This event should be the worker fiber being unloaded, so we can go back to the main fiber
+			REQUIRE(fiberIndex == 1);
+			REQUIRE(isMidTask == false);
+			break;
+		case 4:
+			// This event should be the main fiber being re-loaded after the wait
+			FAIL("Event 4 should be Attach event");
 			break;
 		case 5:
 			// This event should be the main fiber being unloaded in the destructor
 			REQUIRE(fiberIndex == 0);
-			REQUIRE(newState == ftl::FiberState::Detached);
+			REQUIRE(isMidTask == false);
 			break;
 		default:
 			FAIL("Event number is in a bad range");
@@ -183,29 +215,29 @@ TEST_CASE("Thread Event Callbacks", "[utility]") {
 		int prevValue = values->threadEnds[threadIndex].fetch_add(1, std::memory_order_seq_cst);
 		REQUIRE(prevValue == 0);
 	};
-	options.Callbacks.OnFiberStateChanged = [](void *context, unsigned fiberIndex, ftl::FiberState newState) {
+	options.Callbacks.OnFiberAttached = [](void *context, unsigned fiberIndex) {
 		REQUIRE(context != nullptr);
 		TestCheckValues *values = static_cast<TestCheckValues *>(context);
 
 		// We never create any tasks / do waiting, so we should only use one fiber per thread
 		REQUIRE(fiberIndex < 4);
 
-		switch (newState) {
-		case ftl::FiberState::Attached: {
-			// Check that we call Attached exactly once
-			int prevValue = values->fiberAttaches[fiberIndex].fetch_add(1, std::memory_order_seq_cst);
-			REQUIRE(prevValue == 0);
-			break;
-		}
-		case ftl::FiberState::Detached: {
-			// Check that we call Detached exactly once
-			int prevValue = values->fiberDetaches[fiberIndex].fetch_add(1, std::memory_order_seq_cst);
-			REQUIRE(prevValue == 0);
-			break;
-		}
-		default:
-			FAIL("Invalid FiberState: " << static_cast<int>(newState));
-		}
+		// Check that we call Attached exactly once
+		int prevValue = values->fiberAttaches[fiberIndex].fetch_add(1, std::memory_order_seq_cst);
+		REQUIRE(prevValue == 0);
+	};
+	options.Callbacks.OnFiberDetached = [](void *context, unsigned fiberIndex, bool isMidTask) {
+		REQUIRE(context != nullptr);
+		TestCheckValues *values = static_cast<TestCheckValues *>(context);
+
+		// We never create any tasks / do waiting, so we should only use one fiber per thread
+		REQUIRE(fiberIndex < 4);
+
+		// Check that we call Detached exactly once
+		int prevValue = values->fiberDetaches[fiberIndex].fetch_add(1, std::memory_order_seq_cst);
+		REQUIRE(prevValue == 0);
+
+		REQUIRE(isMidTask == false);
 	};
 
 	// Force a scope, so we can verify the behavior in the TaskScheduler destructor
