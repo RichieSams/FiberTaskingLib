@@ -301,23 +301,28 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	// Create and populate the fiber pool
 	m_fiberPoolSize = options.FiberPoolSize;
 	m_fibers = new Fiber[options.FiberPoolSize];
-	m_freeFibers = new std::atomic<bool>[options.FiberPoolSize];
+
+	const unsigned bitFieldSize = (options.FiberPoolSize + (std::numeric_limits<uint64_t>::digits - options.FiberPoolSize % std::numeric_limits<uint64_t>::digits)) / std::numeric_limits<uint64_t>::digits;
+	m_freeFibers = new std::atomic<uint64_t>[bitFieldSize];
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * m_fiberPoolSize);
 	m_readyFiberBundles = new ReadyFiberBundle[options.FiberPoolSize];
 
 	// Leave the first slot for the bound main thread
 	for (unsigned i = 1; i < options.FiberPoolSize; ++i) {
 		m_fibers[i] = Fiber(524288, FiberStartFunc, this);
-		m_freeFibers[i].store(true, std::memory_order_release);
 	}
-	m_freeFibers[0].store(false, std::memory_order_release);
+	for (unsigned i = 1; i < bitFieldSize; ++i) {
+		// Set all bits
+		m_freeFibers[i].store(UINT64_C(~0), std::memory_order_release);
+	}
+	m_freeFibers[0].store(~(UINT64_C(1) << 0), std::memory_order_release);
 
 	// Initialize threads and TLS
 	m_threads = new ThreadType[m_numThreads];
 #ifdef _MSC_VER
 #	pragma warning(push)
 #	pragma warning(disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
-#endif                              // _MSC_VER
+#endif // _MSC_VER
 	m_tls = new ThreadLocalStorage[m_numThreads];
 #ifdef _MSC_VER
 #	pragma warning(pop)
@@ -607,21 +612,63 @@ bool TaskScheduler::GetNextLoPriTask(TaskBundle *nextTask) {
 	return false;
 }
 
+// clang-format off
+const int index64[64] = {
+	0, 47,  1, 56, 48, 27,  2, 60,
+   57, 49, 41, 37, 28, 16,  3, 61,
+   54, 58, 35, 52, 50, 42, 21, 44,
+   38, 32, 29, 23, 17, 11,  4, 62,
+   46, 55, 26, 59, 40, 36, 15, 53,
+   34, 51, 20, 43, 31, 22, 10, 45,
+   25, 39, 14, 33, 19, 30,  9, 24,
+   13, 18,  8, 12,  7,  6,  5, 63
+};
+// clang-format on
+
+/**
+ * Returns the index (0..63) of the least significant one bit
+ *
+ * Reference: https://www.chessprogramming.org/BitScan
+ * Author: Kim Walisch (2012)
+ *
+ * @param value    The value to check. ** Must != 0 **
+ * @return         The index (0..63) of the least significant one bit
+ */
+unsigned GetLeastSignificantBitIndex(uint64_t value) {
+	const uint64_t debruijn64 = UINT64_C(0x03f79d71b4cb0a89);
+	return index64[((value ^ (value - 1)) * debruijn64) >> 58];
+}
+
 unsigned TaskScheduler::GetNextFreeFiberIndex() const {
+	// We use a CAS to try to set a particular bit
+	// If there is heavy contention, then we will fail the CAS
+	// This const defines how many times we retry
+	//
+	// It's currently set quite low, because this will spread out the contention
+	// to more bitfield entries. That is, when we hit maxAttempts, we will go
+	// on to search the next entry in the bitfield, releaving contention from
+	// the previous entry
+	// We don't care about "which" fiber we get, as long as it's free. So it's
+	// perfectly ok if we need to go around the bitset more.
+	constexpr unsigned kMaxAttempts = 3;
+
+	const unsigned bitFieldSize = (m_fiberPoolSize + (std::numeric_limits<uint64_t>::digits - m_fiberPoolSize % std::numeric_limits<uint64_t>::digits)) / std::numeric_limits<uint64_t>::digits;
+
 	for (unsigned j = 0;; ++j) {
-		for (unsigned i = 0; i < m_fiberPoolSize; ++i) {
-			// Double lock
-			if (!m_freeFibers[i].load(std::memory_order_relaxed)) {
-				continue;
-			}
+		for (unsigned i = 0; i < bitFieldSize; ++i) {
+			for (unsigned attempts = 0; attempts < kMaxAttempts; ++attempts) {
+				uint64_t val = m_freeFibers[i].load(std::memory_order_relaxed);
 
-			if (!m_freeFibers[i].load(std::memory_order_acquire)) {
-				continue;
-			}
+				// If there are no slots free, go to the next bit field entry
+				if (val == 0) {
+					continue;
+				}
+				unsigned index = GetLeastSignificantBitIndex(val);
+				uint64_t newVal = val & ~(UINT64_C(1) << index);
 
-			bool expected = true;
-			if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &expected, false, std::memory_order_release, std::memory_order_relaxed)) {
-				return i;
+				if (std::atomic_compare_exchange_weak_explicit(&m_freeFibers[i], &val, newVal, std::memory_order_acquire, std::memory_order_relaxed)) {
+					return (i * std::numeric_limits<uint64_t>::digits) + index;
+				}
 			}
 		}
 
@@ -676,13 +723,22 @@ void TaskScheduler::CleanUpOldFiber() {
 
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	switch (tls.OldFiberDestination) {
-	case FiberDestination::ToPool:
-		// In this specific implementation, the fiber pool is a flat array signaled by atomics
-		// So in order to "Push" the fiber to the fiber pool, we just set its corresponding atomic to true
-		m_freeFibers[tls.OldFiberIndex].store(true, std::memory_order_release);
+	case FiberDestination::ToPool: {
+		// In this specific implementation, the fiber pool is a flat array signaled by an atomic bitfield
+		// So in order to "Push" the fiber to the fiber pool, we just set its corresponding atomic bit
+		uint64_t val = 0;
+		uint64_t newVal = 0;
+		unsigned bitFieldEntryIndex = tls.OldFiberIndex / std::numeric_limits<uint64_t>::digits;
+		unsigned bitFieldIndex = tls.OldFiberIndex % std::numeric_limits<uint64_t>::digits;
+		do {
+			val = m_freeFibers[bitFieldEntryIndex].load(std::memory_order_relaxed);
+			newVal = val | (UINT64_C(1) << bitFieldIndex);
+		} while (!std::atomic_compare_exchange_weak_explicit(&m_freeFibers[bitFieldEntryIndex], &val, newVal, std::memory_order_release, std::memory_order_relaxed));
+
 		tls.OldFiberDestination = FiberDestination::None;
 		tls.OldFiberIndex = kInvalidIndex;
 		break;
+	}
 	case FiberDestination::ToWaiting:
 		// The waiting fibers are stored directly in their counters
 		// They have an atomic<bool> that signals whether the waiting fiber can be consumed if it's ready

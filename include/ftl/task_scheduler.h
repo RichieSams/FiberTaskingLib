@@ -168,11 +168,12 @@ private:
 	/* The backing storage for the fiber pool */
 	Fiber *m_fibers{nullptr};
 	/**
-	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
-	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
-	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
+	 * A bitfield which signifies if a fiber is available to be used. The bit indices of m_freeFibers
+	 * correspond 1 to 1 with the array indices of m_fibers. So if bit X of m_freeFibers is set, then
+	 * m_fibers[X] can be used. The bits act as a lock to ensure that threads do not try to use the
+	 * same fiber at the same time
 	 */
-	std::atomic<bool> *m_freeFibers{nullptr};
+	std::atomic<uint64_t> *m_freeFibers{nullptr};
 	/**
 	 * An array of ReadyFiberBundle which is used by @WaitForCounter()
 	 *
