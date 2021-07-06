@@ -81,11 +81,13 @@ SetSourceGroup(NAME Core
 SetSourceGroup(NAME Util
 	PREFIX FTL
 	SOURCE_FILES ../include/ftl/assert.h
+	             ../include/ftl/callbacks.h
 	             ../include/ftl/config.h
 	             ../include/ftl/fiber.h
 	             fiber.cpp
 	             ../include/ftl/fibtex.h
-	             ../include/ftl/callbacks.h
+	             ../include/ftl/ftl_valgrind.h
+	             ../include/ftl/parallel_for.h
 	             ../include/ftl/thread_abstraction.h
 	             thread_abstraction.cpp
 	             ../include/ftl/thread_local.h

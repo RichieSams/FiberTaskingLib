@@ -274,7 +274,6 @@ readability-isolate-declaration
 readability-misleading-indentation
 readability-misplaced-array-index
 readability-named-parameter
-readability-non-const-parameter
 readability-redundant-control-flow
 readability-redundant-declaration
 readability-redundant-function-ptr-dereference
