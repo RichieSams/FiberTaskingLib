@@ -43,6 +43,7 @@ SetSourceGroup(NAME "Utilities"
 	PREFIX FTL_TEST
 	SOURCE_FILES utilities/event_callbacks.cpp
                  utilities/fibtex.cpp
+	             utilities/parallel_for.cpp
 	             utilities/thread_local.cpp
 )
 

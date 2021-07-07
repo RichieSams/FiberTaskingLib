@@ -45,9 +45,29 @@ CMAKE_ARCH_ARG?=
 
 DOCKER_IMAGE=quay.io/richiesams/docker_$(COMPILER):$(VERSION)
 
-.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run
+.PHONY: pull_image generate_linux generate_linux_native build_linux test_linux clean_linux generate_osx build_osx test_osx clean_osx generate_windows build_windows test_windows clean_windows valgrind_linux_build valgrind_linux_build_native valgrind_linux_run build generate
 
-all: generate_linux build_linux
+all: generate build
+
+
+generate:
+	mkdir -p build/debug
+	mkdir -p build/release
+	cmake --version
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Debug -Bbuild/debug .
+	cmake $(FIBER_STACK_CMAKE_ARGS) $(CPP_17_CMAKE_ARGS) -DFTL_WERROR=$(WERROR) $(CMAKE_EXTRA_ARGS) -DCMAKE_BUILD_TYPE=Release -Bbuild/release .
+
+build:
+	make -j -C build/debug
+	make -j -C build/release
+
+test:
+	/bin/sh -c "(cd build/debug/tests && exec ./ftl-test)"
+	/bin/sh -c "(cd build/release/tests && exec ./ftl-test)"
+
+benchmark:
+	/bin/sh -c "(cd build/release/benchmarks && exec ./ftl-benchmark)"
+
 
 generate_linux:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) generate_linux_native
