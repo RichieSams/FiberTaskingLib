@@ -30,7 +30,7 @@
 #include <algorithm>
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
-#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
+#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_OS_iOS) || defined(FTL_OS_WASM)
 #		include <sys/mman.h>
 #		include <unistd.h>
 #	elif defined(FTL_OS_WINDOWS)
@@ -49,24 +49,26 @@ void *AlignedAlloc(size_t size, size_t alignment);
 void AlignedFree(void *block);
 size_t RoundUp(size_t numToRound, size_t multiple);
 
-Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg)
+#if defined(FTL_BOOST_CONTEXT_FIBERS)
+
+Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void * arg)
         : m_arg(arg) {
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
 	m_systemPageSize = SystemPageSize();
-#else
+#	else
 	m_systemPageSize = 0;
-#endif
+#	endif
 
 	m_stackSize = RoundUp(stackSize, m_systemPageSize);
 	// We add a guard page both the top and the bottom of the stack
 	m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
-	m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
+	m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + m_stackSize, m_stackSize, startRoutine);
 
-	FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
-#if defined(FTL_FIBER_STACK_GUARD_PAGES)
+	FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + m_stackSize);
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
 	MemoryGuard(static_cast<char *>(m_stack), m_systemPageSize);
-	MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, m_systemPageSize);
-#endif
+	MemoryGuard(static_cast<char *>(m_stack) + m_systemPageSize + m_stackSize, m_systemPageSize);
+#	endif
 }
 
 Fiber::~Fiber() {
@@ -81,6 +83,20 @@ Fiber::~Fiber() {
 	}
 }
 
+void Fiber::InitFromCurrentContext(size_t const stackSize) {
+	(void)stackSize;
+	// Boost context doesn't need to be initialized for thread stacks
+}
+
+void Fiber::SwitchToFiber(Fiber *const fiber) {
+	boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
+}
+
+void Fiber::Reset(FiberStartRoutine const startRoutine, void *const arg) {
+	m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
+	m_arg = arg;
+}
+
 void Fiber::Swap(Fiber &first, Fiber &second) noexcept {
 	std::swap(first.m_stack, second.m_stack);
 	std::swap(first.m_systemPageSize, second.m_systemPageSize);
@@ -89,9 +105,86 @@ void Fiber::Swap(Fiber &first, Fiber &second) noexcept {
 	std::swap(first.m_arg, second.m_arg);
 }
 
+#elif defined(FTL_EMSCRIPTEN_FIBERS)
+
+Fiber::Fiber(size_t const stackSize, FiberStartRoutine const startRoutine, void *const arg) {
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
+	m_systemPageSize = SystemPageSize();
+#	else
+	m_systemPageSize = 0;
+#	endif
+
+	m_stackSize = RoundUp(stackSize, m_systemPageSize);
+	// We add a guard page both the top and the bottom of the stack
+	m_cStack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
+	m_asyncifyStack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
+	emscripten_fiber_init(&m_context, startRoutine, arg, static_cast<char *>(m_cStack) + m_systemPageSize + m_stackSize, m_stackSize, static_cast<char *>(m_asyncifyStack) + m_systemPageSize + m_stackSize, m_stackSize);
+
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
+	MemoryGuard(static_cast<char *>(m_cStack), m_systemPageSize);
+	MemoryGuard(static_cast<char *>(m_cStack) + m_systemPageSize + m_stackSize, m_systemPageSize);
+	MemoryGuard(static_cast<char *>(m_asyncifyStack), m_systemPageSize);
+	MemoryGuard(static_cast<char *>(m_asyncifyStack) + m_systemPageSize + m_stackSize, m_systemPageSize);
+#	endif
+}
+
+Fiber::~Fiber() {
+	if (m_cStack != nullptr) {
+		if (m_systemPageSize != 0) {
+			MemoryGuardRelease(static_cast<char *>(m_cStack), m_systemPageSize);
+			MemoryGuardRelease(static_cast<char *>(m_cStack) + m_systemPageSize, m_systemPageSize);
+		}
+		AlignedFree(m_cStack);
+	}
+	if (m_asyncifyStack != nullptr) {
+		if (m_systemPageSize != 0) {
+			MemoryGuardRelease(static_cast<char *>(m_asyncifyStack), m_systemPageSize);
+			MemoryGuardRelease(static_cast<char *>(m_asyncifyStack) + m_systemPageSize, m_systemPageSize);
+		}
+		AlignedFree(m_asyncifyStack);
+	}
+}
+
+void Fiber::InitFromCurrentContext(size_t const stackSize) {
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
+	m_systemPageSize = SystemPageSize();
+#	else
+	m_systemPageSize = 0;
+#	endif
+
+	m_stackSize = RoundUp(stackSize, m_systemPageSize);
+	// We add a guard page both the top and the bottom of the stack
+	m_asyncifyStack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
+
+	emscripten_fiber_init_from_current_context(&m_context, static_cast<char *>(m_asyncifyStack) + m_systemPageSize, m_stackSize);
+
+#	if defined(FTL_FIBER_STACK_GUARD_PAGES)
+	MemoryGuard(static_cast<char *>(m_asyncifyStack), m_systemPageSize);
+	MemoryGuard(static_cast<char *>(m_asyncifyStack) + m_systemPageSize + m_stackSize, m_systemPageSize);
+#	endif
+}
+
+void Fiber::SwitchToFiber(Fiber *const fiber) {
+	emscripten_fiber_swap(&m_context, &fiber->m_context);
+}
+
+void Fiber::Reset(FiberStartRoutine const startRoutine, void *const arg) {
+	emscripten_fiber_init(&m_context, startRoutine, arg, static_cast<char *>(m_cStack) + m_systemPageSize, m_stackSize, static_cast<char *>(m_asyncifyStack) + m_systemPageSize, m_stackSize);
+}
+
+void Fiber::Swap(Fiber &first, Fiber &second) noexcept {
+	std::swap(first.m_cStack, second.m_cStack);
+	std::swap(first.m_asyncifyStack, second.m_asyncifyStack);
+	std::swap(first.m_systemPageSize, second.m_systemPageSize);
+	std::swap(first.m_stackSize, second.m_stackSize);
+	std::swap(first.m_context, second.m_context);
+}
+
+#endif
+
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
-#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
-void MemoryGuard(void *memory, size_t bytes) {
+#	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS) || defined(FTL_OS_WASM)
+void MemoryGuard(void * memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_NONE);
 	FTL_ASSERT("mprotect", !result);
 #		if defined(NDEBUG)

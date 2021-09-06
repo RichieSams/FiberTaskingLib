@@ -36,7 +36,7 @@ typedef unsigned long DWORD; // NOLINT(modernize-use-using)
 
 #elif defined(FTL_POSIX_THREADS)
 
-#	if defined(FTL_OS_LINUX)
+#	if defined(FTL_OS_LINUX) || defined(FTL_OS_WASM)
 typedef unsigned long int pthread_t; // NOLINT(modernize-use-using)
 #	elif defined(FTL_OS_APPLE)
 struct _opaque_pthread_t;
