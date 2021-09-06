@@ -1,11 +1,11 @@
 jobs:
-  - job: linux_gcc_49
-    displayName: Linux - GCC 4.9
+  - job: linux_gcc_5
+    displayName: Linux - GCC 5
     pool:
       vmImage: ubuntu-18.04
     variables:
       compiler: gcc
-      version: 4.9
+      version: 5
     steps:
       - bash: make generate_linux build_linux
         displayName: Build
@@ -47,13 +47,13 @@ jobs:
         displayName: Build
       - bash: make test_linux
         displayName: Test
-  - job: osx_gcc_49
-    displayName: OSX - GCC 4.9
+  - job: osx_gcc_5
+    displayName: OSX - GCC 5
     pool:
       vmImage: macos-10.15
     variables:
       compiler: gcc
-      version: 4.9
+      version: 5
     steps:
       - bash: bash ci_scripts/travis_ci_install_osx.sh
         displayName: Install
