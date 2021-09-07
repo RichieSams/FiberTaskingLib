@@ -135,16 +135,6 @@ public:
 	 * @return
 	 */
 	void Reset(FiberStartRoutine const startRoutine, void *const arg);
-
-private:
-	/**
-	 * Helper function for the move operators
-	 * Swaps all the member variables
-	 *
-	 * @param first     The first fiber
-	 * @param second    The second fiber
-	 */
-	static void Swap(Fiber &first, Fiber &second) noexcept;
 };
 
 } // End of namespace ftl

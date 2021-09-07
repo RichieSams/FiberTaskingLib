@@ -51,7 +51,7 @@ size_t RoundUp(size_t numToRound, size_t multiple);
 
 #if defined(FTL_BOOST_CONTEXT_FIBERS)
 
-Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void * arg)
+Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg)
         : m_arg(arg) {
 #	if defined(FTL_FIBER_STACK_GUARD_PAGES)
 	m_systemPageSize = SystemPageSize();
@@ -184,7 +184,7 @@ void Fiber::Swap(Fiber &first, Fiber &second) noexcept {
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 #	if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS) || defined(FTL_OS_WASM)
-void MemoryGuard(void * memory, size_t bytes) {
+void MemoryGuard(void *memory, size_t bytes) {
 	int result = mprotect(memory, bytes, PROT_NONE);
 	FTL_ASSERT("mprotect", !result);
 #		if defined(NDEBUG)

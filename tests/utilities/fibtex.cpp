@@ -65,13 +65,15 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
 	ftl::TaskSchedulerInitOptions options;
 	options.Behavior = ftl::EmptyQueueBehavior::Yield;
+	options.ThreadPoolSize = 2;
 	REQUIRE(taskScheduler.Init(options) == 0);
 
 	MutexData md(&taskScheduler);
 
 	ftl::TaskCounter c(&taskScheduler);
 
-	constexpr size_t iterations = 20000;
+	printf("Test start\n");
+	constexpr size_t iterations = 100;
 	for (size_t i = 0; i < iterations; ++i) {
 		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
 		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
@@ -88,4 +90,6 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 	for (unsigned i = 0; i < md.Counter; ++i) {
 		REQUIRE(md.Queue[i] == i);
 	}
+
+	printf("Test end\n");
 }

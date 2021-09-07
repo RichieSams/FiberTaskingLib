@@ -50,6 +50,7 @@ TEST_CASE("Single Fiber Switch", "[fiber]") {
 
 	SingleFiberArg singleFiberArg;
 	singleFiberArg.Counter.store(0);
+	singleFiberArg.MainFiber.InitFromCurrentContext(kHalfMebibyte);
 	singleFiberArg.OtherFiber = ftl::Fiber(kHalfMebibyte, SingleFiberStart, &singleFiberArg);
 
 	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.OtherFiber);

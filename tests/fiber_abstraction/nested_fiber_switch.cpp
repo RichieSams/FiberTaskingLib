@@ -41,113 +41,113 @@ struct MultipleFiberArg {
 };
 
 void FirstLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter += 8;
-	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
+	multipleFiberArg->Counter += 8;
+	multipleFiberArg->FirstFiber.SwitchToFiber(&multipleFiberArg->SecondFiber);
 
 	// Return from sixth
 	// We just finished 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1
 	// Let's do an intermediate check
-	REQUIRE(((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) == singleFiberArg->Counter);
+	REQUIRE(((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) == multipleFiberArg->Counter);
 
 	// Now run the rest of the sequence
-	singleFiberArg->Counter *= 4;
-	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
+	multipleFiberArg->Counter *= 4;
+	multipleFiberArg->FirstFiber.SwitchToFiber(&multipleFiberArg->FifthFiber);
 
 	// Return from fifth
-	singleFiberArg->Counter += 1;
-	singleFiberArg->FirstFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
+	multipleFiberArg->Counter += 1;
+	multipleFiberArg->FirstFiber.SwitchToFiber(&multipleFiberArg->ThirdFiber);
 
 	// We should never get here
 	FAIL();
 }
 
 void SecondLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter *= 3;
-	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
+	multipleFiberArg->Counter *= 3;
+	multipleFiberArg->SecondFiber.SwitchToFiber(&multipleFiberArg->ThirdFiber);
 
 	// Return from third
-	singleFiberArg->Counter += 9;
-	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
+	multipleFiberArg->Counter += 9;
+	multipleFiberArg->SecondFiber.SwitchToFiber(&multipleFiberArg->FourthFiber);
 
 	// Return from fourth
-	singleFiberArg->Counter += 7;
-	singleFiberArg->SecondFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
+	multipleFiberArg->Counter += 7;
+	multipleFiberArg->SecondFiber.SwitchToFiber(&multipleFiberArg->FifthFiber);
 
 	// We should never get here
 	FAIL();
 }
 
 void ThirdLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter += 7;
-	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
+	multipleFiberArg->Counter += 7;
+	multipleFiberArg->ThirdFiber.SwitchToFiber(&multipleFiberArg->FourthFiber);
 
 	// Return from first
-	singleFiberArg->Counter *= 3;
-	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
+	multipleFiberArg->Counter *= 3;
+	multipleFiberArg->ThirdFiber.SwitchToFiber(&multipleFiberArg->SecondFiber);
 
 	// Return from fifth
-	singleFiberArg->Counter *= 6;
-	singleFiberArg->ThirdFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
+	multipleFiberArg->Counter *= 6;
+	multipleFiberArg->ThirdFiber.SwitchToFiber(&multipleFiberArg->SixthFiber);
 
 	// We should never get here
 	FAIL();
 }
 
 void FourthLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter *= 6;
-	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->FifthFiber);
+	multipleFiberArg->Counter *= 6;
+	multipleFiberArg->FourthFiber.SwitchToFiber(&multipleFiberArg->FifthFiber);
 
 	// Return from second
-	singleFiberArg->Counter += 8;
-	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
+	multipleFiberArg->Counter += 8;
+	multipleFiberArg->FourthFiber.SwitchToFiber(&multipleFiberArg->SixthFiber);
 
 	// Return from sixth
-	singleFiberArg->Counter *= 5;
-	singleFiberArg->FourthFiber.SwitchToFiber(&singleFiberArg->SecondFiber);
+	multipleFiberArg->Counter *= 5;
+	multipleFiberArg->FourthFiber.SwitchToFiber(&multipleFiberArg->SecondFiber);
 
 	// We should never get here
 	FAIL();
 }
 
 void FifthLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter -= 9;
-	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->SixthFiber);
+	multipleFiberArg->Counter -= 9;
+	multipleFiberArg->FifthFiber.SwitchToFiber(&multipleFiberArg->SixthFiber);
 
 	// Return from first
-	singleFiberArg->Counter *= 5;
-	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->FirstFiber);
+	multipleFiberArg->Counter *= 5;
+	multipleFiberArg->FifthFiber.SwitchToFiber(&multipleFiberArg->FirstFiber);
 
 	// Return from second
-	singleFiberArg->Counter += 1;
-	singleFiberArg->FifthFiber.SwitchToFiber(&singleFiberArg->ThirdFiber);
+	multipleFiberArg->Counter += 1;
+	multipleFiberArg->FifthFiber.SwitchToFiber(&multipleFiberArg->ThirdFiber);
 
 	// We should never get here
 	FAIL();
 }
 
 void SixthLevelFiberStart(void *arg) {
-	auto *singleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
+	auto *multipleFiberArg = reinterpret_cast<MultipleFiberArg *>(arg);
 
-	singleFiberArg->Counter *= 2;
-	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->FirstFiber);
+	multipleFiberArg->Counter *= 2;
+	multipleFiberArg->SixthFiber.SwitchToFiber(&multipleFiberArg->FirstFiber);
 
 	// Return from fourth
-	singleFiberArg->Counter -= 9;
-	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->FourthFiber);
+	multipleFiberArg->Counter -= 9;
+	multipleFiberArg->SixthFiber.SwitchToFiber(&multipleFiberArg->FourthFiber);
 
 	// Return from third
-	singleFiberArg->Counter -= 3;
-	singleFiberArg->SixthFiber.SwitchToFiber(&singleFiberArg->MainFiber);
+	multipleFiberArg->Counter -= 3;
+	multipleFiberArg->SixthFiber.SwitchToFiber(&multipleFiberArg->MainFiber);
 
 	// We should never get here
 	FAIL();
@@ -156,19 +156,20 @@ void SixthLevelFiberStart(void *arg) {
 TEST_CASE("Nested Fiber Switch", "[fiber]") {
 	constexpr size_t kHalfMebibyte = 524288;
 
-	MultipleFiberArg singleFiberArg;
-	singleFiberArg.Counter = 0ULL;
-	singleFiberArg.FirstFiber = ftl::Fiber(kHalfMebibyte, FirstLevelFiberStart, &singleFiberArg);
-	singleFiberArg.SecondFiber = ftl::Fiber(kHalfMebibyte, SecondLevelFiberStart, &singleFiberArg);
-	singleFiberArg.ThirdFiber = ftl::Fiber(kHalfMebibyte, ThirdLevelFiberStart, &singleFiberArg);
-	singleFiberArg.FourthFiber = ftl::Fiber(kHalfMebibyte, FourthLevelFiberStart, &singleFiberArg);
-	singleFiberArg.FifthFiber = ftl::Fiber(kHalfMebibyte, FifthLevelFiberStart, &singleFiberArg);
-	singleFiberArg.SixthFiber = ftl::Fiber(kHalfMebibyte, SixthLevelFiberStart, &singleFiberArg);
+	MultipleFiberArg multipleFiberArg;
+	multipleFiberArg.Counter = 0ULL;
+	multipleFiberArg.MainFiber.InitFromCurrentContext(kHalfMebibyte);
+	multipleFiberArg.FirstFiber = ftl::Fiber(kHalfMebibyte, FirstLevelFiberStart, &multipleFiberArg);
+	multipleFiberArg.SecondFiber = ftl::Fiber(kHalfMebibyte, SecondLevelFiberStart, &multipleFiberArg);
+	multipleFiberArg.ThirdFiber = ftl::Fiber(kHalfMebibyte, ThirdLevelFiberStart, &multipleFiberArg);
+	multipleFiberArg.FourthFiber = ftl::Fiber(kHalfMebibyte, FourthLevelFiberStart, &multipleFiberArg);
+	multipleFiberArg.FifthFiber = ftl::Fiber(kHalfMebibyte, FifthLevelFiberStart, &multipleFiberArg);
+	multipleFiberArg.SixthFiber = ftl::Fiber(kHalfMebibyte, SixthLevelFiberStart, &multipleFiberArg);
 
 	// The order should be:
 	// 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 1 -> 5 -> 1 -> 3 -> 2 -> 4 -> 6 -> 4 -> 2 -> 5 -> 3 -> 6 -> Main
 
-	singleFiberArg.MainFiber.SwitchToFiber(&singleFiberArg.FirstFiber);
+	multipleFiberArg.MainFiber.SwitchToFiber(&multipleFiberArg.FirstFiber);
 
-	REQUIRE(((((((((((((((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3) == singleFiberArg.Counter);
+	REQUIRE(((((((((((((((((((0ULL + 8ULL) * 3ULL) + 7ULL) * 6ULL) - 9ULL) * 2ULL) * 4) * 5) + 1) * 3) + 9) + 8) - 9) * 5) + 7) + 1) * 6) - 3) == multipleFiberArg.Counter);
 }

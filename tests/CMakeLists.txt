@@ -31,28 +31,28 @@ if (EMSCRIPTEN)
 	SET(PTHREAD_POOL_SIZE 8)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	add_definitions(-DPTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE})
-	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -s PTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE} -s ASYNCIFY")
+	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -s PTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE} -s ASYNCIFY -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s PROXY_TO_PTHREAD -s NO_DISABLE_EXCEPTION_CATCHING")
 endif()
 
 
-SetSourceGroup(NAME "Fiber Abstraction"
-	PREFIX FTL_TEST
-	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
-	             fiber_abstraction/nested_fiber_switch.cpp
-	             fiber_abstraction/floating_point_fiber_switch.cpp
-)
+#SetSourceGroup(NAME "Fiber Abstraction"
+#	PREFIX FTL_TEST
+#	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
+#	             fiber_abstraction/nested_fiber_switch.cpp
+#	             fiber_abstraction/floating_point_fiber_switch.cpp
+#)
 
-SetSourceGroup(NAME "Functional"
-	PREFIX FTL_TEST 
-    SOURCE_FILES functional/calc_triangle_num.cpp
-                 functional/producer_consumer.cpp
-)
+#SetSourceGroup(NAME "Functional"
+#	PREFIX FTL_TEST 
+#    SOURCE_FILES functional/calc_triangle_num.cpp
+#                 functional/producer_consumer.cpp
+#)
 
 SetSourceGroup(NAME "Utilities"
 	PREFIX FTL_TEST
 	SOURCE_FILES utilities/event_callbacks.cpp
-                 utilities/fibtex.cpp
-	             utilities/thread_local.cpp
+	             utilities/fibtex.cpp
+#	             utilities/thread_local.cpp
 )
 
 SetSourceGroup(NAME "Root"
@@ -68,6 +68,9 @@ set(FIBER_TASKING_LIB_TESTS_SRC
     ${FTL_TEST_ROOT}
 )
 
+if (EMSCRIPTEN)
+    SET(CMAKE_EXECUTABLE_SUFFIX .html)
+endif()
 
 add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
 target_link_libraries(ftl-test catch2 ftl)

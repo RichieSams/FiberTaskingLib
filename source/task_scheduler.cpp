@@ -60,11 +60,15 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	// Clean up
 	delete threadArgs;
 
+	printf("Thread %d enter\n", index);
+
 	// Spin wait until everything is initialized
 	while (!taskScheduler->m_initialized.load(std::memory_order_acquire)) {
 		// Spin
 		FTL_PAUSE();
 	}
+
+	printf("Everything initialized\n");
 
 	// Execute user thread start callback, if set
 	const EventCallbacks &callbacks = taskScheduler->m_callbacks;
@@ -77,10 +81,13 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 
 	// Initialize tls
 	taskScheduler->m_tls[index].CurrentFiberIndex = freeFiberIndex;
+	taskScheduler->m_tls[index].ThreadFiber.InitFromCurrentContext(524288);
 	// Switch
+	printf("Switching to FiberStartFunc from thread %d\n", index);
 	taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(&taskScheduler->m_fibers[freeFiberIndex]);
 
 	// And we've returned
+	printf("Returned to thread %d\n", index);
 
 	// Execute user thread end callback, if set
 	if (callbacks.OnWorkerThreadEnded != nullptr) {
@@ -103,6 +110,8 @@ static void ReadyFiberDummyTask(TaskScheduler *taskScheduler, void *arg) {
 void TaskScheduler::FiberStartFunc(void *const arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
+	printf("FiberStartFunc enter from thread %d\n", taskScheduler->GetCurrentThreadIndex());
+
 	if (taskScheduler->m_callbacks.OnFiberAttached != nullptr) {
 		taskScheduler->m_callbacks.OnFiberAttached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiberIndex());
 	}
@@ -114,6 +123,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 
 	// Process tasks infinitely, until quit
 	while (!taskScheduler->m_quit.load(std::memory_order_acquire)) {
+		printf("Fiber loop from thread %d\n", taskScheduler->GetCurrentThreadIndex());
+
 		unsigned waitingFiberIndex = kInvalidIndex;
 		ThreadLocalStorage *tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
@@ -245,6 +256,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 	}
 
 	unsigned index = taskScheduler->GetCurrentThreadIndex();
+	printf("Switching to quit fiber from thread %d\n", index);
 	taskScheduler->m_fibers[taskScheduler->m_tls[index].CurrentFiberIndex].SwitchToFiber(&taskScheduler->m_quitFibers[index]);
 
 	// We should never get here
@@ -254,11 +266,17 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 void TaskScheduler::ThreadEndFunc(void *arg) {
 	TaskScheduler *taskScheduler = reinterpret_cast<TaskScheduler *>(arg);
 
+	printf("Enter ThreadEndFunc\n");
+
+	printf("Waiting for %d threads to enter\n", taskScheduler->m_numThreads);
+
 	// Wait for all other threads to quit
 	taskScheduler->m_quitCount.fetch_add(1, std::memory_order_seq_cst);
 	while (taskScheduler->m_quitCount.load(std::memory_order_seq_cst) != taskScheduler->m_numThreads) {
 		SleepThread(50);
 	}
+
+	printf("Wait finished. Jumping to thread fibers\n");
 
 	// Jump to the thread fibers
 	unsigned threadIndex = taskScheduler->GetCurrentThreadIndex();
@@ -349,8 +367,9 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_threads[0].Handle = INVALID_HANDLE_VALUE;
 #endif
 
-	// Set the fiber index
+	// Set up the fiber for the main thread
 	m_tls[0].CurrentFiberIndex = 0;
+	m_fibers[0].InitFromCurrentContext(524288);
 
 	// Create the worker threads
 	for (unsigned i = 1; i < m_numThreads; ++i) {
@@ -378,6 +397,8 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 }
 
 TaskScheduler::~TaskScheduler() {
+	printf("Deconstructor enter\n");
+
 	// Create the quit fibers
 	m_quitFibers = new Fiber[m_numThreads];
 	for (unsigned i = 0; i < m_numThreads; ++i) {
@@ -392,6 +413,8 @@ TaskScheduler::~TaskScheduler() {
 		ThreadSleepCV.notify_all();
 	}
 
+	printf("Jumping to quit fiber\n");
+
 	// Jump to the quit fiber
 	// Create a scope so index isn't used after we come back from the switch. It will be wrong if we started on a non-main thread
 	{
@@ -404,11 +427,14 @@ TaskScheduler::~TaskScheduler() {
 	}
 
 	// We're back. We should be on the main thread now
+	printf("Back. Now join all worker threads\n");
 
 	// Wait for the worker threads to finish
 	for (unsigned i = 1; i < m_numThreads; ++i) {
 		JoinThread(m_threads[i]);
 	}
+
+	printf("Done\n");
 
 	// Cleanup
 	delete[] m_tls;

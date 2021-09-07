@@ -90,6 +90,9 @@ clean_wasm_internal:
 	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -C build_wasm/debug clean
 #	docker run --rm -v $(CURDIR):/app -w /app emscripten/emsdk:2.0.24 make -C build_wasm/release clean
 
+test_wasm:
+	docker run --rm -v $(CURDIR):/app -w /app -p 8080:8080 emscripten/emsdk:2.0.24 emrun --port 8080  --no_browser /app/build_wasm/debug/tests/ftl-test.html
+
 
 valgrind_linux_build:
 	docker run --rm -v $(CURDIR):/app -w /app $(DOCKER_IMAGE) make COMPILER=$(COMPILER) VERSION=$(VERSION) FIBER_GUARD_PAGES=$(FIBER_GUARD_PAGES) CPP_17=$(CPP_17) WERROR=$(WERROR) CMAKE_EXTRA_ARGS=$(CMAKE_EXTRA_ARGS) valgrind_linux_build_native

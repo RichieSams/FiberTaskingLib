@@ -240,7 +240,7 @@ void YieldThread() {
 namespace ftl {
 
 unsigned GetNumHardwareThreads() {
-	return PTHREAD_POOL_SIZE;
+	return PTHREAD_POOL_SIZE - 1;
 }
 
 } // End of namespace ftl

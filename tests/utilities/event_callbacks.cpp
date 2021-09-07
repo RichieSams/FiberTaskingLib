@@ -28,6 +28,8 @@
 #include "catch2/catch.hpp"
 
 TEST_CASE("Fiber Event Callbacks", "[utility]") {
+	printf("Fiber event callbacks - test\n");
+
 	ftl::TaskSchedulerInitOptions options;
 	options.ThreadPoolSize = 1;
 	options.FiberPoolSize = 20;
@@ -161,6 +163,8 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 }
 
 TEST_CASE("Thread Event Callbacks", "[utility]") {
+	printf("Thread event callbacks - test\n");
+
 	constexpr unsigned kThreadCount = 4;
 	constexpr unsigned kFiberCount = 20;
 
