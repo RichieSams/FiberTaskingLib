@@ -121,11 +121,7 @@ public:
 		}
 		array->Put(b, value);
 
-#if defined(FTL_STRONG_MEMORY_MODEL)
-		std::atomic_signal_fence(std::memory_order_release);
-#else
 		std::atomic_thread_fence(std::memory_order_release);
-#endif
 
 		m_bottom.store(b + 1, std::memory_order_relaxed);
 	}
@@ -162,11 +158,7 @@ public:
 	bool Steal(T *const value) {
 		uint64_t t = m_top.load(std::memory_order_acquire);
 
-#if defined(FTL_STRONG_MEMORY_MODEL)
-		std::atomic_signal_fence(std::memory_order_seq_cst);
-#else
 		std::atomic_thread_fence(std::memory_order_seq_cst);
-#endif
 
 		uint64_t const b = m_bottom.load(std::memory_order_acquire);
 		if (t < b) {
