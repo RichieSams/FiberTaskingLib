@@ -42,8 +42,15 @@ namespace nonius {
                 return {};
             }
         };
+#if __cplusplus < 201703L
+        // std::result_of was deprecated in C++17 and removed in C++20
+
         template <typename Sig>
         using ResultOf = typename std::result_of<Sig>::type;
+#else
+        template <typename Sig>
+        using ResultOf = typename std::invoke_result_t<Sig>;
+#endif
 
         // invoke and not return void :(
         template <typename Fun, typename... Args>
