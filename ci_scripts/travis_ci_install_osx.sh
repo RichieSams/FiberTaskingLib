@@ -2,7 +2,7 @@
 set -x #echo on
 
 brew update
-brew cask uninstall oclint
+brew uninstall --force oclint
 
 upgradeBrewFormula () {
 	if brew ls --versions $1 > /dev/null
