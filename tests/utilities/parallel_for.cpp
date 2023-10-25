@@ -24,7 +24,7 @@
 
 #include "ftl/parallel_for.h"
 
-#include "catch2/catch.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 #include <atomic>
 #include <vector>
