@@ -23,11 +23,6 @@
  ##
  
 include(SetSourceGroup)
- 
-SetSourceGroup(NAME Root
-	PREFIX FTL_BENCHMARK
-	SOURCE_FILES main.cpp
-)
 
 SetSourceGroup(NAME Empty
 	PREFIX FTL_BENCHMARK
@@ -41,11 +36,10 @@ SetSourceGroup(NAME "Producer Consumer"
 
 
 set(FTL_BENCHMARK_SRC
-	${FTL_BENCHMARK_ROOT}
 	${FTL_BENCHMARK_EMPTY}
 	${FTL_BENCHMARK_PRODUCER_CONSUMER}
 )
 
 
 add_executable(ftl-benchmark ${FTL_BENCHMARK_SRC})
-target_link_libraries(ftl-benchmark ftl nonius)
+target_link_libraries(ftl-benchmark ftl Catch2::Catch2WithMain)

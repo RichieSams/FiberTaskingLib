@@ -25,7 +25,8 @@
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "nonius/nonius.hpp"
+#include "catch2/benchmark/catch_benchmark.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 // Constants
 constexpr static unsigned kNumProducerTasks = 100U;
@@ -49,26 +50,28 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	taskScheduler->WaitForCounter(&counter);
 }
 
-NONIUS_BENCHMARK("ProducerConsumer", [](nonius::chronometer meter) {
-	ftl::TaskScheduler taskScheduler;
-	ftl::TaskSchedulerInitOptions options;
-	options.ThreadPoolSize = kNumProducerTasks + 20;
-	taskScheduler.Init(options);
+TEST_CASE("ProducerConsumer benchmark") {
+	BENCHMARK_ADVANCED("ProducerConsumer")(Catch::Benchmark::Chronometer meter) {
+		ftl::TaskScheduler taskScheduler;
+		ftl::TaskSchedulerInitOptions options;
+		options.ThreadPoolSize = kNumProducerTasks + 20;
+		taskScheduler.Init(options);
 
-	auto *tasks = new ftl::Task[kNumProducerTasks];
-	for (unsigned i = 0; i < kNumProducerTasks; ++i) {
-		tasks[i] = {Producer, nullptr};
-	}
-
-	meter.measure([&taskScheduler, tasks] {
-		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::TaskCounter counter(&taskScheduler);
-			taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Normal);
-
-			taskScheduler.WaitForCounter(&counter);
+		auto *tasks = new ftl::Task[kNumProducerTasks];
+		for (unsigned i = 0; i < kNumProducerTasks; ++i) {
+			tasks[i] = {Producer, nullptr};
 		}
-	});
 
-	// Cleanup
-	delete[] tasks;
-})
+		meter.measure([&taskScheduler, tasks] {
+			for (unsigned i = 0; i < kNumIterations; ++i) {
+				ftl::TaskCounter counter(&taskScheduler);
+				taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Normal);
+
+				taskScheduler.WaitForCounter(&counter);
+			}
+		});
+
+		// Cleanup
+		delete[] tasks;
+	};
+}
