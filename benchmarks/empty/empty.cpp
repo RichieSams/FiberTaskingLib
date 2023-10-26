@@ -52,7 +52,7 @@ TEST_CASE("Empty benchmark") {
 				ftl::TaskCounter counter(&taskScheduler);
 				taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Normal);
 
-				taskScheduler.WaitForCounter(&counter, 0);
+				taskScheduler.WaitForCounter(&counter);
 			}
 		});
 
