@@ -51,7 +51,8 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 }
 
 TEST_CASE("ProducerConsumer benchmark") {
-	BENCHMARK_ADVANCED("ProducerConsumer")(Catch::Benchmark::Chronometer meter) {
+	BENCHMARK_ADVANCED("ProducerConsumer")
+	(Catch::Benchmark::Chronometer meter) {
 		ftl::TaskScheduler taskScheduler;
 		ftl::TaskSchedulerInitOptions options;
 		options.ThreadPoolSize = kNumProducerTasks + 20;

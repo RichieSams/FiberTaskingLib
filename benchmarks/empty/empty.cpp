@@ -37,7 +37,8 @@ void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 }
 
 TEST_CASE("Empty benchmark") {
-	BENCHMARK_ADVANCED("Empty")(Catch::Benchmark::Chronometer meter) {
+	BENCHMARK_ADVANCED("Empty")
+	(Catch::Benchmark::Chronometer meter) {
 		ftl::TaskScheduler taskScheduler;
 		taskScheduler.Init();
 
