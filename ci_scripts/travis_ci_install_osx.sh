@@ -15,71 +15,47 @@ upgradeBrewFormula () {
 
 
 case "${COMPILER}-${VERSION}" in
-gcc-4.9)
-	upgradeBrewFormula gcc@4.9
-	;;
-gcc-5)
-	upgradeBrewFormula gcc@5
-	;;
-gcc-6)
-	upgradeBrewFormula gcc@6
-	;;
-gcc-7)
-	upgradeBrewFormula gcc@7
-	;;
-gcc-8)
-	upgradeBrewFormula gcc@8
-	;;
 gcc-9)
 	upgradeBrewFormula gcc@9
 	;;
-clang-3.7)
-	upgradeBrewFormula llvm@3.7
+gcc-10)
+	upgradeBrewFormula gcc@10
 	;;
-clang-3.8)
-	upgradeBrewFormula llvm@3.8
+gcc-11)
+	upgradeBrewFormula gcc@11
 	;;
-clang-3.9)
-	upgradeBrewFormula llvm@3.9
-	# 3.9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@3.9/bin/clang
-	export CXX=/usr/local/opt/llvm@3.9/bin/clang++
+gcc-12)
+	upgradeBrewFormula gcc@12
 	;;
-clang-4)
-	upgradeBrewFormula llvm@4
-	# 4 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@4/bin/clang
-	export CXX=/usr/local/opt/llvm@4/bin/clang++
+clang-12)
+	upgradeBrewFormula llvm@12
+	# 12 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@12/bin/clang
+	export CXX=/usr/local/opt/llvm@12/bin/clang++
 	;;
-clang-5)
-	upgradeBrewFormula llvm@5
-	# 5 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@5/bin/clang
-	export CXX=/usr/local/opt/llvm@5/bin/clang++
+clang-13)
+	upgradeBrewFormula llvm@13
+	# 13 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@13/bin/clang
+	export CXX=/usr/local/opt/llvm@13/bin/clang++
 	;;
-clang-6)
-	upgradeBrewFormula llvm@6
-	# 6 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@6/bin/clang
-	export CXX=/usr/local/opt/llvm@6/bin/clang++
+clang-14)
+	upgradeBrewFormula llvm@14
+	# 14 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@14/bin/clang
+	export CXX=/usr/local/opt/llvm@14/bin/clang++
 	;;
-clang-7)
-	upgradeBrewFormula llvm@7
-	# 7 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@7/bin/clang
-	export CXX=/usr/local/opt/llvm@7/bin/clang++
+clang-15)
+	upgradeBrewFormula llvm@15
+	# 15 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@15/bin/clang
+	export CXX=/usr/local/opt/llvm@15/bin/clang++
 	;;
-clang-8)
-	upgradeBrewFormula llvm@9
-	# 8 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@8/bin/clang
-	export CXX=/usr/local/opt/llvm@8/bin/clang++
-	;;
-clang-9)
-	upgradeBrewFormula llvm@9
-	# 9 is keg-only, so we have to set the full file path
-	export CC=/usr/local/opt/llvm@9/bin/clang
-	export CXX=/usr/local/opt/llvm@9/bin/clang++
+clang-16)
+	upgradeBrewFormula llvm@16
+	# 16 is keg-only, so we have to set the full file path
+	export CC=/usr/local/opt/llvm@16/bin/clang
+	export CXX=/usr/local/opt/llvm@16/bin/clang++
 	;;
 *) echo "Compiler not supported: ${COMPILER}-${VERSION}. See travis_ci_install_osx.sh"; exit 1 ;;
 esac
