@@ -47,22 +47,16 @@ SetSourceGroup(NAME "Utilities"
 	             utilities/thread_local.cpp
 )
 
-SetSourceGroup(NAME "Root"
-	PREFIX FTL_TEST
-	SOURCE_FILES main.cpp
-)
-
 # Link all the sources into one
 set(FIBER_TASKING_LIB_TESTS_SRC
 	${FTL_TEST_FIBER_ABSTRACTION}
 	${FTL_TEST_FUNCTIONAL}
 	${FTL_TEST_UTILITIES}
-    ${FTL_TEST_ROOT}
 )
 
 
 add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
-target_link_libraries(ftl-test catch2 ftl)
+target_link_libraries(ftl-test Catch2::Catch2WithMain ftl)
 
 # Set the warnings
 AddCompilerFlags(ftl-test)

@@ -23,7 +23,7 @@
  ##
 
 # Catch2
-if (FTL_BUILD_TESTS)
+if (FTL_BUILD_TESTS OR FTL_BUILD_BENCHMARKS)
 	add_subdirectory(catch2)
 endif()
 
@@ -56,7 +56,3 @@ if (WIN32)
 	# Restore the original flags
 	set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
 endif()
-
-
-# Nonius
-add_subdirectory(nonius)

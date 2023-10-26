@@ -25,7 +25,8 @@
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "nonius/nonius.hpp"
+#include "catch2/benchmark/catch_benchmark.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 // Constants
 constexpr static unsigned kNumTasks = 65000;
@@ -35,24 +36,27 @@ void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 	// No-Op
 }
 
-NONIUS_BENCHMARK("Empty", [](nonius::chronometer meter) {
-	ftl::TaskScheduler taskScheduler;
-	taskScheduler.Init();
+TEST_CASE("Empty benchmark") {
+	BENCHMARK_ADVANCED("Empty")
+	(Catch::Benchmark::Chronometer meter) {
+		ftl::TaskScheduler taskScheduler;
+		taskScheduler.Init();
 
-	auto *tasks = new ftl::Task[kNumTasks];
-	for (unsigned i = 0; i < kNumTasks; ++i) {
-		tasks[i] = {EmptyBenchmarkTask, nullptr};
-	}
-
-	meter.measure([&taskScheduler, tasks] {
-		for (unsigned i = 0; i < kNumIterations; ++i) {
-			ftl::TaskCounter counter(&taskScheduler);
-			taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Normal);
-
-			taskScheduler.WaitForCounter(&counter, 0);
+		auto *tasks = new ftl::Task[kNumTasks];
+		for (unsigned i = 0; i < kNumTasks; ++i) {
+			tasks[i] = {EmptyBenchmarkTask, nullptr};
 		}
-	});
 
-	// Cleanup
-	delete[] tasks;
-})
+		meter.measure([&taskScheduler, tasks] {
+			for (unsigned i = 0; i < kNumIterations; ++i) {
+				ftl::TaskCounter counter(&taskScheduler);
+				taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Normal);
+
+				taskScheduler.WaitForCounter(&counter);
+			}
+		});
+
+		// Cleanup
+		delete[] tasks;
+	};
+}

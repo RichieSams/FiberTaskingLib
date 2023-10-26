@@ -25,7 +25,7 @@
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "catch2/catch.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 #include <array>
 

@@ -1,17 +1,36 @@
 include(CheckCXXCompilerFlag)
 
-# Function to add flag if compiler supports it
 function(Check_And_Add_Flag)
 	set(TARGET ${ARGV0})
+	set(FLAG ${ARGV1})
 
-	# Sanitize flag to become cmake variable name
-	string (REPLACE "-" "_" NAME ${ARGV1})
-	string (SUBSTRING ${NAME} 1 -1 NAME)
-	string (FIND ${NAME} "=" EQUALS)
-	string (SUBSTRING ${NAME} 0 ${EQUALS} NAME)
-	CHECK_CXX_COMPILER_FLAG(${ARGV1} ${NAME})
-	if (${NAME}) 
-		target_compile_options(${TARGET} PRIVATE ${ARGV1})
+	# Check if it's a -Wno- flag
+	if (FLAG MATCHES "^-Wno-")
+		# special handling for -Wno- flags due to gcc weirdness
+		# as we have to check the reverse flag before applying the one we want
+		# Extract the name after -Wno-
+		string (REGEX REPLACE "^-Wno-" "" NO_FLAG ${FLAG})
+
+		# Sanitize to become cmake variable name
+		string (REPLACE "-" "_" NAME ${NO_FLAG})
+		string (FIND ${NAME} "=" EQUALS)
+		string (SUBSTRING ${NAME} 0 ${EQUALS} NAME)
+		set(NAME "Wno_${NAME}")
+		CHECK_CXX_COMPILER_FLAG("-W${NO_FLAG}" ${NAME})
+		if (${NAME})
+			target_compile_options(${TARGET} PRIVATE ${FLAG})
+		endif()
+	else()
+		# Sanitize flag to become cmake variable name
+		string (REPLACE "-" "_" NAME ${FLAG})
+		string (SUBSTRING ${NAME} 1 -1 NAME)
+		string (FIND ${NAME} "=" EQUALS)
+		string (SUBSTRING ${NAME} 0 ${EQUALS} CAN_USE_FLAG_NAME)
+
+		CHECK_CXX_COMPILER_FLAG(${FLAG} ${NAME})
+		if (${NAME})
+			target_compile_options(${TARGET} PRIVATE ${FLAG})
+		endif()
 	endif()
 endfunction()
 
@@ -27,7 +46,7 @@ function(AddCompilerFlags)
 		Check_And_Add_Flag(${TARGET} -Wsign-conversion)
 		Check_And_Add_Flag(${TARGET} -Wcast-align)
 		Check_And_Add_Flag(${TARGET} -Wcast-qual)
-		Check_And_Add_Flag(${TARGET} -Wctor-dtor-privacy)
+		# Check_And_Add_Flag(${TARGET} -Wctor-dtor-privacy) # causes issues on gcc 5/9 with catch2 under linux
 		Check_And_Add_Flag(${TARGET} -Wdisabled-optimization)
 		Check_And_Add_Flag(${TARGET} -Wdouble-promotion)
 		Check_And_Add_Flag(${TARGET} -Wduplicated-branches)
@@ -47,6 +66,7 @@ function(AddCompilerFlags)
 		Check_And_Add_Flag(${TARGET} -Wundef)
 		Check_And_Add_Flag(${TARGET} -Wuseless-cast)
 		Check_And_Add_Flag(${TARGET} -Wno-unknown-pragmas)
+		Check_And_Add_Flag(${TARGET} -Wno-aligned-new)
 		Check_And_Add_Flag(${TARGET} -Wno-aligned-new)
 		if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0))
 			# Useless flag that hits a bunch of valid code

@@ -26,8 +26,9 @@
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "catch2/catch.hpp"
+#include "catch2/catch_test_macros.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 void SimpleInit(ftl::TaskScheduler *scheduler, void *arg) {
@@ -69,7 +70,8 @@ TEST_CASE("Thread Local", "[utility]") {
 	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
 
 	// Side Effects
-	ftl::ThreadLocal<size_t> sideEffectCounter(&taskScheduler, []() { return g_sideEffectCount++; });
+	ftl::ThreadLocal<size_t> sideEffectCounter(
+	    &taskScheduler, []() noexcept { return g_sideEffectCount++; });
 
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, &sideEffectCounter});
 

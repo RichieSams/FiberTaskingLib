@@ -25,7 +25,10 @@
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 
-#include "catch2/catch.hpp"
+#include "catch2/catch_test_macros.hpp"
+#include "catch2/generators/catch_generators.hpp"
+#include "catch2/generators/catch_generators_adapters.hpp"
+#include "catch2/generators/catch_generators_random.hpp"
 
 struct NumberSubset {
 	uint64_t Start;
