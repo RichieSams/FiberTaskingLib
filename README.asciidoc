@@ -276,7 +276,6 @@ The library is licensed under the https://tldrlegal.com/license/apache-license-2
 
  - Boost Context Fork: https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/boost_context[Boost License v1.0]
  - Catch2: https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/catch2[Boost License v1.0]
- - Nonius: https://github.com/RichieSams/FiberTaskingLib/tree/master/third_party/nonius[CC0 1.0 Universal]
 
 {blank}
 
