@@ -91,6 +91,7 @@ int main() {
 
 	// Test
 	assert(triangleNum * (triangleNum + 1ULL) / 2ULL == result);
+	(void)result;
 
 	// Cleanup
 	delete[] subsets;
