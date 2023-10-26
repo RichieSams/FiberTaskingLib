@@ -27,7 +27,7 @@ function(AddCompilerFlags)
 		Check_And_Add_Flag(${TARGET} -Wsign-conversion)
 		Check_And_Add_Flag(${TARGET} -Wcast-align)
 		Check_And_Add_Flag(${TARGET} -Wcast-qual)
-		Check_And_Add_Flag(${TARGET} -Wctor-dtor-privacy)
+		# Check_And_Add_Flag(${TARGET} -Wctor-dtor-privacy) # causes issues on gcc 5/9 with catch2 under linux
 		Check_And_Add_Flag(${TARGET} -Wdisabled-optimization)
 		Check_And_Add_Flag(${TARGET} -Wdouble-promotion)
 		Check_And_Add_Flag(${TARGET} -Wduplicated-branches)
@@ -47,7 +47,7 @@ function(AddCompilerFlags)
 		Check_And_Add_Flag(${TARGET} -Wundef)
 		Check_And_Add_Flag(${TARGET} -Wuseless-cast)
 		Check_And_Add_Flag(${TARGET} -Wno-unknown-pragmas)
-		Check_And_Add_Flag(${TARGET} -Wno-aligned-new)
+		# Check_And_Add_Flag(${TARGET} -Wno-aligned-new) # doesn't exist on gcc 5
 		if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0))
 			# Useless flag that hits a bunch of valid code
 			Check_And_Add_Flag(${TARGET} -Wno-missing-field-initializers)
