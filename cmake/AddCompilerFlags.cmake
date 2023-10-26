@@ -1,34 +1,36 @@
 include(CheckCXXCompilerFlag)
 
-# Function to add flag if compiler supports it
 function(Check_And_Add_Flag)
 	set(TARGET ${ARGV0})
+	set(FLAG ${ARGV1})
 
-	# Sanitize flag to become cmake variable name
-	string (REPLACE "-" "_" NAME ${ARGV1})
-	string (SUBSTRING ${NAME} 1 -1 NAME)
-	string (FIND ${NAME} "=" EQUALS)
-	string (SUBSTRING ${NAME} 0 ${EQUALS} NAME)
-	CHECK_CXX_COMPILER_FLAG(${ARGV1} ${NAME})
-	if (${NAME}) 
-		target_compile_options(${TARGET} PRIVATE ${ARGV1})
-	endif()
-endfunction()
+	# Check if it's a -Wno- flag
+	if (FLAG MATCHES "^-Wno-")
+		# special handling for -Wno- flags due to gcc weirdness
+		# as we have to check the reverse flag before applying the one we want
+		# Extract the name after -Wno-
+		string (REGEX REPLACE "^-Wno-" "" NO_FLAG ${FLAG})
 
-# Function to add flag if compiler supports it
-# for -Wno- parameters the standard check doesn't always catch that it's not supported
-# so we need to check the non-no flag first in order to check if we can apply no-
-function(Check_And_Add_WNo_Flag)
-	set(TARGET ${ARGV0})
+		# Sanitize to become cmake variable name
+		string (REPLACE "-" "_" NAME ${NO_FLAG})
+		string (FIND ${NAME} "=" EQUALS)
+		string (SUBSTRING ${NAME} 0 ${EQUALS} NAME)
+		set(NAME "Wno_${NAME}")
+		CHECK_CXX_COMPILER_FLAG("-W${NO_FLAG}" ${NAME})
+		if (${NAME})
+			target_compile_options(${TARGET} PRIVATE ${FLAG})
+		endif()
+	else()
+		# Sanitize flag to become cmake variable name
+		string (REPLACE "-" "_" NAME ${FLAG})
+		string (SUBSTRING ${NAME} 1 -1 NAME)
+		string (FIND ${NAME} "=" EQUALS)
+		string (SUBSTRING ${NAME} 0 ${EQUALS} CAN_USE_FLAG_NAME)
 
-	# Sanitize flag to become cmake variable name
-	string (REPLACE "-" "_" NAME ${ARGV1})
-	string (SUBSTRING ${NAME} 1 -1 NAME)
-	string (FIND ${NAME} "=" EQUALS)
-	string (SUBSTRING ${NAME} 0 ${EQUALS} NAME)
-	CHECK_CXX_COMPILER_FLAG("-W${ARGV1}" ${NAME})
-	if (${NAME}) 
-		target_compile_options(${TARGET} PRIVATE "-Wno-${ARGV1}")
+		CHECK_CXX_COMPILER_FLAG(${FLAG} ${NAME})
+		if (${NAME})
+			target_compile_options(${TARGET} PRIVATE ${FLAG})
+		endif()
 	endif()
 endfunction()
 
@@ -63,14 +65,12 @@ function(AddCompilerFlags)
 		Check_And_Add_Flag(${TARGET} -Wswitch-default)
 		Check_And_Add_Flag(${TARGET} -Wundef)
 		Check_And_Add_Flag(${TARGET} -Wuseless-cast)
-		# special handling for -Wno- flags due to gcc weirdness
-		# as we have to check the reverse flag before applying the one we want
-		Check_And_Add_WNo_Flag(${TARGET} unknown-pragmas)
-		Check_And_Add_WNo_Flag(${TARGET} aligned-new)
-		Check_And_Add_WNo_Flag(${TARGET} aligned-new)
+		Check_And_Add_Flag(${TARGET} -Wno-unknown-pragmas)
+		Check_And_Add_Flag(${TARGET} -Wno-aligned-new)
+		Check_And_Add_Flag(${TARGET} -Wno-aligned-new)
 		if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0))
 			# Useless flag that hits a bunch of valid code
-			Check_And_Add_WNo_Flag(${TARGET} missing-field-initializers)
+			Check_And_Add_Flag(${TARGET} -Wno-missing-field-initializers)
 		endif()
 		if(FTL_WERROR)
 			Check_And_Add_Flag(${TARGET} -Werror)
