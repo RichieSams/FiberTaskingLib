@@ -1,16 +1,4 @@
 jobs:
-  - job: linux_gcc_5
-    displayName: Linux - GCC 5
-    pool:
-      vmImage: ubuntu-22.04
-    variables:
-      compiler: gcc
-      version: 5
-    steps:
-      - bash: make generate_linux build_linux
-        displayName: Build
-      - bash: make test_linux
-        displayName: Test
   - job: linux_gcc_9
     displayName: Linux - GCC 9
     pool:
@@ -23,25 +11,37 @@ jobs:
         displayName: Build
       - bash: make test_linux
         displayName: Test
-  - job: linux_clang_37
-    displayName: Linux - Clang 3.7
+  - job: linux_gcc_12
+    displayName: Linux - GCC 12
     pool:
       vmImage: ubuntu-22.04
     variables:
-      compiler: clang
-      version: 3.7
+      compiler: gcc
+      version: 12
     steps:
       - bash: make generate_linux build_linux
         displayName: Build
       - bash: make test_linux
         displayName: Test
-  - job: linux_clang_9
-    displayName: Linux - Clang 9
+  - job: linux_clang_12
+    displayName: Linux - Clang 12
     pool:
       vmImage: ubuntu-22.04
     variables:
       compiler: clang
-      version: 9
+      version: 12
+    steps:
+      - bash: make generate_linux build_linux
+        displayName: Build
+      - bash: make test_linux
+        displayName: Test
+  - job: linux_clang_15
+    displayName: Linux - Clang 15
+    pool:
+      vmImage: ubuntu-22.04
+    variables:
+      compiler: clang
+      version: 15
     steps:
       - bash: make generate_linux build_linux
         displayName: Build
@@ -89,13 +89,13 @@ jobs:
         displayName: Build
       - bash: make test_osx
         displayName: Test
-  - job: osx_clang_16
-    displayName: OSX - Clang 16
+  - job: osx_clang_15
+    displayName: OSX - Clang 15
     pool:
       vmImage: macOS-13
     variables:
       compiler: clang
-      version: 16
+      version: 15
     steps:
       - bash: bash ci_scripts/travis_ci_install_osx.sh
         displayName: Install
