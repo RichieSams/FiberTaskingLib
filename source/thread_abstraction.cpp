@@ -134,9 +134,9 @@ void YieldThread() {
 #		include <features.h>
 #	endif
 #	include <pthread.h>
+#	include <sched.h>
 #	include <string.h>
 #	include <unistd.h>
-#	include <sched.h>
 
 namespace ftl {
 
