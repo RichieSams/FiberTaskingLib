@@ -2,7 +2,7 @@ jobs:
   - job: linux_gcc_5
     displayName: Linux - GCC 5
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     variables:
       compiler: gcc
       version: 5
@@ -14,7 +14,7 @@ jobs:
   - job: linux_gcc_9
     displayName: Linux - GCC 9
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     variables:
       compiler: gcc
       version: 9
@@ -26,7 +26,7 @@ jobs:
   - job: linux_clang_37
     displayName: Linux - Clang 3.7
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     variables:
       compiler: clang
       version: 3.7
@@ -38,7 +38,7 @@ jobs:
   - job: linux_clang_9
     displayName: Linux - Clang 9
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     variables:
       compiler: clang
       version: 9
@@ -47,24 +47,10 @@ jobs:
         displayName: Build
       - bash: make test_linux
         displayName: Test
-  - job: osx_gcc_5
-    displayName: OSX - GCC 5
-    pool:
-      vmImage: macos-10.15
-    variables:
-      compiler: gcc
-      version: 5
-    steps:
-      - bash: bash ci_scripts/travis_ci_install_osx.sh
-        displayName: Install
-      - bash: make generate_osx build_osx
-        displayName: Build
-      - bash: make test_osx
-        displayName: Test
   - job: osx_gcc_9
     displayName: OSX - GCC 9
     pool:
-      vmImage: macos-10.15
+      vmImage: macOS-13
     variables:
       compiler: gcc
       version: 9
@@ -75,13 +61,13 @@ jobs:
         displayName: Build
       - bash: make test_osx
         displayName: Test
-  - job: osx_clang_9
-    displayName: OSX - Clang 9
+  - job: osx_gcc_12
+    displayName: OSX - GCC 12
     pool:
-      vmImage: macos-10.15
+      vmImage: macOS-13
     variables:
-      compiler: clang
-      version: 9
+      compiler: gcc
+      version: 12
     steps:
       - bash: bash ci_scripts/travis_ci_install_osx.sh
         displayName: Install
@@ -89,17 +75,33 @@ jobs:
         displayName: Build
       - bash: make test_osx
         displayName: Test
-  - job: windows_vs_2017
-    displayName: Windows - Visual Studio 2017
+  - job: osx_clang_12
+    displayName: OSX - Clang 12
     pool:
-      vmImage: vs2017-win2016
+      vmImage: macOS-13
     variables:
-      cmake.gen.name: Visual Studio 15 2017 Win64
-      cmake.arch.arg: ""
+      compiler: clang
+      version: 12
     steps:
-      - powershell: make generate_windows build_windows
+      - bash: bash ci_scripts/travis_ci_install_osx.sh
+        displayName: Install
+      - bash: make generate_osx build_osx
         displayName: Build
-      - powershell: make test_windows
+      - bash: make test_osx
+        displayName: Test
+  - job: osx_clang_16
+    displayName: OSX - Clang 16
+    pool:
+      vmImage: macOS-13
+    variables:
+      compiler: clang
+      version: 16
+    steps:
+      - bash: bash ci_scripts/travis_ci_install_osx.sh
+        displayName: Install
+      - bash: make generate_osx build_osx
+        displayName: Build
+      - bash: make test_osx
         displayName: Test
   - job: windows_vs_2019
     displayName: Windows - Visual Studio 2019
@@ -113,15 +115,27 @@ jobs:
         displayName: Build
       - powershell: make test_windows
         displayName: Test
+  - job: windows_vs_2022
+    displayName: Windows - Visual Studio 2022
+    pool:
+      vmImage: windows-2022
+    variables:
+      cmake.gen.name: Visual Studio 17 2022
+      cmake.arch.arg: -A x64
+    steps:
+      - powershell: make generate_windows build_windows
+        displayName: Build
+      - powershell: make test_windows
+        displayName: Test
   - job: lint
     displayName: Clang-Tidy Linting
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     steps:
       - bash: make lint
   - job: format
     displayName: Clang-Format
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-22.04
     steps:
       - bash: make format_check
