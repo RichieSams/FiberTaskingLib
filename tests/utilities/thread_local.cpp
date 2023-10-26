@@ -70,7 +70,8 @@ TEST_CASE("Thread Local", "[utility]") {
 	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
 
 	// Side Effects
-	ftl::ThreadLocal<size_t> sideEffectCounter(&taskScheduler, []() { return g_sideEffectCount++; });
+	ftl::ThreadLocal<size_t> sideEffectCounter(
+	    &taskScheduler, []() noexcept { return g_sideEffectCount++; });
 
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, &sideEffectCounter});
 
