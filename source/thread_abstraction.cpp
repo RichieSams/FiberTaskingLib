@@ -136,6 +136,7 @@ void YieldThread() {
 #	include <pthread.h>
 #	include <string.h>
 #	include <unistd.h>
+#	include <sched.h>
 
 namespace ftl {
 
@@ -224,9 +225,7 @@ void SleepThread(int msDuration) {
 }
 
 void YieldThread() {
-#	if defined(FTL_OS_LINUX)
-	pthread_yield();
-#	endif
+	sched_yield();
 }
 
 } // End of namespace ftl
