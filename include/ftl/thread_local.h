@@ -28,6 +28,7 @@
 #	define FTL_THREAD_LOCAL_HANDLE_DEBUG FTL_DEBUG
 #endif
 
+#include "ftl/alloc.h"
 #include "ftl/task_scheduler.h"
 
 #include <functional>
@@ -121,7 +122,7 @@ public:
 	ThreadLocal(TaskScheduler *ts, F &&factory)
 	        : m_scheduler(ts),
 	          m_initializer(std::forward<F>(factory)),
-	          m_data(static_cast<ValuePadder<T> *>(operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
+	          m_data(static_cast<ValuePadder<T> *>(AlignedAlloc(sizeof(ValuePadder<T>) * ts->GetThreadCount(), alignof(ValuePadder<T>)))) {
 		for (unsigned i = 0; i < ts->GetThreadCount(); ++i) {
 			// That's not how placement new works...
 			// ReSharper disable once CppNonReclaimedResourceAcquisition
@@ -135,7 +136,7 @@ public:
 	ThreadLocal &operator=(ThreadLocal &&other) noexcept = delete;
 
 	~ThreadLocal() {
-		delete[] m_data;
+		AlignedFree(m_data);
 	}
 
 	/**
