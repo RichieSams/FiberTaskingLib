@@ -76,7 +76,9 @@ SetSourceGroup(NAME Core
 
 SetSourceGroup(NAME Util
 	PREFIX FTL
-	SOURCE_FILES ../include/ftl/assert.h
+	SOURCE_FILES ../include/ftl/alloc.h
+				 alloc.cpp
+				 ../include/ftl/assert.h
 	             ../include/ftl/callbacks.h
 	             ../include/ftl/config.h
 	             ../include/ftl/fiber.h
