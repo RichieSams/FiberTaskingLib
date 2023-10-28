@@ -68,7 +68,7 @@ int main() {
 			subset->end = triangleNum;
 		}
 
-		tasks[i] = {AddNumberSubset, subset};
+		tasks[i] = { AddNumberSubset, subset };
 
 		nextNumber = subset->end + 1;
 	}

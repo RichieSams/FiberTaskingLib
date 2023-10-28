@@ -49,7 +49,8 @@ TEST_CASE("Parallel For", "[utility]") {
 			    (void)ts;
 			    total.fetch_add(*value);
 		    },
-		    ftl::TaskPriority::Normal);
+		    ftl::TaskPriority::Normal
+		);
 	}
 	SECTION("Iterable") {
 		std::vector<unsigned> data(size);
@@ -62,7 +63,8 @@ TEST_CASE("Parallel For", "[utility]") {
 			    (void)ts;
 			    total.fetch_add(*value);
 		    },
-		    ftl::TaskPriority::Normal);
+		    ftl::TaskPriority::Normal
+		);
 	}
 
 	constexpr uint64_t expectedValue = size * (size + 1) / 2;

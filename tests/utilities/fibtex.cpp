@@ -30,11 +30,11 @@
 
 struct MutexData {
 	explicit MutexData(ftl::TaskScheduler *scheduler)
-	        : Lock(scheduler, 6), Counter(0) {
+	        : Lock(scheduler, 6) {
 	}
 
 	ftl::Fibtex Lock;
-	unsigned Counter;
+	unsigned Counter = 0;
 	std::vector<unsigned> Queue;
 };
 
@@ -73,12 +73,12 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 
 	constexpr size_t iterations = 20000;
 	for (size_t i = 0; i < iterations; ++i) {
-		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{LockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{SpinLockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{InfiniteSpinLockGuardTest, &md}, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ SpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ SpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ InfiniteSpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ InfiniteSpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
 
 		taskScheduler.WaitForCounter(&c);
 	}

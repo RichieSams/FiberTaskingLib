@@ -40,7 +40,7 @@ void Consumer(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto *tasks = new ftl::Task[kNumConsumerTasks];
 	for (unsigned i = 0; i < kNumConsumerTasks; ++i) {
-		tasks[i] = {Consumer, arg};
+		tasks[i] = { Consumer, arg };
 	}
 
 	ftl::TaskCounter counter(taskScheduler);
@@ -60,7 +60,7 @@ TEST_CASE("ProducerConsumer benchmark") {
 
 		auto *tasks = new ftl::Task[kNumProducerTasks];
 		for (unsigned i = 0; i < kNumProducerTasks; ++i) {
-			tasks[i] = {Producer, nullptr};
+			tasks[i] = { Producer, nullptr };
 		}
 
 		meter.measure([&taskScheduler, tasks] {

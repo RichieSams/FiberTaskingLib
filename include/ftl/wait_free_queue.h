@@ -68,7 +68,7 @@ private:
 	public:
 		explicit CircularArray(size_t const n)
 		        : m_items(n) {
-			FTL_ASSERT("n must be a power of 2", !(n == 0) && !(n & (n - 1)));
+			FTL_ASSERT("n must be a power of 2", (n & (n - 1)) == 0);
 		}
 
 	private:

@@ -119,7 +119,7 @@ private:
 		/* The queue of high priority waiting tasks */
 		WaitFreeQueue<TaskBundle> LoPriTaskQueue;
 
-		std::atomic<bool> *OldFiberStoredFlag{nullptr};
+		std::atomic<bool> *OldFiberStoredFlag{ nullptr };
 
 		/* The queue of ready waiting Fibers that were pinned to this thread */
 		std::vector<ReadyFiberBundle *> PinnedReadyFibers;
@@ -143,14 +143,14 @@ private:
 		/* The index of the previously executed fiber in m_fibers */
 		unsigned OldFiberIndex;
 		/* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
-		FiberDestination OldFiberDestination{FiberDestination::None};
+		FiberDestination OldFiberDestination{ FiberDestination::None };
 
 		/* The last high priority queue that we successfully stole from. This is an offset index from the current thread index */
-		unsigned HiPriLastSuccessfulSteal{1};
+		unsigned HiPriLastSuccessfulSteal{ 1 };
 		/* The last low priority queue that we successfully stole from. This is an offset index from the current thread index */
-		unsigned LoPriLastSuccessfulSteal{1};
+		unsigned LoPriLastSuccessfulSteal{ 1 };
 
-		unsigned FailedQueuePopAttempts{0};
+		unsigned FailedQueuePopAttempts{ 0 };
 	};
 
 private:
@@ -161,18 +161,18 @@ private:
 
 	EventCallbacks m_callbacks;
 
-	unsigned m_numThreads{0};
-	ThreadType *m_threads{nullptr};
+	unsigned m_numThreads{ 0 };
+	ThreadType *m_threads{ nullptr };
 
-	unsigned m_fiberPoolSize{0};
+	unsigned m_fiberPoolSize{ 0 };
 	/* The backing storage for the fiber pool */
-	Fiber *m_fibers{nullptr};
+	Fiber *m_fibers{ nullptr };
 	/**
 	 * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
 	 * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
 	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
 	 */
-	std::atomic<bool> *m_freeFibers{nullptr};
+	std::atomic<bool> *m_freeFibers{ nullptr };
 	/**
 	 * An array of ReadyFiberBundle which is used by @WaitForCounter()
 	 *
@@ -185,19 +185,19 @@ private:
 	 * simple, we pre-allocate one for each fiber. The struct is small, so this
 	 * preallocation isn't too bad
 	 */
-	ReadyFiberBundle *m_readyFiberBundles{nullptr};
+	ReadyFiberBundle *m_readyFiberBundles{ nullptr };
 
-	Fiber *m_quitFibers{nullptr};
+	Fiber *m_quitFibers{ nullptr };
 
-	std::atomic<bool> m_initialized{false};
-	std::atomic<bool> m_quit{false};
-	std::atomic<unsigned> m_quitCount{0};
+	std::atomic<bool> m_initialized{ false };
+	std::atomic<bool> m_quit{ false };
+	std::atomic<unsigned> m_quitCount{ 0 };
 
-	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{EmptyQueueBehavior::Spin};
+	std::atomic<EmptyQueueBehavior> m_emptyQueueBehavior{ EmptyQueueBehavior::Spin };
 	/**
-	* This lock is used with the CV below to put threads to sleep when there
-	* is no work to do.
-	*/
+	 * This lock is used with the CV below to put threads to sleep when there
+	 * is no work to do.
+	 */
 	std::mutex ThreadSleepLock;
 	std::condition_variable ThreadSleepCV;
 
@@ -209,7 +209,7 @@ private:
 	 * During initialization of the TaskScheduler, we create one ThreadLocalStorage instance per thread. Threads index
 	 * into their storage using m_tls[GetCurrentThreadIndex()]
 	 */
-	ThreadLocalStorage *m_tls{nullptr};
+	ThreadLocalStorage *m_tls{ nullptr };
 
 	/**
 	 * We friend AtomicCounter so we can keep AddReadyFiber() private
@@ -293,10 +293,10 @@ public:
 	FTL_NOINLINE unsigned GetCurrentThreadIndex() const;
 
 	/**
-	* Gets the 0-based index of the current fiber.
-	* 
-	* NOTE: main fiber index is 0
-	*/
+	 * Gets the 0-based index of the current fiber.
+	 *
+	 * NOTE: main fiber index is 0
+	 */
 	unsigned GetCurrentFiberIndex() const;
 
 	/**

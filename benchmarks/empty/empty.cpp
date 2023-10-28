@@ -44,7 +44,7 @@ TEST_CASE("Empty benchmark") {
 
 		auto *tasks = new ftl::Task[kNumTasks];
 		for (unsigned i = 0; i < kNumTasks; ++i) {
-			tasks[i] = {EmptyBenchmarkTask, nullptr};
+			tasks[i] = { EmptyBenchmarkTask, nullptr };
 		}
 
 		meter.measure([&taskScheduler, tasks] {

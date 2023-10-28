@@ -101,9 +101,9 @@ protected:
 		 */
 		std::atomic<bool> InUse;
 		/* The fiber bundle that's waiting */
-		void *FiberBundle{nullptr};
+		void *FiberBundle{ nullptr };
 		/* The value the fiber is waiting for */
-		unsigned TargetValue{0};
+		unsigned TargetValue{ 0 };
 		/**
 		 * The index of the thread this fiber is pinned to
 		 * If the fiber *isn't* pinned, this will equal std::numeric_limits<unsigned>::max()

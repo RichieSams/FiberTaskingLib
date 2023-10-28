@@ -427,7 +427,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter 
 		counter->Add(1);
 	}
 
-	const TaskBundle bundle = {task, counter};
+	const TaskBundle bundle = { task, counter };
 	if (priority == TaskPriority::High) {
 		m_tls[GetCurrentThreadIndex()].HiPriTaskQueue.Push(bundle);
 	} else if (priority == TaskPriority::Normal) {
@@ -457,7 +457,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 	}
 	for (unsigned i = 0; i < numTasks; ++i) {
 		FTL_ASSERT("Task given to TaskScheduler:AddTasks has a nullptr Function", tasks[i].Function != nullptr);
-		const TaskBundle bundle = {tasks[i], counter};
+		const TaskBundle bundle = { tasks[i], counter };
 		queue->Push(bundle);
 	}
 

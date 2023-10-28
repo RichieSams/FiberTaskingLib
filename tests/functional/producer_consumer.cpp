@@ -41,7 +41,7 @@ void Consumer(ftl::TaskScheduler * /*scheduler*/, void *arg) {
 void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 	auto *tasks = new ftl::Task[kNumConsumerTasks];
 	for (unsigned i = 0; i < kNumConsumerTasks; ++i) {
-		tasks[i] = {Consumer, arg};
+		tasks[i] = { Consumer, arg };
 	}
 
 	ftl::TaskCounter counter(taskScheduler);
@@ -63,7 +63,7 @@ TEST_CASE("Producer Consumer", "[functional]") {
 
 	std::array<ftl::Task, kNumProducerTasks> tasks{};
 	for (auto &&task : tasks) {
-		task = {Producer, &globalCounter};
+		task = { Producer, &globalCounter };
 	}
 
 	ftl::TaskCounter counter(&taskScheduler);

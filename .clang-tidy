@@ -132,7 +132,7 @@ CheckOptions:
   - key:             modernize-make-shared.IgnoreMacros
     value:           '1'
   - key:             modernize-make-shared.IncludeStyle
-    value:           '0'
+    value:           llvm
   - key:             modernize-make-shared.MakeSmartPtrFunction
     value:           'std::make_shared'
   - key:             modernize-make-shared.MakeSmartPtrFunctionHeader
@@ -140,7 +140,7 @@ CheckOptions:
   - key:             modernize-make-unique.IgnoreMacros
     value:           '1'
   - key:             modernize-make-unique.IncludeStyle
-    value:           '0'
+    value:           llvm
   - key:             modernize-make-unique.MakeSmartPtrFunction
     value:           'std::make_unique'
   - key:             modernize-make-unique.MakeSmartPtrFunctionHeader

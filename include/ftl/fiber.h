@@ -89,11 +89,11 @@ public:
 	~Fiber();
 
 private:
-	void *m_stack{nullptr};
-	size_t m_systemPageSize{0};
-	size_t m_stackSize{0};
-	boost_context::fcontext_t m_context{nullptr};
-	void *m_arg{nullptr};
+	void *m_stack{ nullptr };
+	size_t m_systemPageSize{ 0 };
+	size_t m_stackSize{ 0 };
+	boost_context::fcontext_t m_context{ nullptr };
+	void *m_arg{ nullptr };
 	FTL_VALGRIND_ID
 
 public:
