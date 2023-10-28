@@ -30,7 +30,7 @@
 #include <stdint.h>
 
 struct MultipleFiberArg {
-	uint64_t Counter{0};
+	uint64_t Counter{ 0 };
 	ftl::Fiber MainFiber;
 	ftl::Fiber FirstFiber;
 	ftl::Fiber SecondFiber;

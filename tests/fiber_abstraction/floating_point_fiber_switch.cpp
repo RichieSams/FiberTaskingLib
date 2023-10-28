@@ -29,7 +29,7 @@
 #include <atomic>
 
 struct MultipleFiberArg {
-	double Counter{0};
+	double Counter{ 0 };
 	ftl::Fiber MainFiber;
 	ftl::Fiber FirstFiber;
 	ftl::Fiber SecondFiber;

@@ -64,7 +64,7 @@ public:
 
 private:
 	ThreadLocalHandle(ThreadLocal<T> &parent, T &v)
-	        : m_parent{parent}, m_value{v} {
+	        : m_parent{ parent }, m_value{ v } {
 	}
 
 	ThreadLocal<T> &m_parent;
@@ -99,11 +99,12 @@ public:
 
 #ifdef _MSC_VER
 #	pragma warning(push)
-#	pragma warning( \
-	    disable : 4316) // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
-#endif                  // _MSC_VER
+#	pragma warning(   \
+	    disable : 4316 \
+	)  // I know this won't be allocated to the right alignment, this is okay as we're using alignment for padding.
+#endif // _MSC_VER
 	explicit ThreadLocal(TaskScheduler *ts)
-	        : m_scheduler{ts}, m_initializer{}, m_data{new ValuePadder<T>[ts->GetThreadCount()]} {
+	        : m_scheduler(ts), m_initializer(), m_data(new ValuePadder<T>[ts->GetThreadCount()]) {
 	}
 #ifdef _MSC_VER
 #	pragma warning(pop)
@@ -118,7 +119,8 @@ public:
 	 */
 	template <class F>
 	ThreadLocal(TaskScheduler *ts, F &&factory)
-	        : m_scheduler{ts}, m_initializer{std::forward<F>(factory)},
+	        : m_scheduler(ts),
+	          m_initializer(std::forward<F>(factory)),
 	          m_data(static_cast<ValuePadder<T> *>(operator new[](sizeof(ValuePadder<T>) * ts->GetThreadCount()))) {
 		for (unsigned i = 0; i < ts->GetThreadCount(); ++i) {
 			// That's not how placement new works...
@@ -145,7 +147,7 @@ public:
 	 * @return    Handle to the thread's version of T.
 	 */
 	ThreadLocalHandle<T> GetHandle() {
-		return ThreadLocalHandle<T>{*this, **this};
+		return ThreadLocalHandle<T>{ *this, **this };
 	}
 
 	T &operator*() {
@@ -235,6 +237,6 @@ void ThreadLocalHandle<T>::ValidHandle(T &value) {
 // C++17 deduction guide
 #ifdef __cpp_deduction_guides
 template <class T>
-ThreadLocal(TaskScheduler *, T)->ThreadLocal<T>;
+ThreadLocal(TaskScheduler *, T) -> ThreadLocal<T>;
 #endif
 } // namespace ftl

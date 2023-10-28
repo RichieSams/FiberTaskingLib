@@ -110,7 +110,7 @@ bool JoinThread(ThreadType thread) {
 }
 
 ThreadType GetCurrentThread() {
-	return {::GetCurrentThread(), ::GetCurrentThreadId()};
+	return { ::GetCurrentThread(), ::GetCurrentThreadId() };
 }
 
 bool SetCurrentThreadAffinity(size_t coreAffinity) {

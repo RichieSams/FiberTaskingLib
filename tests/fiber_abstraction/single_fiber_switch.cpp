@@ -29,7 +29,7 @@
 #include <atomic>
 
 struct SingleFiberArg {
-	std::atomic_long Counter{0};
+	std::atomic_long Counter{ 0 };
 	ftl::Fiber MainFiber;
 	ftl::Fiber OtherFiber;
 };

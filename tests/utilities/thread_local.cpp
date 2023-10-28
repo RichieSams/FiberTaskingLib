@@ -51,7 +51,7 @@ void SideEffect(ftl::TaskScheduler *scheduler, void *arg) {
 	(*(*counter));
 }
 
-static std::atomic<size_t> g_sideEffectCount{0};
+static std::atomic<size_t> g_sideEffectCount{ 0 };
 
 TEST_CASE("Thread Local", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
@@ -60,20 +60,21 @@ TEST_CASE("Thread Local", "[utility]") {
 	// Single Init
 	ftl::ThreadLocal<size_t> simpleCounter(&taskScheduler);
 
-	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{SimpleInit, &simpleCounter});
+	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{ SimpleInit, &simpleCounter });
 
 	ftl::TaskCounter ac(&taskScheduler);
 	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Normal, &ac);
 	taskScheduler.WaitForCounter(&ac);
 
 	auto singleInitVals = simpleCounter.GetAllValues();
-	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{0}));
+	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{ 0 }));
 
 	// Side Effects
 	ftl::ThreadLocal<size_t> sideEffectCounter(
-	    &taskScheduler, []() noexcept { return g_sideEffectCount++; });
+	    &taskScheduler, []() noexcept { return g_sideEffectCount++; }
+	);
 
-	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{SideEffect, &sideEffectCounter});
+	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{ SideEffect, &sideEffectCounter });
 
 	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), ftl::TaskPriority::Normal, &ac);
 	taskScheduler.WaitForCounter(&ac);

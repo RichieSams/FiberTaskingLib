@@ -87,7 +87,7 @@ TEST_CASE("Triangle Number", "[functional]") {
 			subset->End = triangleNum;
 		}
 
-		tasks[i] = {AddNumberSubset, subset};
+		tasks[i] = { AddNumberSubset, subset };
 
 		nextNumber = subset->End + 1;
 	}

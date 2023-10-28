@@ -39,7 +39,7 @@ def main():
         checks = f.readlines()
         checks = [x.strip() for x in checks]
     
-    subprocess.check_call(['clang-tidy-8', '-list-checks', '-checks', f'{",".join(checks)}'])
+    subprocess.check_call(['clang-tidy-15', '-list-checks', '-checks', f'{",".join(checks)}'])
 
     source_files = glob.glob('benchmarks/**/*.cpp', recursive=True)
     source_files += glob.glob('examples/**/*.cpp', recursive=True)
@@ -53,7 +53,7 @@ def main():
     print('\n', flush=True)
 
     args = [
-        'clang-tidy-8',
+        'clang-tidy-15',
         '-quiet',
         '-p', 'build_lint',
         '-header-filter', 'include/ftl/.*',
