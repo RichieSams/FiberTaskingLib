@@ -24,6 +24,14 @@
 
 include(AddCompilerFlags)
 
+# Set the c++ std
+if (FTL_CPP_17)
+	target_compile_features(ftl PUBLIC cxx_std_17)
+	add_definitions(-DFTL_CPP_17=1)
+else()
+	target_compile_features(ftl PUBLIC cxx_std_11)
+endif()
+
 # Create an executable for each example
 add_executable(ftl-example-triangle-num triangle_num.cpp)
 target_link_libraries(ftl-example-triangle-num ftl)
