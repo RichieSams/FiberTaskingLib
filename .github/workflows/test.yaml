@@ -1,0 +1,89 @@
+name: Test
+
+on:
+  push:
+
+jobs:
+  linux:
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        config:
+          - name: linux_gcc_9
+            compiler: gcc
+            compiler_version: 9
+          - name: linux_gcc_12
+            compiler: gcc
+            compiler_version: 12
+          - name: linux_clang_12
+            compiler: clang
+            compiler_version: 12
+          - name: linux_clang_15
+            compiler: clang
+            compiler_version: 15
+    container:
+      image: quay.io/richiesams/docker_${{ matrix.config.compiler }}:${{ matrix.config.compiler_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Debug
+        run: make CMAKE_PRESET=Unix_x64_Debug generate build
+      - name: Build Release
+        run: make CMAKE_PRESET=Unix_x64_Release generate build
+      - name: Test
+        run: make test
+  darwin:
+    name: ${{ matrix.config.name }}
+    runs-on: macOS-13
+    strategy:
+      matrix:
+        config:
+          - name: darwin_gcc_9
+            compiler: gcc
+            compiler_version: 9
+          - name: darwin_gcc_12
+            compiler: gcc
+            compiler_version: 12
+          - name: darwin_clang_12
+            compiler: clang
+            compiler_version: 12
+          - name: darwin_clang_15
+            compiler: clang
+            compiler_version: 15
+    env:
+      COMPILER: ${{ matrix.config.compiler }}
+      VERSION: ${{ matrix.config.compiler_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: bash ci_scripts/darwin_install_compiler.sh
+      - name: Build Debug
+        run: make CMAKE_PRESET=Unix_x64_Debug generate build
+      - name: Build Release
+        run: make CMAKE_PRESET=Unix_x64_Release generate build
+      - name: Test
+        run: make test
+  windows:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - name: windows_vs_2019
+            os: windows-2019
+            compiler_version: 2019
+          - name: windows_vs_2022
+            os: windows-2022
+            compiler_version: 2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          vsversion: "${{ matrix.compiler_version }}"
+      - uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Build Debug
+        run: make CMAKE_PRESET=Win_x64_Debug generate build
+      - name: Build Release
+        run: make CMAKE_PRESET=Win_x64_Release generate build
+      - name: Test
+        run: make test
