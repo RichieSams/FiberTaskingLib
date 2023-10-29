@@ -6,8 +6,6 @@
 cmake_minimum_required(VERSION 3.2)
 project(boost_context ASM)
 
-include(SetSourceGroup)
-
 
 option(FTL_FIBER_CANARY_BYTES "Enable canary bytes in fiber switching logic, to help debug errors" OFF)
 
@@ -94,11 +92,11 @@ message(STATUS "-- Target processor: ${CONTEXT_PLATFORM}")
 message(STATUS "-- Target asm      : ${CONTEXT_CANARY}${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}")
 
 
-SetSourceGroup(NAME Root
-	PREFIX BOOST_CONTEXT
-	SOURCE_FILES asm/make_${CONTEXT_CANARY}${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
-	             asm/jump_${CONTEXT_CANARY}${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
-	             include/boost_context/fcontext.h)
+set(BOOST_CONTEXT_SRC
+	asm/make_${CONTEXT_CANARY}${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
+	asm/jump_${CONTEXT_CANARY}${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
+	include/boost_context/fcontext.h
+)
 
 if (CONTEXT_ASM MATCHES "masm.asm" AND CONTEXT_PLATFORM MATCHES "i386")
 	set_source_files_properties(asm/make_${CONTEXT_PLATFORM}_${CONTEXT_OS}_${CONTEXT_ABI}_${CONTEXT_ASM}
@@ -107,5 +105,5 @@ if (CONTEXT_ASM MATCHES "masm.asm" AND CONTEXT_PLATFORM MATCHES "i386")
 	                            COMPILE_FLAGS "/safeseh")
 endif()
 
-add_library(boost_context STATIC ${BOOST_CONTEXT_ROOT})
+add_library(boost_context STATIC ${BOOST_CONTEXT_SRC})
 target_include_directories(boost_context INTERFACE include)

@@ -22,7 +22,6 @@
  # limitations under the License.
  ##
 
-include(SetSourceGroup)
 include(AddCompilerFlags)
 
 
@@ -62,44 +61,32 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
 	set(FTL_ARCH "arm64")
 endif()
 
-SetSourceGroup(NAME Core
-	PREFIX FTL
-	SOURCE_FILES 
-				 ../include/ftl/task.h
-	             ../include/ftl/base_counter.h
-	             base_counter.cpp
-	             ../include/ftl/atomic_counter.h
-	             ../include/ftl/task_counter.h
-	             ../include/ftl/task_scheduler.h
-	             task_scheduler.cpp
+set(FTL_SRC
+	../include/ftl/alloc.h
+	../include/ftl/assert.h
+	../include/ftl/atomic_counter.h
+	../include/ftl/base_counter.h
+	../include/ftl/callbacks.h
+	../include/ftl/config.h
+	../include/ftl/fiber.h
+	../include/ftl/fibtex.h
+	../include/ftl/ftl_valgrind.h
+	../include/ftl/ftl_valgrind.h
+	../include/ftl/parallel_for.h
+	../include/ftl/task_counter.h
+	../include/ftl/task_scheduler.h
+	../include/ftl/task.h
+	../include/ftl/thread_abstraction.h
+	../include/ftl/thread_local.h
+	../include/ftl/wait_free_queue.h
+	alloc.cpp
+	base_counter.cpp
+	fiber.cpp
+	task_scheduler.cpp
+	thread_abstraction.cpp
 )
 
-SetSourceGroup(NAME Util
-	PREFIX FTL
-	SOURCE_FILES ../include/ftl/alloc.h
-				 alloc.cpp
-				 ../include/ftl/assert.h
-	             ../include/ftl/callbacks.h
-	             ../include/ftl/config.h
-	             ../include/ftl/fiber.h
-	             fiber.cpp
-	             ../include/ftl/fibtex.h
-	             ../include/ftl/ftl_valgrind.h
-	             ../include/ftl/parallel_for.h
-	             ../include/ftl/thread_abstraction.h
-	             thread_abstraction.cpp
-	             ../include/ftl/thread_local.h
-	             ../include/ftl/wait_free_queue.h
-				 ../include/ftl/ftl_valgrind.h
-)
-
-# Link all the sources into one
-set(FIBER_TASKING_LIB_SRC
-	${FTL_CORE}
-	${FTL_UTIL}
-)
-
-add_library(ftl STATIC ${FIBER_TASKING_LIB_SRC})
+add_library(ftl STATIC ${FTL_SRC})
 target_compile_options(ftl PUBLIC -DNUM_WAITING_FIBER_SLOTS=${FTL_NUM_WAITING_FIBER_SLOTS})
 target_include_directories(ftl PUBLIC ../include)
 target_link_libraries(ftl boost_context ${CMAKE_THREAD_LIBS_INIT})
