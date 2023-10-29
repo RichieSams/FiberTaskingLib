@@ -65,9 +65,9 @@
       }
     },
     {
-      "name": "Linux_x64_Debug",
-      "displayName": "Linux x64 - Debug",
-      "description": "Linux, Makefile generator, x64 architecture, Debug build",
+      "name": "Unix_x64_Debug",
+      "displayName": "Unix x64 - Debug",
+      "description": "Unix, Makefile generator, x64 architecture, Debug build",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/Debug",
       "architecture": {
@@ -86,9 +86,9 @@
       "vendor": {}
     },
     {
-      "name": "Linux_x64_Release",
-      "displayName": "Linux - Release",
-      "description": "Linux, Makefile generator, x64 architecture, Release build",
+      "name": "Unix_x64_Release",
+      "displayName": "Unix - Release",
+      "description": "Unix, Makefile generator, x64 architecture, Release build",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/RelWithDebInfo",
       "architecture": {
@@ -105,6 +105,28 @@
       },
       "environment": {},
       "vendor": {}
+    },
+    {
+      "name": "Valgrind",
+      "displayName": "Valgrind",
+      "description": "Valgrind",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/Valgrind",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "FTL_DISABLE_ITERATOR_DEBUG": true,
+        "FTL_FIBER_CANARY_BYTES": false,
+        "FTL_FIBER_STACK_GUARD_PAGES": true,
+        "FTL_WERROR": true,
+        "FTL_CPP_17": true,
+        "FTL_VALGRIND": true
+      },
+      "environment": {},
+      "vendor": {}
     }
   ],
   "buildPresets": [
@@ -117,12 +139,12 @@
       "configurePreset": "Win_x64_Release"
     },
     {
-      "name": "Linux_x64_Debug",
-      "configurePreset": "Linux_x64_Debug"
+      "name": "Unix_x64_Debug",
+      "configurePreset": "Unix_x64_Debug"
     },
     {
-      "name": "Linux_x64_Release",
-      "configurePreset": "Linux_x64_Release"
+      "name": "Unix_x64_Release",
+      "configurePreset": "Unix_x64_Release"
     }
   ]
 }
