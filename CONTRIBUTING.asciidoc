@@ -10,18 +10,17 @@ The project has a code style. See the https://github.com/RichieSams/FiberTasking
 
 ## Git Commit Formatting
 
-Commits follow the following general style shown below. Chris Beams wrote an http://chris.beams.io/posts/git-commit/[excellent blog post] detailing this style. I highly suggest reading it.
+Commit messages must follow the https://www.conventionalcommits.org/en/v1.0.0/#summary[conventional commits] format. This allows us to automatically generate semantic-versioning and changelogs. In addition, the commit message information should roughly follow the style below. Chris Beams wrote an http://chris.beams.io/posts/git-commit/[excellent blog post] detailing this style. I highly suggest reading it.
 
 [source,txt]
 ----
-Summarize changes in around 50 characters or less
+<type>[optional scope]: Summarize changes in around 50 characters or less
 
-More detailed explanatory text, if necessary. Wrap it to about 72
-characters or so. In some contexts, the first line is treated as the
-subject of the commit and the rest of the text as the body. The
-blank line separating the summary from the body is critical (unless
-you omit the body entirely); various tools like `log`, `shortlog`
-and `rebase` can get confused if you run the two together.
+More detailed explanatory text, if necessary. In some contexts, 
+the first line is treated as the subject of the commit and the rest of
+the text as the body. The blank line separating the summary from the body
+is critical (unless you omit the body entirely); various tools like `log`,
+`shortlog` and `rebase` can get confused if you run the two together.
 
 Explain the problem that this commit is solving. Focus on why you
 are making this change as opposed to how (the code explains that).
@@ -30,9 +29,9 @@ change? Here's the place to explain them.
 
 Further paragraphs come after blank lines.
 
- - Bullet points are okay, too
+ * Bullet points are okay, too
 
- - Typically a hyphen or asterisk is used for the bullet, preceded
+ * Typically a hyphen or asterisk is used for the bullet, preceded
    by a single space, with blank lines in between, but conventions
    vary here
 
@@ -41,6 +40,8 @@ like this:
 
 Resolves: #123
 See also: #456, #789
+
+[optional footer]
 ----
 
 ## Code of Conduct
