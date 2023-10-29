@@ -4,7 +4,7 @@
 
 When writing code for FiberTaskingLib, I always try to follow these conventions. Sticking to a common set of formatting / indention rules makes it easier to read through the source base. Therefore, if you want to submit patches, please try to adhere to these rules.
 
-That said, I don't always follow these rules slavishly; in certain cases it is OK (and in fact might be favorable) to stray from them. Applying common sense, as usual, is a good idea. 
+I highly recommend just using clang-format to auto-format all your changes. Then you can skip most of the details of this page. I personally have clang-format set to run on save in my IDE. But there is also a Makefile command `format` that will run clang format on the entire code-base using docker.
 
 In the following examples, tabs are replaced by spaces for visual consistency on the web. But in actual code, use tabs for indentations. See below for more details.
 
@@ -451,7 +451,7 @@ Classes, structs, functions are documented using the javadoc style
 [source,cc]
 ----
 /**
- * Adds a group of tasks to the internal queue
+ * @brief Adds a group of tasks to the internal queue
  *
  * @param numTasks    The number of tasks
  * @param tasks       The tasks to queue
@@ -473,25 +473,3 @@ The following goes slightly beyond code formatting: We use certain keywords (tog
 
  * **FIXME:** marks code that contains hacks or bad/temporary workarounds, things that really should be revised at a later point.
  * **TODO:** marks incomplete code, or things that could be done better but are left for the future.
- 
-
-== AStyle Program
-
-http://astyle.sourceforge.net/[ArtisticStyle] is a program that will format code according to a set of rules. While it doesn't support all of the conventions mentioned above, it will get it pretty close. Below are the command line arguments that I use.
-
-[source,sh]
-----
---style=java 
---indent=tab=4 
---align-pointer=name 
---align-reference=name 
---indent-preproc-block 
---indent-preproc-define 
---indent-preproc-cond 
---pad-oper 
---pad-header 
---unpad-paren 
---add-one-line-brackets 
---convert-tabs 
---mode=c
-----

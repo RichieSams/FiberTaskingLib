@@ -66,14 +66,14 @@ $ cmake ../
 +
 [source,sh]
 ----
-$ make
+$ make -j
 ----
 +
 . Run the tests
 +
 [source,sh]
 ----
-$ make test
+$ ./tests/ftl-test
 ----
 
 {blank}

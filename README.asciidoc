@@ -5,7 +5,7 @@ This is a library for enabling task-based multi-threading. It allows execution o
 
 Under the covers, the task graph is executed using fibers, which in turn, are run on a pool of worker threads (one thread per CPU core). This allows the scheduler to wait on dependencies without task chaining or context switches. 
 
-This library was created as a proof of concept of the ideas presented by
+This library was first created as a proof of concept of the ideas presented by
 Christian Gyrling in his 2015 GDC Talk 'Parallelizing the Naughty Dog Engine Using Fibers'
 
 http://gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine[Free GDC Vault Recorded Presentation] +
@@ -88,7 +88,7 @@ int main() {
 			subset->end = triangleNum;
 		}
 
-		tasks[i] = {AddNumberSubset, subset};
+		tasks[i] = { AddNumberSubset, subset };
 
 		nextNumber = subset->end + 1;
 	}
@@ -111,6 +111,7 @@ int main() {
 
 	// Test
 	assert(triangleNum * (triangleNum + 1ULL) / 2ULL == result);
+	(void)result;
 
 	// Cleanup
 	delete[] subsets;
@@ -124,21 +125,8 @@ int main() {
 
 {blank}
 
-## Automatic Test Matrix
-
-
-|====
-2+^.^| Windows                                                                                                                                                                                                                                                                                           2+^.^| Linux                                                                                                                                                                                                                                                                              2+^.^| OSX
-<.^| Visual Studio 2019 <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=windows_vs_2019[Windows VC++ 2019 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"] <.^| GCC 9    | image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=linux_gcc_9[Linux GCC 9 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]       <.^| GCC 9     <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=osx_gcc_9[OSX GCC 9 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]
-<.^| Visual Studio 2022 <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=windows_vs_2022[Windows VC++ 2022 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"] <.^| GCC 12   | image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=linux_gcc_12[Linux GCC 12 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]     <.^| GCC 12    <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=osx_gcc_12[OSX GCC 12 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]
-<.^|                    <.^|                                                                                                                                                                                                                                                                               <.^| Clang 12 | image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=linux_clang_12[Linux Clang 12 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"] <.^| Clang 12  <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=osx_clang_12[OSX Clang 12 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]
-<.^|                    <.^|                                                                                                                                                                                                                                                                               <.^| Clang 15 | image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=linux_clang_15[Linux Clang 15 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"] <.^| Clang 15  <.^| image:https://dev.azure.com/adastley/adastley/_apis/build/status/RichieSams.FiberTaskingLib?api-version=6.0-preview.1&label=build&branchName=master&job=osx_clang_15[OSX Clang 15 build status, link="https://dev.azure.com/adastley/adastley/_build?definitionId=1"]
-|====
-
-{blank}
-
 ## How it works
-Honestly, the best explanation is to watch Christian Gyrling's talk. It's free to watch (as of the time of writing) from the GDC vault. His explaination of fibers as well as how they used the fiber system in their game engine is excellent. However, I will try to give a TL;DR; version here.
+For a great introduction to fiber and the general idea, I would suggest watching Christian Gyrling's http://gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine[talk]. It's free to watch (as of the time of writing) from the GDC vault. That said, I will give an overview of how this library works below:
 
 ### What are fibers
 A https://msdn.microsoft.com/en-us/library/windows/desktop/ms682661%28v=vs.85%29.aspx[fiber] consists of a stack and a small storage space for registers. It's a very lightweight execution context that runs inside a thread. You can think of it as a shell of an actual thread. 
@@ -255,13 +243,11 @@ It's implemented behind the scenes with a TaskCounter, so if a Fibtex is locked,
 ## Supported Platforms
 
 |====
-| Arch   | Windows       | Linux         | OS X          | iOS       | Android
-| arm    | Needs testing | Tested OK     |               | In theory | In theory
-| arm_64 | Needs testing | Tested OK     |               | In theory | In theory
-| x86    | Tested OK     | Needs testing | Needs testing |           | In theory
-| x86_64 | Tested OK     | Tested OK     | Tested OK     |           | In theory
-| ppc    |               |               | In theory     |           | 
-| ppc_64 |               |               | In theory     |           | 
+| Arch   | Windows         | Linux           | OS X            | iOS       | Android
+| arm    | Needs testing   | Fully supported | In theory       | In theory | In theory
+| arm_64 | Needs testing   | Fully supported | Needs testing   | In theory | In theory
+| x86    | Fully supported | Needs testing   | Needs testing   |           | 
+| x86_64 | Fully supported | Fully supported | Fully supported |           | 
 |====
 
 {blank}
