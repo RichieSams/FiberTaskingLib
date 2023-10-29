@@ -22,22 +22,10 @@
  # limitations under the License.
  ##
  
-include(SetSourceGroup)
-
-SetSourceGroup(NAME Empty
-	PREFIX FTL_BENCHMARK
-	SOURCE_FILES empty/empty.cpp
-)
-
-SetSourceGroup(NAME "Producer Consumer"
-	PREFIX FTL_BENCHMARK
-	SOURCE_FILES producer_consumer/producer_consumer.cpp
-)
-
 
 set(FTL_BENCHMARK_SRC
-	${FTL_BENCHMARK_EMPTY}
-	${FTL_BENCHMARK_PRODUCER_CONSUMER}
+	empty/empty.cpp
+	producer_consumer/producer_consumer.cpp
 )
 
 # Set the c++ std

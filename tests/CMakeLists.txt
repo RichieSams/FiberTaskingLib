@@ -22,40 +22,21 @@
  # limitations under the License.
  ##
 
-include(SetSourceGroup)
 include(AddCompilerFlags)
 
-
-SetSourceGroup(NAME "Fiber Abstraction"
-	PREFIX FTL_TEST
-	SOURCE_FILES fiber_abstraction/single_fiber_switch.cpp
-	             fiber_abstraction/nested_fiber_switch.cpp
-	             fiber_abstraction/floating_point_fiber_switch.cpp
+set(FTL_TEST_SRC
+	fiber_abstraction/floating_point_fiber_switch.cpp
+	fiber_abstraction/nested_fiber_switch.cpp
+	fiber_abstraction/single_fiber_switch.cpp
+	utilities/event_callbacks.cpp
+	utilities/parallel_for.cpp
+	utilities/thread_local.cpp
+    functional/calc_triangle_num.cpp
+    functional/producer_consumer.cpp
+    utilities/fibtex.cpp
 )
 
-SetSourceGroup(NAME "Functional"
-	PREFIX FTL_TEST 
-    SOURCE_FILES functional/calc_triangle_num.cpp
-                 functional/producer_consumer.cpp
-)
-
-SetSourceGroup(NAME "Utilities"
-	PREFIX FTL_TEST
-	SOURCE_FILES utilities/event_callbacks.cpp
-                 utilities/fibtex.cpp
-	             utilities/parallel_for.cpp
-	             utilities/thread_local.cpp
-)
-
-# Link all the sources into one
-set(FIBER_TASKING_LIB_TESTS_SRC
-	${FTL_TEST_FIBER_ABSTRACTION}
-	${FTL_TEST_FUNCTIONAL}
-	${FTL_TEST_UTILITIES}
-)
-
-
-add_executable(ftl-test ${FIBER_TASKING_LIB_TESTS_SRC})
+add_executable(ftl-test ${FTL_TEST_SRC})
 target_link_libraries(ftl-test Catch2::Catch2WithMain ftl)
 
 # Set the warnings
