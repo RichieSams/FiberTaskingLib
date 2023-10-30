@@ -1,0 +1,10 @@
+name: Commit Testing
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml

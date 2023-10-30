@@ -1,0 +1,10 @@
+name: Continuous Testing
+
+on:
+  # Run once a week, so we CI backend updates don't sneak up on us
+  schedule:
+    - cron: "0 13 * * SUN"
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
