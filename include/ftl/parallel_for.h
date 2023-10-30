@@ -39,12 +39,6 @@ using ParallelForTaskFunction = void(TaskScheduler *taskScheduler, T *value);
 
 template <typename ItrType, typename Callable>
 void ParallelFor(TaskScheduler *taskScheduler, ItrType begin, ItrType end, size_t batchSize, Callable &&func, TaskPriority priority) {
-#if defined(FTL_CPP_17)
-	static_assert(std::is_invocable<Callable, TaskScheduler *, decltype(&(*begin))>::value);
-	using ItrCategory = std::iterator_traits<ItrType>::iterator_category;
-	static_assert(std::is_same_v<ItrCategory, std::forward_iterator_tag> || std::is_same_v<ItrCategory, std::bidirectional_iterator_tag> || std::is_same_v<ItrCategory, std::random_access_iterator_tag>);
-#endif
-
 	struct ParallelForArg {
 		ItrType Start = ItrType();
 		size_t Count = 0;
