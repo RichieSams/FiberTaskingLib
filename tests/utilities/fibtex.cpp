@@ -23,14 +23,14 @@
  */
 
 #include "ftl/fibtex.h"
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/catch_test_macros.hpp"
 
 struct MutexData {
 	explicit MutexData(ftl::TaskScheduler *scheduler)
-	        : Lock(scheduler, 6) {
+	        : Lock(scheduler) {
 	}
 
 	ftl::Fibtex Lock;
@@ -45,22 +45,6 @@ void LockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
 	data->Queue.push_back(data->Counter++);
 }
 
-void SpinLockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
-	auto *data = reinterpret_cast<MutexData *>(arg);
-
-	ftl::LockWrapper wrapper(data->Lock, ftl::FibtexLockBehavior::Spin);
-	std::lock_guard<ftl::LockWrapper> lg(wrapper);
-	data->Queue.push_back(data->Counter++);
-}
-
-void InfiniteSpinLockGuardTest(ftl::TaskScheduler * /*scheduler*/, void *arg) {
-	auto *data = reinterpret_cast<MutexData *>(arg);
-
-	ftl::LockWrapper wrapper(data->Lock, ftl::FibtexLockBehavior::SpinInfinite);
-	std::lock_guard<ftl::LockWrapper> lg(wrapper);
-	data->Queue.push_back(data->Counter++);
-}
-
 TEST_CASE("Fibtex Locking Tests", "[utility]") {
 	ftl::TaskScheduler taskScheduler;
 	ftl::TaskSchedulerInitOptions options;
@@ -69,22 +53,18 @@ TEST_CASE("Fibtex Locking Tests", "[utility]") {
 
 	MutexData md(&taskScheduler);
 
-	ftl::TaskCounter c(&taskScheduler);
+	ftl::WaitGroup wg(&taskScheduler);
 
 	constexpr size_t iterations = 20000;
 	for (size_t i = 0; i < iterations; ++i) {
-		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{ SpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{ SpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{ InfiniteSpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
-		taskScheduler.AddTask(ftl::Task{ InfiniteSpinLockGuardTest, &md }, ftl::TaskPriority::Normal, &c);
+		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &wg);
+		taskScheduler.AddTask(ftl::Task{ LockGuardTest, &md }, ftl::TaskPriority::Normal, &wg);
 
-		taskScheduler.WaitForCounter(&c);
+		wg.Wait();
 	}
 
-	REQUIRE(md.Counter == 6 * iterations);
-	REQUIRE(md.Queue.size() == 6 * iterations);
+	REQUIRE(md.Counter == 2 * iterations);
+	REQUIRE(md.Queue.size() == 2 * iterations);
 	for (unsigned i = 0; i < md.Counter; ++i) {
 		REQUIRE(md.Queue[i] == i);
 	}

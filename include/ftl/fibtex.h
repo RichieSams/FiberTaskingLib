@@ -24,10 +24,11 @@
 
 #pragma once
 
-#include "ftl/atomic_counter.h"
-#include "ftl/task_scheduler.h"
+#include <atomic>
 
 namespace ftl {
+
+class TaskScheduler;
 
 /**
  * A fiber aware mutex. Does not block in the traditional way. Methods do not follow the lowerCamelCase convention
@@ -39,13 +40,8 @@ public:
 	 * All Fibtex's have to be aware of the task scheduler in order to yield.
 	 *
 	 * @param taskScheduler    The TaskScheduler that will be using this mutex.
-	 * @param fiberSlots       How many fibers can simultaneously wait on the mutex
-	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
 	 */
-	explicit Fibtex(TaskScheduler *taskScheduler, unsigned fiberSlots = NUM_WAITING_FIBER_SLOTS)
-	        : m_ableToSpin(taskScheduler->GetThreadCount() > 1), m_taskScheduler(taskScheduler),
-	          m_atomicCounter(taskScheduler, 0, fiberSlots) {
-	}
+	explicit Fibtex(TaskScheduler *taskScheduler);
 
 	Fibtex(const Fibtex &) = delete;
 	Fibtex(Fibtex &&that) = delete;
@@ -55,97 +51,90 @@ public:
 	~Fibtex() = default;
 
 private:
-	bool m_ableToSpin;
+	/**
+	 * If the task scheduler only has 1 thread, there's no point of doing
+	 * any spin waiting
+	 */
+	const bool m_ableToSpin;
 	TaskScheduler *m_taskScheduler;
-	AtomicFlag m_atomicCounter;
+
+	/* We store the general lock, the queue lock, and the queue all in a single uintptr_t */
+	std::atomic<uintptr_t> m_word;
+
+	static constexpr uintptr_t kIsLockedBit = 1;
+	static constexpr uintptr_t kIsQueueLockedBit = 2;
+	static constexpr uintptr_t kQueueHeadMask = 3;
 
 public:
 	/**
-	 * Lock mutex in traditional way, yielding immediately.
-	 */
-	// ReSharper disable once CppInconsistentNaming
-	void lock(bool const pinToThread = false) {
-		while (true) {
-			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
-				return;
-			}
-
-			m_taskScheduler->WaitForCounter(&m_atomicCounter, pinToThread);
-		}
-	}
-
-	/**
-	 * Lock mutex using a finite spinlock. Does not spin if there is only one backing thread.
+	 * @brief Lock the Fibtex
 	 *
-	 * @param pinToThread    If the fiber should resume on the same thread as it started on pre-lock.
-	 * @param iterations     Amount of iterations to spin before yielding.
+	 * We use lower-case naming so users can use std::lock_guard and friends
+	 *
+	 * @param pinToCurrentThread    If true, this fiber won't be resumed on another thread (if locking puts it to sleep)
 	 */
 	// ReSharper disable once CppInconsistentNaming
-	void lock_spin(bool const pinToThread = false, unsigned const iterations = 1000) {
-		// Don't spin if there is only one thread and spinning is pointless
-		if (!m_ableToSpin) {
-			lock(pinToThread);
+	void lock(bool pinToCurrentThread = false) {
+		// Fast path
+		// No one has the lock and there are no waiters
+		uintptr_t expected = 0;
+		if (std::atomic_compare_exchange_weak_explicit(&m_word, &expected, kIsLockedBit, std::memory_order_acquire, std::memory_order_relaxed)) {
+			// Lock acquired
 			return;
 		}
 
-		// Spin for a bit
-		for (unsigned i = 0; i < iterations; ++i) {
-			// Spin
-			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
-				return;
-			}
-			FTL_PAUSE();
-		}
-
-		// Spinning didn't grab the lock, we're in for the long haul. Yield.
-		lock(pinToThread);
+		LockSlow(pinToCurrentThread);
 	}
 
 	/**
-	 * Lock mutex using an infinite spinlock. Does not spin if there is only one backing thread.
-	 */
-	// ReSharper disable once CppInconsistentNaming
-	void lock_spin_infinite(bool const pinToThread = false) {
-		// Don't spin if there is only one thread and spinning is pointless
-		if (!m_ableToSpin) {
-			lock(pinToThread);
-			return;
-		}
-
-		while (true) {
-			// Spin
-			if (m_atomicCounter.Set(std::memory_order_acq_rel)) {
-				return;
-			}
-			FTL_PAUSE();
-		}
-	}
-
-	/**
-	 * Attempts to lock the lock a single time.
+	 * @brief Attempt to lock the Fibtex
 	 *
-	 * @return    If lock successful.
+	 * We use lower-case naming so users can use std::lock_guard and friends
+	 *
+	 * @return    True if succesful in locking. False otherwisekk
 	 */
-	// ReSharper disable once CppInconsistentNaming
 	bool try_lock() {
-		return m_atomicCounter.Set(std::memory_order_acq_rel);
+		// No one has the lock and there are no waiters
+		uintptr_t expected = 0;
+		if (std::atomic_compare_exchange_weak_explicit(&m_word, &expected, kIsLockedBit, std::memory_order_acquire, std::memory_order_relaxed)) {
+			// Lock acquired
+			return true;
+		}
+
+		// Try barging the lock
+		uintptr_t currentWordValue = m_word.load();
+
+		if ((currentWordValue & kIsLockedBit) == 0) {
+			if (std::atomic_compare_exchange_weak(&m_word, &currentWordValue, currentWordValue | kIsLockedBit)) {
+				// Success! We acquired the lock.
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
-	 * Unlock the mutex.
+	 * @brief Unlock the Fibtex
+	 *
+	 * We use lower-case naming so users can use std::lock_guard and friends
 	 */
 	// ReSharper disable once CppInconsistentNaming
 	void unlock() {
-		if (!m_atomicCounter.Clear(std::memory_order_acq_rel)) {
-			FTL_ASSERT("Error: Mutex was unlocked by another fiber or was double unlocked.", false);
+		// Fast path
+		// We have the lock and there are no waiters
+		uintptr_t expected = kIsLockedBit;
+		if (std::atomic_compare_exchange_weak_explicit(&m_word, &expected, 0, std::memory_order_release, std::memory_order_relaxed)) {
+			// Lock released
+			return;
 		}
-	}
-};
 
-enum class FibtexLockBehavior {
-	Traditional,
-	Spin,
-	SpinInfinite,
+		UnlockSlow();
+	}
+
+private:
+	void LockSlow(bool pinToCurrentThread);
+	void UnlockSlow();
 };
 
 /**
@@ -154,30 +143,17 @@ enum class FibtexLockBehavior {
 class LockWrapper {
 public:
 	/**
-	 * @param mutex             Fibtex to wrap around.
-	 * @param behavior          How to lock the underlying Fibtex
-	 * @param pinToThread       If the fiber should resume on the same thread as it started on pre-lock.
-	 * @param spinIterations    If behavior == Spin, this gives the amount of iterations to spin before yielding. Ignored otherwise.
+	 * @param mutex                 Fibtex to wrap around.
+	 * @param pinToCurrentThread    If true, this fiber won't be resumed on another thread (if locking puts it to sleep)
 	 */
-	LockWrapper(Fibtex &mutex, FibtexLockBehavior behavior, bool pinToThread = false, unsigned spinIterations = 1000)
-	        : m_mutex(mutex), m_pinToThread(pinToThread), m_behavior(behavior), m_spinIterations(spinIterations) {
+	explicit LockWrapper(Fibtex &fibtex, bool pinToCurrentThread = false)
+	        : m_fibtex(fibtex), m_pinToThread(pinToCurrentThread) {
 	}
 	/**
 	 * Locks mutex
 	 */
 	void lock() {
-		switch (m_behavior) {
-		case FibtexLockBehavior::Traditional:
-		default:
-			m_mutex.lock(m_pinToThread);
-			break;
-		case FibtexLockBehavior::Spin:
-			m_mutex.lock_spin(m_pinToThread, m_spinIterations);
-			break;
-		case FibtexLockBehavior::SpinInfinite:
-			m_mutex.lock_spin_infinite(m_pinToThread);
-			break;
-		}
+		m_fibtex.lock(m_pinToThread);
 	}
 	/**
 	 * Tries to lock mutex
@@ -185,20 +161,18 @@ public:
 	 * @return    If mutex successfully locked.
 	 */
 	bool try_lock() {
-		return m_mutex.try_lock();
+		return m_fibtex.try_lock();
 	}
 	/**
 	 * Unlocks mutex.
 	 */
 	void unlock() const {
-		m_mutex.unlock();
+		m_fibtex.unlock();
 	}
 
 private:
-	Fibtex &m_mutex;
+	Fibtex &m_fibtex;
 	bool m_pinToThread;
-	FibtexLockBehavior m_behavior;
-	unsigned m_spinIterations;
 };
 
 } // namespace ftl

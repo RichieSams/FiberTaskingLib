@@ -29,6 +29,7 @@
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
 #include "ftl/wait_free_queue.h"
+#include "ftl/wait_group.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -36,11 +37,6 @@
 #include <vector>
 
 namespace ftl {
-
-class BaseCounter;
-class TaskCounter;
-class AtomicFlag;
-class FullAtomicCounter;
 
 enum class EmptyQueueBehavior {
 	// Spin in a loop, actively searching for tasks
@@ -62,6 +58,8 @@ struct TaskSchedulerInitOptions {
 	/* Callbacks to run at various points to allow for e.g. hooking a profiler to fiber states */
 	EventCallbacks Callbacks;
 };
+
+struct WaitingFiberBundle;
 
 /**
  * A class that enables task-based multithreading.
@@ -94,16 +92,7 @@ private:
 	 */
 	struct TaskBundle {
 		Task TaskToExecute;
-		TaskCounter *Counter;
-	};
-
-	struct ReadyFiberBundle {
-		ReadyFiberBundle() = default;
-
-		// The fiber
-		unsigned FiberIndex;
-		// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
-		std::atomic<bool> FiberIsSwitched;
+		WaitGroup *WG;
 	};
 
 	struct alignas(kCacheLineSize) ThreadLocalStorage {
@@ -122,7 +111,7 @@ private:
 		std::atomic<bool> *OldFiberStoredFlag{ nullptr };
 
 		/* The queue of ready waiting Fibers that were pinned to this thread */
-		std::vector<ReadyFiberBundle *> PinnedReadyFibers;
+		std::vector<WaitingFiberBundle *> PinnedReadyFibers;
 
 		/**
 		 * The current fiber implementation requires that fibers created from threads finish on the same thread where
@@ -173,19 +162,6 @@ private:
 	 * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
 	 */
 	std::atomic<bool> *m_freeFibers{ nullptr };
-	/**
-	 * An array of ReadyFiberBundle which is used by @WaitForCounter()
-	 *
-	 * We don't technically need one per fiber. Only one per call to WaitForCounter()
-	 * In the past we would dynamically allocate this struct in WaitForCounter() and
-	 * then free it when we resumed the fiber.
-	 *
-	 * However, we want to avoid allocations during runtime. So we pre-allocate
-	 * them. At max, we can call WaitForCounter() for each fiber. So, to make things
-	 * simple, we pre-allocate one for each fiber. The struct is small, so this
-	 * preallocation isn't too bad
-	 */
-	ReadyFiberBundle *m_readyFiberBundles{ nullptr };
 
 	Fiber *m_quitFibers{ nullptr };
 
@@ -212,10 +188,11 @@ private:
 	ThreadLocalStorage *m_tls{ nullptr };
 
 	/**
-	 * We friend AtomicCounter so we can keep AddReadyFiber() private
+	 * We friend WaitGroup and Fibtex so we can keep InitWaitingFiberBundle() and SwitchToFreeFiber() private
 	 * This makes the public API cleaner
 	 */
-	friend class BaseCounter;
+	friend class WaitGroup;
+	friend class Fibtex;
 
 public:
 	/**
@@ -240,7 +217,7 @@ public:
 	 * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
 	 *                    completes, it will be decremented.
 	 */
-	void AddTask(Task task, TaskPriority priority, TaskCounter *counter = nullptr);
+	void AddTask(Task task, TaskPriority priority, WaitGroup *waitGroup = nullptr);
 	/**
 	 * Adds a group of tasks to the internal queue
 	 *
@@ -252,32 +229,7 @@ public:
 	 * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
 	 *                    numTasks. When each task completes, it will be decremented.
 	 */
-	void AddTasks(unsigned numTasks, Task const *tasks, TaskPriority priority, TaskCounter *counter = nullptr);
-
-	/**
-	 * Yields execution to another task until counter == 0
-	 *
-	 * @param counter             The counter to check
-	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
-	 */
-	void WaitForCounter(TaskCounter *counter, bool pinToCurrentThread = false);
-
-	/**
-	 * Yields execution to another task until counter == 0
-	 *
-	 * @param counter             The counter to check
-	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
-	 */
-	void WaitForCounter(AtomicFlag *counter, bool pinToCurrentThread = false);
-
-	/**
-	 * Yields execution to another task until counter == value
-	 *
-	 * @param counter             The counter to check
-	 * @param value               The value to wait for
-	 * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
-	 */
-	void WaitForCounter(FullAtomicCounter *counter, unsigned value, bool pinToCurrentThread = false);
+	void AddTasks(uint32_t numTasks, Task *tasks, TaskPriority priority, WaitGroup *waitGroup = nullptr);
 
 	/**
 	 * Gets the 0-based index of the current thread
@@ -369,7 +321,20 @@ private:
 	 */
 	void CleanUpOldFiber();
 
-	void WaitForCounterInternal(BaseCounter *counter, unsigned value, bool pinToCurrentThread);
+	/**
+	 * @brief Initializes the values of a WaitingFiberBundle with the current fiber info
+	 *
+	 * @param bundle                The bundle to initialize
+	 * @param pinToCurrentThread    If true, the current fiber won't be resumed on another thread
+	 */
+	void InitWaitingFiberBundle(WaitingFiberBundle *bundle, bool pinToCurrentThread);
+
+	/**
+	 * @brief Get's a free fiber from the pool and switches to it
+	 *
+	 * @param fiberIsSwitched    The boolean to set when the fiber is successfully switched away
+	 */
+	void SwitchToFreeFiber(std::atomic<bool> *fiberIsSwitched);
 
 	/**
 	 * Add a fiber to the "ready list". Fibers in the ready list will be resumed the next time a fiber goes searching
@@ -379,7 +344,7 @@ private:
 	 * @param bundle               The fiber bundle to add
 	 * up"
 	 */
-	void AddReadyFiber(unsigned pinnedThreadIndex, ReadyFiberBundle *bundle);
+	void AddReadyFiber(WaitingFiberBundle *bundle);
 
 	/**
 	 * The threadProc function for all worker threads

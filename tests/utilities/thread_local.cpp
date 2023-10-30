@@ -23,8 +23,8 @@
  */
 
 #include "ftl/thread_local.h"
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/catch_test_macros.hpp"
 
@@ -62,9 +62,9 @@ TEST_CASE("Thread Local", "[utility]") {
 
 	std::vector<ftl::Task> singleInitTask(taskScheduler.GetThreadCount(), ftl::Task{ SimpleInit, &simpleCounter });
 
-	ftl::TaskCounter ac(&taskScheduler);
-	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Normal, &ac);
-	taskScheduler.WaitForCounter(&ac);
+	ftl::WaitGroup wg(&taskScheduler);
+	taskScheduler.AddTasks(static_cast<unsigned>(singleInitTask.size()), singleInitTask.data(), ftl::TaskPriority::Normal, &wg);
+	wg.Wait();
 
 	auto singleInitVals = simpleCounter.GetAllValues();
 	REQUIRE(taskScheduler.GetThreadCount() == std::accumulate(singleInitVals.begin(), singleInitVals.end(), size_t{ 0 }));
@@ -76,8 +76,8 @@ TEST_CASE("Thread Local", "[utility]") {
 
 	std::vector<ftl::Task> sideEffectTask(10000, ftl::Task{ SideEffect, &sideEffectCounter });
 
-	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), ftl::TaskPriority::Normal, &ac);
-	taskScheduler.WaitForCounter(&ac);
+	taskScheduler.AddTasks(static_cast<unsigned>(sideEffectTask.size()), sideEffectTask.data(), ftl::TaskPriority::Normal, &wg);
+	wg.Wait();
 
 	auto sideEffect = sideEffectCounter.GetAllValues();
 

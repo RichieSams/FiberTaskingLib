@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/catch_test_macros.hpp"
 
@@ -151,10 +151,10 @@ TEST_CASE("Fiber Event Callbacks", "[utility]") {
 			runCount->fetch_add(1, std::memory_order_seq_cst);
 		};
 
-		ftl::TaskCounter waitCounter(&taskScheduler);
-		taskScheduler.AddTask(testTask, ftl::TaskPriority::Normal, &waitCounter);
+		ftl::WaitGroup wg(&taskScheduler);
+		taskScheduler.AddTask(testTask, ftl::TaskPriority::Normal, &wg);
 
-		taskScheduler.WaitForCounter(&waitCounter);
+		wg.Wait();
 
 		REQUIRE(taskRunCount.load(std::memory_order_seq_cst) == 1);
 	}

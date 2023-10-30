@@ -6,8 +6,8 @@ So we have to do it manually.
 !! If you update this example, make sure it matches the code in `README.asciidoc` !!
 */
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -74,14 +74,14 @@ int main() {
 	}
 
 	// Schedule the tasks
-	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(numTasks, tasks, ftl::TaskPriority::Normal, &counter);
+	ftl::WaitGroup wg(&taskScheduler);
+	taskScheduler.AddTasks(numTasks, tasks, ftl::TaskPriority::Normal, &wg);
 
 	// FTL creates its own copies of the tasks, so we can safely delete the memory
 	delete[] tasks;
 
 	// Wait for the tasks to complete
-	taskScheduler.WaitForCounter(&counter);
+	wg.Wait();
 
 	// Add the results
 	uint64_t result = 0ULL;

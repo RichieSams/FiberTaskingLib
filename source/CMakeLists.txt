@@ -64,8 +64,6 @@ endif()
 set(FTL_SRC
 	../include/ftl/alloc.h
 	../include/ftl/assert.h
-	../include/ftl/atomic_counter.h
-	../include/ftl/base_counter.h
 	../include/ftl/callbacks.h
 	../include/ftl/config.h
 	../include/ftl/fiber.h
@@ -73,17 +71,18 @@ set(FTL_SRC
 	../include/ftl/ftl_valgrind.h
 	../include/ftl/ftl_valgrind.h
 	../include/ftl/parallel_for.h
-	../include/ftl/task_counter.h
 	../include/ftl/task_scheduler.h
 	../include/ftl/task.h
 	../include/ftl/thread_abstraction.h
 	../include/ftl/thread_local.h
 	../include/ftl/wait_free_queue.h
+	../include/ftl/wait_group.h
 	alloc.cpp
-	base_counter.cpp
 	fiber.cpp
+	fibtex.cpp
 	task_scheduler.cpp
 	thread_abstraction.cpp
+	wait_group.cpp
 )
 
 add_library(ftl STATIC ${FTL_SRC})
