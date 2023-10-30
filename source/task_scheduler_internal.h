@@ -22,40 +22,23 @@
  * limitations under the License.
  */
 
-#include "ftl/task_scheduler.h"
-#include "ftl/wait_group.h"
+#pragma once
 
-#include "catch2/benchmark/catch_benchmark.hpp"
-#include "catch2/catch_test_macros.hpp"
+namespace ftl {
 
-// Constants
-constexpr static unsigned kNumTasks = 65000;
-constexpr static unsigned kNumIterations = 1;
+struct WaitingFiberBundle {
+	// The fiber
+	unsigned FiberIndex;
+	// A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @TaskScheduler::CleanUpOldFiber()
+	std::atomic<bool> FiberIsSwitched;
+	/**
+	 * The index of the thread this fiber is pinned to
+	 * If the fiber *isn't* pinned, this will equal std::numeric_limits<unsigned>::max()
+	 */
+	unsigned PinnedThreadIndex;
 
-void EmptyBenchmarkTask(ftl::TaskScheduler * /*scheduler*/, void * /*arg*/) {
-	// No-Op
-}
+	WaitingFiberBundle *Next;
+	WaitingFiberBundle *QueueTail;
+};
 
-TEST_CASE("Empty benchmark") {
-	BENCHMARK_ADVANCED("Empty")
-	(Catch::Benchmark::Chronometer meter) {
-		ftl::TaskScheduler taskScheduler;
-		taskScheduler.Init();
-
-		auto *tasks = new ftl::Task[kNumTasks];
-		for (unsigned i = 0; i < kNumTasks; ++i) {
-			tasks[i] = { EmptyBenchmarkTask, nullptr };
-		}
-
-		meter.measure([&taskScheduler, tasks] {
-			for (unsigned i = 0; i < kNumIterations; ++i) {
-				ftl::WaitGroup wg(&taskScheduler);
-				taskScheduler.AddTasks(kNumTasks, tasks, ftl::TaskPriority::Normal);
-				wg.Wait();
-			}
-		});
-
-		// Cleanup
-		delete[] tasks;
-	};
-}
+} // End of namespace ftl

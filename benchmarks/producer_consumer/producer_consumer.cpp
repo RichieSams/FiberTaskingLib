@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/benchmark/catch_benchmark.hpp"
 #include "catch2/catch_test_macros.hpp"
@@ -43,11 +43,11 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	ftl::TaskCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Normal, &counter);
+	ftl::WaitGroup wg(taskScheduler);
+	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Normal, &wg);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(&counter);
+	wg.Wait();
 }
 
 TEST_CASE("ProducerConsumer benchmark") {
@@ -65,10 +65,9 @@ TEST_CASE("ProducerConsumer benchmark") {
 
 		meter.measure([&taskScheduler, tasks] {
 			for (unsigned i = 0; i < kNumIterations; ++i) {
-				ftl::TaskCounter counter(&taskScheduler);
-				taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Normal);
-
-				taskScheduler.WaitForCounter(&counter);
+				ftl::WaitGroup wg(&taskScheduler);
+				taskScheduler.AddTasks(kNumProducerTasks, tasks, ftl::TaskPriority::Normal, &wg);
+				wg.Wait();
 			}
 		});
 

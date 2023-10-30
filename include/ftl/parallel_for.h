@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include <type_traits>
 #if defined(FTL_CPP_17)
@@ -51,7 +51,7 @@ void ParallelFor(TaskScheduler *taskScheduler, ItrType begin, ItrType end, size_
 	ParallelForArg *internalArgs = new ParallelForArg[numBatches];
 
 	size_t remaining = dataSize;
-	TaskCounter counter(taskScheduler);
+	WaitGroup wg(taskScheduler);
 	ItrType current = begin;
 	for (size_t i = 0; i < numBatches; ++i) {
 		const size_t count = remaining < batchSize ? remaining : batchSize;
@@ -74,10 +74,10 @@ void ParallelFor(TaskScheduler *taskScheduler, ItrType begin, ItrType end, size_
 				(*argData->Function)(ts, &(*iter));
 			}
 		};
-		taskScheduler->AddTask(wrapperTask, priority, &counter);
+		taskScheduler->AddTask(wrapperTask, priority, &wg);
 	}
 
-	taskScheduler->WaitForCounter(&counter);
+	wg.Wait();
 	delete[] internalArgs;
 }
 

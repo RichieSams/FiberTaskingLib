@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/generators/catch_generators.hpp"
@@ -93,11 +93,11 @@ TEST_CASE("Triangle Number", "[functional]") {
 	}
 
 	// Schedule the tasks and wait for them to complete
-	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Normal, &counter);
+	ftl::WaitGroup wg(&taskScheduler);
+	taskScheduler.AddTasks(static_cast<unsigned>(numTasks), tasks, ftl::TaskPriority::Normal, &wg);
 	delete[] tasks;
 
-	taskScheduler.WaitForCounter(&counter);
+	wg.Wait();
 
 	// Add the results
 	uint64_t result = 0ULL;

@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
+#include "ftl/wait_group.h"
 
 #include "catch2/catch_test_macros.hpp"
 
@@ -44,11 +44,11 @@ void Producer(ftl::TaskScheduler *taskScheduler, void *arg) {
 		tasks[i] = { Consumer, arg };
 	}
 
-	ftl::TaskCounter counter(taskScheduler);
-	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Normal, &counter);
+	ftl::WaitGroup wg(taskScheduler);
+	taskScheduler->AddTasks(kNumConsumerTasks, tasks, ftl::TaskPriority::Normal, &wg);
 	delete[] tasks;
 
-	taskScheduler->WaitForCounter(&counter);
+	wg.Wait();
 }
 
 /**
@@ -66,9 +66,9 @@ TEST_CASE("Producer Consumer", "[functional]") {
 		task = { Producer, &globalCounter };
 	}
 
-	ftl::TaskCounter counter(&taskScheduler);
-	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), ftl::TaskPriority::Normal, &counter);
-	taskScheduler.WaitForCounter(&counter);
+	ftl::WaitGroup wg(&taskScheduler);
+	taskScheduler.AddTasks(kNumProducerTasks, tasks.data(), ftl::TaskPriority::Normal, &wg);
+	wg.Wait();
 
 	// Test to see that all tasks finished
 	REQUIRE(kNumProducerTasks * kNumConsumerTasks == globalCounter.load());

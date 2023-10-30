@@ -24,12 +24,11 @@
 
 #include "ftl/task_scheduler.h"
 
-#include "ftl/atomic_counter.h"
 #include "ftl/callbacks.h"
-#include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
+#include "task_scheduler_internal.h"
 
-#if defined(FTL_WIN32_THREADS)
+#if defined(FTL_OS_WINDOWS)
 #	ifndef WIN32_LEAN_AND_MEAN
 #		define WIN32_LEAN_AND_MEAN
 #	endif
@@ -37,8 +36,6 @@
 #		define NOMINMAX
 #	endif
 #	include <windows.h>
-#elif defined(FTL_POSIX_THREADS)
-#	include <pthread.h>
 #endif
 
 namespace ftl {
@@ -148,8 +145,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			// Check if the found task is a ReadyFiber dummy task
 			if (foundTask && nextTask.TaskToExecute.Function == ReadyFiberDummyTask) {
 				// Get the waiting fiber index
-				ReadyFiberBundle *readyFiberBundle = reinterpret_cast<ReadyFiberBundle *>(nextTask.TaskToExecute.ArgData);
-				waitingFiberIndex = readyFiberBundle->FiberIndex;
+				WaitingFiberBundle *bundle = reinterpret_cast<WaitingFiberBundle *>(nextTask.TaskToExecute.ArgData);
+				waitingFiberIndex = bundle->FiberIndex;
 			}
 		}
 
@@ -178,7 +175,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 			// Get a fresh instance of TLS, since we could be on a new thread now
 			tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
-			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
+			if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed) == EmptyQueueBehavior::Sleep) {
 				tls->FailedQueuePopAttempts = 0;
 			}
 		} else {
@@ -187,7 +184,7 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 				foundTask = taskScheduler->GetNextLoPriTask(&nextTask);
 			}
 
-			EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+			EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed);
 
 			if (foundTask) {
 				if (behavior == EmptyQueueBehavior::Sleep) {
@@ -195,8 +192,8 @@ void TaskScheduler::FiberStartFunc(void *const arg) {
 				}
 
 				nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
-				if (nextTask.Counter != nullptr) {
-					nextTask.Counter->Decrement();
+				if (nextTask.WG != nullptr) {
+					nextTask.WG->Done();
 				}
 			} else {
 				// We failed to find a Task from any of the queues
@@ -303,7 +300,6 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	m_fibers = new Fiber[options.FiberPoolSize];
 	m_freeFibers = new std::atomic<bool>[options.FiberPoolSize];
 	FTL_VALGRIND_HG_DISABLE_CHECKING(m_freeFibers, sizeof(std::atomic<bool>) * m_fiberPoolSize);
-	m_readyFiberBundles = new ReadyFiberBundle[options.FiberPoolSize];
 
 	// Leave the first slot for the bound main thread
 	for (unsigned i = 1; i < options.FiberPoolSize; ++i) {
@@ -413,21 +409,20 @@ TaskScheduler::~TaskScheduler() {
 	// Cleanup
 	delete[] m_tls;
 	delete[] m_threads;
-	delete[] m_readyFiberBundles;
 	delete[] m_freeFibers;
 	delete[] m_fibers;
 
 	delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter *const counter) {
+void TaskScheduler::AddTask(Task task, TaskPriority priority, WaitGroup *waitGroup) {
 	FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
 
-	if (counter != nullptr) {
-		counter->Add(1);
+	if (waitGroup != nullptr) {
+		waitGroup->Add(1);
 	}
 
-	const TaskBundle bundle = { task, counter };
+	const TaskBundle bundle = { task, waitGroup };
 	if (priority == TaskPriority::High) {
 		m_tls[GetCurrentThreadIndex()].HiPriTaskQueue.Push(bundle);
 	} else if (priority == TaskPriority::Normal) {
@@ -441,9 +436,9 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter 
 	}
 }
 
-void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, TaskPriority priority, TaskCounter *const counter) {
-	if (counter != nullptr) {
-		counter->Add(numTasks);
+void TaskScheduler::AddTasks(uint32_t numTasks, Task *tasks, TaskPriority priority, WaitGroup *waitGroup) {
+	if (waitGroup != nullptr) {
+		waitGroup->Add(static_cast<int32_t>(numTasks));
 	}
 
 	WaitFreeQueue<TaskBundle> *queue = nullptr;
@@ -457,7 +452,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const *const tasks, T
 	}
 	for (unsigned i = 0; i < numTasks; ++i) {
 		FTL_ASSERT("Task given to TaskScheduler:AddTasks has a nullptr Function", tasks[i].Function != nullptr);
-		const TaskBundle bundle = { tasks[i], counter };
+		const TaskBundle bundle = { tasks[i], waitGroup };
 		queue->Push(bundle);
 	}
 
@@ -507,9 +502,9 @@ inline bool TaskScheduler::TaskIsReadyToExecute(TaskBundle *bundle) const {
 		return true;
 	}
 
-	// If it's a ready fiber task, the arg is a ReadyFiberBundle
-	ReadyFiberBundle *readyFiberBundle = reinterpret_cast<ReadyFiberBundle *>(bundle->TaskToExecute.ArgData);
-	return readyFiberBundle->FiberIsSwitched.load(std::memory_order_acquire);
+	// If it's a ready fiber task, the arg is a WaitingFiberBundle
+	WaitingFiberBundle *waitingFiberBundle = reinterpret_cast<WaitingFiberBundle *>(bundle->TaskToExecute.ArgData);
+	return waitingFiberBundle->FiberIsSwitched.load(std::memory_order_acquire);
 }
 
 bool TaskScheduler::GetNextHiPriTask(TaskBundle *nextTask, std::vector<TaskBundle> *taskBuffer) {
@@ -571,7 +566,7 @@ cleanup:
 		// If we're using Sleep mode, we need to wake up the other threads
 		// They may have looked for tasks while we had them all in our temp buffer and thus not
 		// found anything and gone to sleep.
-		EmptyQueueBehavior const behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+		EmptyQueueBehavior const behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 		if (behavior == EmptyQueueBehavior::Sleep) {
 			// Wake all the threads
 			ThreadSleepCV.notify_all();
@@ -697,7 +692,9 @@ void TaskScheduler::CleanUpOldFiber() {
 	}
 }
 
-void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBundle *bundle) {
+void TaskScheduler::AddReadyFiber(WaitingFiberBundle *bundle) {
+	unsigned const pinnedThreadIndex = bundle->PinnedThreadIndex;
+
 	if (pinnedThreadIndex == kNoThreadPinning) {
 		ThreadLocalStorage *tls = &m_tls[GetCurrentThreadIndex()];
 
@@ -707,7 +704,7 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
 		task.ArgData = bundle;
 		TaskBundle taskBundle{};
 		taskBundle.TaskToExecute = task;
-		taskBundle.Counter = nullptr;
+		taskBundle.WG = nullptr;
 
 		tls->HiPriTaskQueue.Push(taskBundle);
 
@@ -731,7 +728,7 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
 		//
 		// However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
 		// Therefore, we need to kick all the threads so that the pinned-to thread can take it
-		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+		const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
 		if (behavior == EmptyQueueBehavior::Sleep) {
 			if (GetCurrentThreadIndex() != pinnedThreadIndex) {
 				std::unique_lock<std::mutex> lock(ThreadSleepLock);
@@ -742,27 +739,7 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
 	}
 }
 
-void TaskScheduler::WaitForCounter(TaskCounter *counter, bool pinToCurrentThread) {
-	WaitForCounterInternal(counter, 0, pinToCurrentThread);
-}
-
-void TaskScheduler::WaitForCounter(AtomicFlag *counter, bool pinToCurrentThread) {
-	WaitForCounterInternal(counter, 0, pinToCurrentThread);
-}
-
-void TaskScheduler::WaitForCounter(FullAtomicCounter *counter, unsigned value, bool pinToCurrentThread) {
-	WaitForCounterInternal(counter, value, pinToCurrentThread);
-}
-
-void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value, bool pinToCurrentThread) {
-	// Fast out
-	if (counter->m_value.load(std::memory_order_relaxed) == value) {
-		// wait for threads to drain from counter logic, otherwise we might continue too early
-		while (counter->m_lock.load() > 0) {
-		}
-		return;
-	}
-
+void TaskScheduler::InitWaitingFiberBundle(WaitingFiberBundle *bundle, bool pinToCurrentThread) {
 	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
 	unsigned const currentFiberIndex = tls.CurrentFiberIndex;
 
@@ -773,18 +750,15 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 		pinnedThreadIndex = kNoThreadPinning;
 	}
 
-	// Create the ready fiber bundle and attempt to add it to the waiting list
-	ReadyFiberBundle *readyFiberBundle = &m_readyFiberBundles[currentFiberIndex];
-	readyFiberBundle->FiberIndex = currentFiberIndex;
-	readyFiberBundle->FiberIsSwitched.store(false);
+	bundle->FiberIndex = currentFiberIndex;
+	bundle->FiberIsSwitched.store(false);
+	bundle->PinnedThreadIndex = pinnedThreadIndex;
+	bundle->Next = nullptr;
+}
 
-	bool const alreadyDone = counter->AddFiberToWaitingList(readyFiberBundle, value, pinnedThreadIndex);
-
-	// The counter finished while we were trying to put it in the waiting list
-	// Just trivially return
-	if (alreadyDone) {
-		return;
-	}
+void TaskScheduler::SwitchToFreeFiber(std::atomic<bool> *fiberIsSwitched) {
+	ThreadLocalStorage &tls = m_tls[GetCurrentThreadIndex()];
+	unsigned const currentFiberIndex = tls.CurrentFiberIndex;
 
 	// Get a free fiber
 	unsigned const freeFiberIndex = GetNextFreeFiberIndex();
@@ -793,7 +767,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter *counter, unsigned value,
 	tls.OldFiberIndex = currentFiberIndex;
 	tls.CurrentFiberIndex = freeFiberIndex;
 	tls.OldFiberDestination = FiberDestination::ToWaiting;
-	tls.OldFiberStoredFlag = &readyFiberBundle->FiberIsSwitched;
+	tls.OldFiberStoredFlag = fiberIsSwitched;
 
 	if (m_callbacks.OnFiberDetached != nullptr) {
 		m_callbacks.OnFiberDetached(m_callbacks.Context, currentFiberIndex, true);
