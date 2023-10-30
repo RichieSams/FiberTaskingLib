@@ -22,22 +22,31 @@
  # limitations under the License.
  ##
 
-include(AddCompilerFlags)
+ include(AddCompilerFlags)
 
-set(FTL_TEST_SRC
-	fiber_abstraction/floating_point_fiber_switch.cpp
-	fiber_abstraction/nested_fiber_switch.cpp
-	fiber_abstraction/single_fiber_switch.cpp
-	utilities/event_callbacks.cpp
-	utilities/parallel_for.cpp
-	utilities/thread_local.cpp
-    functional/calc_triangle_num.cpp
-    functional/producer_consumer.cpp
-    utilities/fibtex.cpp
-)
-
-add_executable(ftl-test ${FTL_TEST_SRC})
-target_link_libraries(ftl-test Catch2::Catch2WithMain ftl)
-
-# Set the warnings
-AddCompilerFlags(ftl-test)
+ set(FTL_TEST_SRC
+	 fiber_abstraction/floating_point_fiber_switch.cpp
+	 fiber_abstraction/nested_fiber_switch.cpp
+	 fiber_abstraction/single_fiber_switch.cpp
+	 utilities/event_callbacks.cpp
+	 utilities/parallel_for.cpp
+	 utilities/thread_local.cpp
+	 functional/calc_triangle_num.cpp
+	 functional/producer_consumer.cpp
+	 utilities/fibtex.cpp
+ )
+ 
+ # Set the c++ std
+ if (FTL_CPP_17)
+	 target_compile_features(ftl PUBLIC cxx_std_17)
+	 add_definitions(-DFTL_CPP_17=1)
+ else()
+	 target_compile_features(ftl PUBLIC cxx_std_11)
+ endif()
+ 
+ add_executable(ftl-test ${FTL_TEST_SRC})
+ target_link_libraries(ftl-test Catch2::Catch2WithMain ftl)
+ 
+ # Set the warnings
+ AddCompilerFlags(ftl-test)
+ 
