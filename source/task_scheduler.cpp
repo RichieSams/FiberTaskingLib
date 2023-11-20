@@ -53,7 +53,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void *const arg) {
 	auto *const threadArgs = reinterpret_cast<ThreadStartArgs *>(arg);
 	TaskScheduler *taskScheduler = threadArgs->Scheduler;
 	unsigned const index = threadArgs->ThreadIndex;
-
+	SetCurrentThreadAffinity(index);
 	// Clean up
 	delete threadArgs;
 
@@ -333,7 +333,9 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 	}
 
 	// Set the properties for the current thread
+	// on linux this locks code to single core
 	SetCurrentThreadAffinity(0);
+
 	m_threads[0] = GetCurrentThread();
 #if defined(FTL_WIN32_THREADS)
 	// Set the thread handle to INVALID_HANDLE_VALUE
