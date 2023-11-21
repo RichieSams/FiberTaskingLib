@@ -143,7 +143,7 @@ To answer this question, let's compare to another task-based multithreading libr
 . If they aren't finished, we can do 2 things:
  a. Spin-wait / Sleep
  b. Ask the scheduler for a new task and start executing that
-. Let's take path *b*
+. Let's take the second path
 . So the scheduler gives us Task G and we start executing
 . But Task G ends up needing a dependency as well, so we ask the scheduler for another new task
 . And another, and another
@@ -219,11 +219,11 @@ Generally, you shouldn't use Mutexes in fiber code, for two reasons:
 2. Mutex contention will block the worker threads. And since we generally don't oversubscribe the threads to the cores, this leaves cores idle.
 
 To solve this, we created Fibtex. It implements the std lockable interface, so you can use it with all your favorite wrappers (std::lock_guard, std::unique_lock, etc.)
-It's implemented behind the scenes with a TaskCounter, so if a Fibtex is locked, a waiter can switch to another task and do valuable work
+It's implemented behind the scenes with fiber waits, so if a Fibtex is locked, a waiter can switch to another task and do valuable work
 
 ### Thread Pinning
 
-When a fiber is resumed after a WaitGroup::Wait() or a Fibtex::lock(), there is no guarantee that it will resume on the same thread that it was running on when it was suspended. For most code, this is fine. However, certain libraries have strong assumptions. For example, in DirectX, you must do the final frame submit from the same thread that created the swap chain. Thus, some code will need to guarantee that fibers are resumed on the same thread where they were running when suspended. To do this, you can use the argument `pinToCurrentThread`. When set to `true`, the scheduler will guarantee that the resumed fiber will run on the same thread. This argument is available for WaitGroup::Wait() and Fibtext::lock()
+When a fiber is resumed after a WaitGroup::Wait() or a Fibtex::lock(), there is no guarantee that it will resume on the same thread that it was running on when it was suspended. For most code, this is fine. However, certain libraries have strong assumptions. For example, in DirectX, you must do the final frame submit from the same thread that created the swap chain. Thus, some code will need to guarantee that fibers are resumed on the same thread where they were running when suspended. To do this, you can use the argument `pinToCurrentThread`. When set to `true`, the scheduler will guarantee that the resumed fiber will run on the same thread. This argument is available for WaitGroup::Wait() and Fibtext::lock(). NOTE: thread pinning is more expensive than the default behavior, and can potentially result in much slower resumption of the task in question (since it requires the pinned thread to finish the task it's currently running). Therefore, it should only be used if truely necessary.
 
 
 {blank}
@@ -264,5 +264,5 @@ Contributions are very welcome. See the https://github.com/RichieSams/FiberTaski
 
 {blank}
 
-## Request for Criticism
+## Request for Feedback
 This implementation was something I created because I thought Christian's presentation was really interesting and I wanted to explore it myself. The code is still a work in progress and I would love to hear your critiques of how I could make it better. I will continue to work on this project and improve it as best as possible.
