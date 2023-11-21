@@ -38,13 +38,16 @@ Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg)
         : m_arg(arg) {
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
 	m_systemPageSize = SystemPageSize();
+	const size_t alignment = SystemPageSize();
 #else
 	m_systemPageSize = 0;
+	// All systems require stacks that are at least 16 byte aligned
+	const size_t alignment = 16;
 #endif
 
 	m_stackSize = RoundUp(stackSize, m_systemPageSize);
 	// We add a guard page both the top and the bottom of the stack
-	m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, m_systemPageSize);
+	m_stack = AlignedAlloc(m_systemPageSize + m_stackSize + m_systemPageSize, alignment);
 	m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_systemPageSize + stackSize, stackSize, startRoutine);
 
 	FTL_VALGRIND_REGISTER(static_cast<char *>(m_stack) + m_systemPageSize, static_cast<char *>(m_stack) + m_systemPageSize + stackSize);
