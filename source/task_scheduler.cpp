@@ -332,8 +332,8 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options) {
 		m_callbacks.OnFibersCreated(m_callbacks.Context, options.FiberPoolSize);
 	}
 
-	// Set the properties for the current thread
-	// on linux this locks code to single core
+	// Set the properties for the main thread
+	
 	SetCurrentThreadAffinity(0);
 
 	m_threads[0] = GetCurrentThread();
