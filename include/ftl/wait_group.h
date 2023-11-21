@@ -59,7 +59,7 @@ private:
 
 	/* The counter that can be waited on. Once it is zero, all waiters will be released */
 	std::atomic<int32_t> m_counter;
-	/* We store the he queue lock and the queue all in a single uintptr_t */
+	/* We store the queue lock and the queue all in a single uintptr_t */
 	std::atomic<uintptr_t> m_word;
 
 	static constexpr uintptr_t kIsQueueLockedBit = 1;
