@@ -55,6 +55,13 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+
+# Workaround for OSX currently having a broken linker
+# https://github.com/Homebrew/homebrew-core/issues/145991
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-ld_classic")
+endif()
+
 # Add third party libs
 add_subdirectory(third_party)
 
