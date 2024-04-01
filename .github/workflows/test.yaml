@@ -40,10 +40,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: darwin_gcc_9
-            brew_package: gcc@9
-            cc: /usr/local/opt/gcc@9/bin/gcc-9
-            cxx: /usr/local/opt/gcc@9/bin/g++-9
           - name: darwin_gcc_12
             brew_package: gcc@12
             cc: /usr/local/opt/gcc@12/bin/gcc-12
