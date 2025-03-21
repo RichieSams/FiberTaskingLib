@@ -35,23 +35,41 @@ jobs:
         run: make test
   darwin:
     name: ${{ matrix.config.name }}
-    runs-on: macOS-13
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: darwin_gcc_12
+          - name: darwin_gcc_12_amd64
+            os: macOS-13
+            arch: x64
             brew_package: gcc@12
             cc: /usr/local/opt/gcc@12/bin/gcc-12
             cxx: /usr/local/opt/gcc@12/bin/g++-12
-          - name: darwin_clang_12
+          - name: darwin_clang_12_amd64
+            os: macOS-13
+            arch: x64
             brew_package: llvm@12
             cc: /usr/local/opt/llvm@12/bin/clang
             cxx: /usr/local/opt/llvm@12/bin/clang++
-          - name: darwin_clang_15
+          - name: darwin_clang_15_amd64
+            os: macOS-13
+            arch: x64
             brew_package: llvm@15
             cc: /usr/local/opt/llvm@15/bin/clang
             cxx: /usr/local/opt/llvm@15/bin/clang++
+          - name: darwin_gcc_12_arm64
+            os: macOS-14
+            arch: arm64
+            brew_package: gcc@12
+            cc: /opt/homebrew/opt/gcc@12/bin/gcc-12
+            cxx: /opt/homebrew/opt/gcc@12/bin/g++-12
+          - name: darwin_clang_15_arm64
+            os: macOS-14
+            arch: arm64
+            brew_package: llvm@15
+            cc: /opt/homebrew/opt/llvm@15/bin/clang
+            cxx: /opt/homebrew/opt/llvm@15/bin/clang++
     env:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
@@ -60,9 +78,9 @@ jobs:
       - name: Install
         run: brew install ${{ matrix.config.brew_package }}
       - name: Build Debug
-        run: make CMAKE_PRESET=Unix_x64_Debug generate build
+        run: make CMAKE_PRESET=Unix_${{ matrix.config.arch }}_Debug generate build
       - name: Build Release
-        run: make CMAKE_PRESET=Unix_x64_Release generate build
+        run: make CMAKE_PRESET=Unix_${{ matrix.config.arch }}_Release generate build
       - name: Test
         run: make test
   windows:

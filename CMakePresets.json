@@ -106,6 +106,48 @@
       "vendor": {}
     },
     {
+      "name": "Unix_arm64_Debug",
+      "displayName": "Unix arm64 - Debug",
+      "description": "Unix, Makefile generator, arm64 architecture, Debug build",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/Debug",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "FTL_DISABLE_ITERATOR_DEBUG": true,
+        "FTL_FIBER_CANARY_BYTES": false,
+        "FTL_FIBER_STACK_GUARD_PAGES": true,
+        "FTL_WERROR": true,
+        "FTL_CPP_17": true
+      },
+      "environment": {},
+      "vendor": {}
+    },
+    {
+      "name": "Unix_arm64_Release",
+      "displayName": "Unix arm64 - Release",
+      "description": "Unix, Makefile generator, arm64 architecture, Release build",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/RelWithDebInfo",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "FTL_DISABLE_ITERATOR_DEBUG": true,
+        "FTL_FIBER_CANARY_BYTES": false,
+        "FTL_FIBER_STACK_GUARD_PAGES": true,
+        "FTL_WERROR": true,
+        "FTL_CPP_17": true
+      },
+      "environment": {},
+      "vendor": {}
+    },
+    {
       "name": "Valgrind",
       "displayName": "Valgrind",
       "description": "Valgrind",
@@ -144,6 +186,14 @@
     {
       "name": "Unix_x64_Release",
       "configurePreset": "Unix_x64_Release"
+    },
+    {
+      "name": "Unix_arm64_Debug",
+      "configurePreset": "Unix_arm64_Debug"
+    },
+    {
+      "name": "Unix_arm64_Release",
+      "configurePreset": "Unix_arm64_Release"
     }
   ]
 }
