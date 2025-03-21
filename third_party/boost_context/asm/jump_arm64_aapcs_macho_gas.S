@@ -1,5 +1,6 @@
 /*
-            Copyright Edward Nevill + Oliver Kowalke 2015
+         Copyright Edward Nevill + Oliver Kowalke 2015
+             Copyright Adrian Astley 2025.
    Distributed under the Boost Software License, Version 1.0.
       (See accompanying file LICENSE_1_0.txt or copy at
           http://www.boost.org/LICENSE_1_0.txt)
@@ -42,9 +43,9 @@
  *  |    x27    |    x28    |    FP     |     LR    |  *
  *  -------------------------------------------------  *
  *  -------------------------------------------------  *
- *  |  40 |  41 |  42 | 43  |           |           |  *
+ *  |  40 |  41 |  42 | 43  |  444|  45 |  46 | 47  |  *
  *  -------------------------------------------------  *
- *  | 0xa0| 0xa4| 0xa8| 0xac|           |           |  *
+ *  | 0xa0| 0xa4| 0xa8| 0xac| 0xb0| 0xb4| 0xb8| 0xbc|  *
  *  -------------------------------------------------  *
  *  |     PC    |   align   |           |           |  *
  *  -------------------------------------------------  *
@@ -52,37 +53,58 @@
  *******************************************************/
 
 .text
-.globl _make_fcontext
+.globl _jump_fcontext
 .balign 16
+_jump_fcontext:
+    # prepare stack for GP + FPU
+    sub  sp, sp, #0xb0
 
-_make_fcontext:
-    ; shift address in x0 (allocated stack) to lower 16 byte boundary
-    and x0, x0, ~0xF
+    # save d8 - d15
+    stp  d8,  d9,  [sp, #0x00]
+    stp  d10, d11, [sp, #0x10]
+    stp  d12, d13, [sp, #0x20]
+    stp  d14, d15, [sp, #0x30]
 
-    ; reserve space for context-data on context-stack
-    sub  x0, x0, #0xb0
+    # save x19-x30
+    stp  x19, x20, [sp, #0x40]
+    stp  x21, x22, [sp, #0x50]
+    stp  x23, x24, [sp, #0x60]
+    stp  x25, x26, [sp, #0x70]
+    stp  x27, x28, [sp, #0x80]
+    stp  x29, x30, [sp, #0x90]
 
-    ; third arg of make_fcontext() == address of context-function
-    ; store address as a PC to jump in
-    str  x2, [x0, #0xa0]
+    # save LR as PC
+    str  x30, [sp, #0xa0]
 
-    ; compute abs address of label finish
-    ; 0x0c = 3 instructions * size (4) before label 'finish'
+    # store RSP (pointing to context-data) at address pointed at by X0
+	# STR doesn't allow us to use sp as the base register, so we have to mov it to x4 first
+	mov x4, sp    
+	str x4, [x0, 0]
 
-    ; TODO: Numeric offset since llvm still does not support labels in ADR. Fix:
-    ;       http://lists.cs.uiuc.edu/pipermail/llvm-commits/Week-of-Mon-20140407/212336.html
-    adr  x1, 0x0c
+    # restore RSP (pointing to context-data) from X1
+    mov  sp, x1
 
-    ; save address of finish as return-address for context-function
-    ; will be entered after context-function returns (LR register)
-    str  x1, [x0, #0x98]
+    # load d8 - d15
+    ldp  d8,  d9,  [sp, #0x00]
+    ldp  d10, d11, [sp, #0x10]
+    ldp  d12, d13, [sp, #0x20]
+    ldp  d14, d15, [sp, #0x30]
 
-    ret  lr ; return pointer to context-data (x0)
+    # load x19-x30
+    ldp  x19, x20, [sp, #0x40]
+    ldp  x21, x22, [sp, #0x50]
+    ldp  x23, x24, [sp, #0x60]
+    ldp  x25, x26, [sp, #0x70]
+    ldp  x27, x28, [sp, #0x80]
+    ldp  x29, x30, [sp, #0x90]
 
-finish:
-    ; exit code is zero
-    mov  x0, #0
-    ; exit application
-    bl  __exit
+    # pass data (third arg passed to jump_fcontext) as first arg passed to context function
+    mov x0, x2
 
+    # load pc
+    ldr  x4, [sp, #0xa0]
 
+    # restore stack from GP + FP
+    add  sp, sp, #0xb0
+
+    ret x4
